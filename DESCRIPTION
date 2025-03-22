@@ -1,0 +1,16 @@
+Package: fastan
+Title: Bayesian Factor Analysis with STAN
+Version: 0.0.0.9000
+Authors@R: 
+    person("Carlos", "de Moura", , "lcbarrosdemoura@gmail.br", role = c("aut", "cre", "cph"))
+Description: What the package does (one paragraph).
+License: MIT + file LICENSE
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.2
+Suggests: 
+    testthat (>= 3.0.0)
+Depends:
+    R (>= 4.1.0),
+    ggplot2
+Config/testthat/edition: 3
