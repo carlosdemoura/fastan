@@ -4,7 +4,7 @@
 \alias{plot_trace}
 \title{Posterior sample trace plot}
 \usage{
-plot_trace(fit, par, row, col, warmup = T)
+plot_trace(fit, par, row = 1, col = 1, smry = NA)
 }
 \value{
 ggplot2 plot

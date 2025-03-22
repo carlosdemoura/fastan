@@ -4,7 +4,7 @@
 ^\.Rproj\.user$
 ^LICENSE\.md$
 ^README\.Rmd$
-^logo_fastan$
-^shiny_online$
-^lab$
-^proj$
+^_lab$
+^_logo$
+^_shiny_online$
+

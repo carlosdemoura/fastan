@@ -4,7 +4,7 @@
 \alias{plot_posterior}
 \title{Plot posterior sample histogram and/or density}
 \usage{
-plot_posterior(fit, par, row, col, type = c("hist", "dens"))
+plot_posterior(fit, par, row = 1, col = 1, type = c("hist", "dens"))
 }
 \arguments{
 \item{fit}{.}

@@ -4,10 +4,14 @@
 \alias{plot_lambda}
 \title{Plot lambdas}
 \usage{
-plot_lambda(smry)
+plot_lambda(smry, stat = "mean", mod = 0)
 }
 \arguments{
 \item{smry}{.}
+
+\item{stat}{.}
+
+\item{mod}{.}
 }
 \value{
 ggplot2 plot

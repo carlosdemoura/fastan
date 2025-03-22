@@ -4,5 +4,5 @@
 .httr-oauth
 .DS_Store
 .quarto
-proj/
-shiny_online/fastan_shiny_prototype/
+_lab/proj/
+_shiny_online/fastan_shiny_prototype/

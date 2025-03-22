@@ -9,6 +9,10 @@ plot_mock_doc()
 \arguments{
 \item{fit}{.}
 
+\item{smry}{.}
+
+\item{mod}{.}
+
 \item{par}{.}
 
 \item{row}{.}
@@ -18,8 +22,6 @@ plot_mock_doc()
 \item{type}{.}
 
 \item{stat}{.}
-
-\item{smry}{.}
 
 \item{warmup}{.}
 }

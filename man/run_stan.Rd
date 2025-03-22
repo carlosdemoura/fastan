@@ -4,7 +4,7 @@
 \alias{run_stan}
 \title{Run STAN MCMC}
 \usage{
-run_stan(model, init = NULL, chains = 1, ...)
+run_stan(model, init = NULL, chains = 1, pred = F, ...)
 }
 \arguments{
 \item{model}{.}

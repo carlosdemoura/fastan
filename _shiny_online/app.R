@@ -8,11 +8,11 @@ library(tidyr)
 library(coda)
 library(ggridges)
 
-#devtools::install_github("carlosdemoura/fastan")
-#library(fastan)
-devtools::load_all()
+devtools::install_github("carlosdemoura/fastan")
+library(fastan)
+#devtools::load_all()
 
-max_size_in_Mb_for_uploads = 50
+max_size_in_Mb_for_uploads = 100
 options(shiny.maxRequestSize = max_size_in_Mb_for_uploads*1024^2)
 
 element = function(color, height, title) {
@@ -454,11 +454,6 @@ server = function(input, output, session) {
         row, col,
         smry = project()$summary
       )
-    })
-
-    output$diag_density = renderPlot({
-      hist(samp, probability = T)
-      lines(density(samp), lwd  = 3, col = "red")
     })
 
     output$PanelConvergence.gr_plot = renderPlot({

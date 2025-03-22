@@ -2,7 +2,7 @@
 % Please edit documentation in R/plots.R
 \name{plot_ridges}
 \alias{plot_ridges}
-\title{Plot ridges}
+\title{FALTA MUITO}
 \usage{
 plot_ridges(model)
 }

@@ -4,7 +4,7 @@
 \alias{model_data_sc}
 \title{Process data in \code{fastan} model format (confirmatory or semi-confirmatory models)}
 \usage{
-model_data_sc(data, value, group, row, col, semi.conf)
+model_data_sc(data, value, group, row, col, semi.conf, factor_name = NULL)
 }
 \arguments{
 \item{data}{data.frame in the longer format.}

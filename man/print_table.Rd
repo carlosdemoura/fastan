@@ -2,7 +2,7 @@
 % Please edit documentation in R/plots.R
 \name{print_table}
 \alias{print_table}
-\title{Print LaTeX table}
+\title{ESSA PORRA TÁ CERTA?}
 \usage{
 print_table(smry, par, row = NULL, col = NULL, stat = c("mean", "median"))
 }
