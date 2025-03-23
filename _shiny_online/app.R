@@ -8,11 +8,11 @@ library(tidyr)
 library(coda)
 library(ggridges)
 
-devtools::install_github("carlosdemoura/fastan")
-library(fastan)
-#devtools::load_all()
+#devtools::install_github("carlosdemoura/fastan")
+#library(fastan)
+devtools::load_all()
 
-max_size_in_Mb_for_uploads = 100
+max_size_in_Mb_for_uploads = 500
 options(shiny.maxRequestSize = max_size_in_Mb_for_uploads*1024^2)
 
 element = function(color, height, title) {

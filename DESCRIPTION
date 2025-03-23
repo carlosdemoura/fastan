@@ -12,6 +12,7 @@ Imports:
     abind,
     coda,
     dplyr,
+    posterior,
     purrr,
     rstan,
     tidyr

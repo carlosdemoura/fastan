@@ -4,14 +4,12 @@
 \alias{plot_lambda}
 \title{Plot lambdas}
 \usage{
-plot_lambda(smry, stat = "mean", mod = 0)
+plot_lambda(smry, stat = "mean")
 }
 \arguments{
 \item{smry}{.}
 
 \item{stat}{.}
-
-\item{mod}{.}
 }
 \value{
 ggplot2 plot

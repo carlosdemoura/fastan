@@ -83,7 +83,7 @@ plot_hpd = function(smry, par, row = NULL, col = NULL, stat = c("mean", "median"
 #' @export
 #'
 #' @import ggplot2
-plot_lambda = function(smry, stat = "mean", mod = 0) {
+plot_lambda = function(smry, stat = "mean") {
   df = matrix_to_df(smry$lambda)
 
   ggplot(df, aes(x = col, group = factor(row), color = factor(row), fill = factor(row))) +

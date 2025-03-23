@@ -9,9 +9,6 @@
 #'
 #' @return fastan model object
 #'
-#' @examples
-#' generate_data_sc(rows.by.group = rep(10, 2), columns = 8, cicles = 2, semi.conf = T)
-#'
 #' @export
 #'
 #' @import dplyr

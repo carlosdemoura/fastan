@@ -4,14 +4,12 @@
 \alias{fiat_init}
 \title{FALTA PREDICTION}
 \usage{
-fiat_init(model, chains, param = 1)
+fiat_init(model, chains)
 }
 \arguments{
 \item{model}{fastanModel object.}
 
 \item{chains}{integer; number of chains.}
-
-\item{param}{numeric or list; if it's a list it must contain alpha, lambda, sigma2, and (if predictions are being made) pred; the DEFAULT is \code{1}.}
 }
 \value{
 list; for each

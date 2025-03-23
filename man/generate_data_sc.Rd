@@ -25,7 +25,3 @@ fastan model object
 \description{
 Generate data (confirmatory or semi-confirmatory models)
 }
-\examples{
-generate_data_sc(rows.by.group = rep(10, 2), columns = 8, cicles = 2, semi.conf = T)
-
-}

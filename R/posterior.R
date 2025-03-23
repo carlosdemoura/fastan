@@ -4,26 +4,17 @@
 #'
 #' @param model fastanModel object.
 #' @param chains integer; number of chains.
-#' @param param numeric or list; if it's a list it must contain alpha, lambda, sigma2, and (if predictions are being made) pred; the DEFAULT is `1`.
 #'
 #' @return list; for each
 #'
 #' @export
-fiat_init = function(model, chains, param = 1) {
-  if ( (length(param) == 1) & is.numeric(param) ) {
-    x = param
-    param = list()
-    for (p in c("alpha", "lambda", "sigma2", "pred")) {
-      param[[p]] = rep(x, chains)
-    }
-  }
-
+fiat_init = function(model, chains) {
   init = list()
 
   for (i in 1:chains) {
-    init[[i]] = list(alpha  = matrix(param$alpha[i] , nrow = model$dim$al_row,  ncol = model$dim$al_fac),
-                     lambda = matrix(param$lambda[i], nrow = model$dim$al_fac,  ncol = model$dim$al_col),
-                     sigma2 = matrix(param$sigma2[i], nrow = model$dim$al_row,  ncol = 1)
+    init[[i]] = list(alpha  = matrix(1, nrow = model$dim$al_row,  ncol = model$dim$al_fac),
+                     lambda = matrix(0, nrow = model$dim$al_fac,  ncol = model$dim$al_col),
+                     sigma2 = matrix(1, nrow = model$dim$al_row,  ncol = 1)
                      #,
                      #pred   = matrix(param$pred[i]  , nrow = model$dim$obs_row, ncol = model$dim$obs_col)
     )
@@ -75,7 +66,7 @@ adjust_data_interface = function(model) {
 #' @import rstan
 run_stan = function(model, init = NULL, chains = 1, pred = F, ...) {
   if (is.null(init)) {
-    init = fiat_init(model, chains, 1)
+    init = fiat_init(model, chains)
   }
   rstan::stan(file   = file.path("inst/stan/interface_fa_sc.stan"),
               data   = adjust_data_interface(model),
@@ -84,25 +75,6 @@ run_stan = function(model, init = NULL, chains = 1, pred = F, ...) {
               chains = chains,
               ...
               )
-}
-
-
-#' Transform `rstan` fit into `coda::mcmc.list()`
-#'
-#' @param fit `rstan::stan()` object.
-#' @param param string; must be in rstan::stan fit format.
-#'
-#' @return `coda::mcmc.list()`
-#'
-#' @export
-get_chains_mcmc = function(fit, param) {
-#get_chains_mcmc = function(project_folder, param) {
-  draws = posterior::as_draws(fit)
-  chains = list()
-  for (i in 1:length(fit@inits)) {
-    chains[[i]] = posterior::subset_draws(draws, chain=i, variable=param) |> c() |> coda::mcmc()
-  }
-  coda::as.mcmc.list(chains)
 }
 
 
@@ -153,12 +125,6 @@ summary_matrix = function(fit, model = NULL) {
 }
 
 
-#' Invert the signal of a column of lambda on the MCMC
-invert_lambda_signal = function() {
-
-}
-
-
 #' Get diagnostic statistics in a data.frame
 #'
 #' @import dplyr
@@ -173,4 +139,129 @@ diagnostic_statistics = function(fit) {
     tidyr::extract(par, into = c("par", "row", "col"), regex = "([a-zA-Z0-9_]+)\\[(\\d+),(\\d+)\\]", convert = TRUE)
   df[nrow(df),] = c(df[nrow(df),1:2], "lp__", 1, 1)
   df
+}
+
+
+#' Invert the signal of a column of lambda on the MCMC
+invert_lambda_signal = function() {
+
+}
+
+
+#' Transform `rstan` fit into `coda::mcmc.list()`
+#'
+#' @param fit `rstan::stan()` object.
+#' @param param string; must be in rstan::stan fit format.
+#'
+#' @return `coda::mcmc.list()`
+#'
+#' @export
+#'
+#' @import posterior
+get_chains_mcmc = function(fit, param) {
+  draws = posterior::as_draws(fit)
+  chains = list()
+  for (i in 1:length(fit@inits)) {
+    chains[[i]] = posterior::subset_draws(draws, chain=i, variable=param) |> c() |> coda::mcmc()
+  }
+  coda::as.mcmc.list(chains)
+}
+
+
+#' Generate initial values for STAN MCMC from another fit
+#'
+#' @param fit fastanModel object.
+get_all_chains = function(fit) {
+  params = fit@sim$pars_oi |> utils::head(-1)
+  chains = fit@sim$chains
+  dims   = fit@sim$dims_oi|> utils::head(-1)
+  iter   = fit@sim$iter
+
+  get_draws_per_parameter = function(param) {
+    dim = dims[[param]]
+    answer = array(dim = c(dim, iter, chains))  # dimnames = c("row", "col", "iter", "chain")
+    for (row in 1:dim[1]) {
+      for (col in 1:dim[2]) {
+        answer[row, col, , ] =
+          get_chains_mcmc( fit, param |> paste0("[", row, ",", col, "]") ) |>
+          sapply(function(x){ x |> c()})
+      }
+    }
+    answer
+  }
+
+  all_chains = list()
+  for (param in params) {
+    all_chains[[param]] = get_draws_per_parameter(param)
+  }
+  all_chains
+}
+
+
+#' Adjust the data argument on `rstan::stan()`
+#'
+merge_chains = function(chain1, chain2) {
+  answer = list()
+  for (par in c("alpha", "lambda", "sigma2")) {
+    chains = dim(chain1[[par]])[4]
+    iter1  = dim(chain1[[par]])[3]
+    iter2  = dim(chain2[[par]])[3]
+
+    new_chain = array(dim = c(dim(chain1[[par]])[1:2], iter1 + iter2, chains))
+    new_chain[,,1:iter1,] =
+      chain1[[par]]
+    new_chain[,,(iter1+1):(iter1+iter2),] =
+      chain2[[par]]
+    answer[[par]] = new_chain
+  }
+  answer
+}
+
+
+#' Generate initial values for STAN MCMC from another fit
+#'
+#' @param fit fastanModel object.
+#'
+#' @return list; for each
+#'
+#' @export
+fiat_init_from_fit = function(draws) {
+  chains = dim(draws$alpha)[4]
+  x =
+    sapply(
+      draws,
+      function(x) { x[,,dim(x)[3],, drop = FALSE]
+      })
+
+  correct_dimensions = function(x, par) {
+    if(is.null(dim(x))) {
+      if (par == "lambda"){
+        answer = matrix(x, nrow = 1)
+      } else {
+        answer = matrix(x, ncol = 1)
+      }
+    } else {
+      answer = x
+    }
+    return(answer)
+  }
+
+  init_temp = list()
+  for (par in c("alpha", "lambda", "sigma2")) {
+    init_temp[[par]] =
+      lapply(
+        1:dim(x[[par]])[4],
+        function(i) {
+          x[[par]][,,,i] |> correct_dimensions(par)
+
+        })
+  }
+
+  init = vector("list", length = chains)
+  for (chain in 1:chains) {
+    init[[chain]] = lapply(init_temp, function(x) x[[chain]])
+    names(init[[chain]]) = names(init_temp)
+  }
+
+  init
 }
