@@ -13,6 +13,8 @@ run_stan(model, init = NULL, chains = 1, pred = F, ...)
 
 \item{chains}{.}
 
+\item{pred}{.}
+
 \item{...}{arguments that will be passed to \code{rstan::stan()}}
 }
 \value{

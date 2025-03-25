@@ -118,11 +118,10 @@ generate_data_sc = function(rows.by.group, columns, cicles = 1, semi.conf = F) {
 #' @import dplyr
 model_data_sc = function(data, value, group, row, col, semi.conf, factor_name = NULL) {
   #data = x; row = "row"; group = "group"; col = "col"; value = "value"
-
   labels = list(
-    factor_level = levels(data[[col]])  ,
-    group        = levels(data[[group]]),
-    loading      = levels(data[[row]])
+    factor_level = unique(data[[col]])  ,
+    group        = unique(data[[group]]),
+    loading      = unique(data[[row]])
   )
 
   if (!is.null(factor_name)) {
@@ -143,9 +142,9 @@ model_data_sc = function(data, value, group, row, col, semi.conf, factor_name = 
     {\(.) .[c("value", "row", "col", "group")]}() |>
     {\(.)
     dplyr::mutate(.,
-      row    = match(.$row,   labels$loading      ),
-      col    = match(.$col,   labels$factor_level ),
-      group  = match(.$group, labels$group        )
+      row    = .$row   |> factor(labels$loading)      |> as.numeric(),
+      col    = .$col   |> factor(labels$factor_level) |> as.numeric(),
+      group  = .$group |> factor(labels$group)        |> as.numeric()
     )}()
 
   coor = data_fa |>

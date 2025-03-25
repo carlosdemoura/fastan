@@ -27,38 +27,3 @@ fiat_groups_limits = function(x) {
   )
   return(y)
 }
-
-
-#' Get where data is stored
-#'
-#' Get where on your PC the package data is being stored.
-#'
-#' @return A string, folder path.
-#'
-#' @export
-#'
-#' @import tools
-#' @import purrr
-local_data = function(folder = NULL) {
-  tools::R_user_dir("fastan", which = "data") |>
-    {\(.) gsub("\\\\", "/", .)}() |>
-    purrr::pluck(1) |>
-    {\(.) if (is.null(folder)) file.path(.)
-      else file.path(., folder)}()
-}
-
-if (!dir.exists(local_data("projects"))) dir.create(local_data("projects"), recursive = TRUE)
-
-
-#' Title
-#'
-#' @param file .
-#'
-#' @export
-get_rds = function(file) {
-  env = new.env()
-  load(file, envir = env)
-  x = ls(env)
-  get(x, envir = env)
-}
-

@@ -2,8 +2,6 @@
 #'
 #' @param data .
 #' @param info .
-#'
-#' @export
 fa_project = function(data, info = "") {
   proj =
     list(

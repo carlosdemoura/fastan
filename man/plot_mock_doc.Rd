@@ -9,6 +9,8 @@ plot_mock_doc()
 \arguments{
 \item{fit}{.}
 
+\item{draws}{.}
+
 \item{smry}{.}
 
 \item{mod}{.}
