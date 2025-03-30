@@ -28,6 +28,42 @@ fiat_init = function(model, chains) {
 }
 
 
+#' Generate initial values for STAN MCMC from another fit
+#'
+#' @param draws fastanModel object.
+#'
+#' @return list; for each
+#'
+#' @export
+fiat_init_from_last_value = function(fit) {
+  draws = my_extract(fit)
+  correct_dimensions = function(x, par) {
+    if(is.null(dim(x))) {
+      if (par == "lambda"){
+        answer = matrix(x, nrow = 1)
+      } else {
+        answer = matrix(x, ncol = 1)
+      }
+    } else {
+      answer = x
+    }
+    return(answer)
+  }
+
+  init = list()
+  for (chain in 1:dim(draws$alpha)[2]) {
+    init[[chain]] = list()
+    for (par in c("alpha", "lambda", "sigma2")) {
+      init[[chain]][[par]] =
+        draws[[par]] |>
+        {\(.) .[dim(.)[1],chain,,] }() |>
+        correct_dimensions(par)
+    }
+  }
+  init
+}
+
+
 #' Adjust the data argument on `rstan::stan()`
 #'
 #' @param model fastan model object.
@@ -132,11 +168,32 @@ summary_matrix = function(fit, model = NULL) {
 }
 
 
+#' Transform `rstan` fit into `coda::mcmc.list()`
+#'
+#' @param fit `rstan::stan()` object.
+#' @param param string; must be in rstan::stan fit format.
+#'
+#' @return `coda::mcmc.list()`
+#'
+#' @export
+get_chains_mcmc = function(fit, param) {
+  #get_chains_mcmc = function(project_folder, param) {
+  draws = posterior::as_draws(fit)
+  chains = list()
+  for (i in 1:length(fit@inits)) {
+    chains[[i]] = posterior::subset_draws(draws, chain=i, variable=param) |> c() |> coda::mcmc()
+  }
+  coda::as.mcmc.list(chains)
+}
+
+
 #' Get diagnostic statistics from fit
+#'
+#' @export
 #'
 #' @import dplyr
 #' @import tidyr
-diagnostic_fit = function(fit) {
+diagnostic_statistics = function(fit) {
   df =
     summary(fit)$summary |>
     as.data.frame() |>
@@ -149,68 +206,6 @@ diagnostic_fit = function(fit) {
 }
 
 
-#' Get diagnostic statistics from draws
-#'
-#' @import dplyr
-#' @import tidyr
-diagnostic_draws = function(draws) {
-  draws
-}
-
-
 #' Invert the signal of a column of lambda on the MCMC
 invert_lambda_signal = function() {
-
-}
-
-
-#' Generate initial values for STAN MCMC from another fit
-#'
-#' @param draws fastanModel object.
-#'
-#' @return list; for each
-#'
-#' @export
-fiat_init_from_draws = function(draws) {
-  correct_dimensions = function(x, par) {
-    if(is.null(dim(x))) {
-      if (par == "lambda"){
-        answer = matrix(x, nrow = 1)
-      } else {
-        answer = matrix(x, ncol = 1)
-      }
-    } else {
-      answer = x
-    }
-    return(answer)
-  }
-
-  init = list()
-  for (chain in 1:dim(draws$alpha)[2]) {
-    init[[chain]] = list()
-    for (par in c("alpha", "lambda", "sigma2")) {
-      init[[chain]][[par]] =
-        draws[[par]] |>
-        {\(.) .[dim(.)[1],chain,,] }() |>
-        correct_dimensions(par)
-    }
-  }
-  init
-}
-
-#' Generate initial values for STAN MCMC from another fit
-#'
-#' @param draws1,draws2 draws
-#'
-#' @export
-#'
-#' @import abind
-merge_draws = function(draws1, draws2) {
-  x = sapply(
-    list("alpha", "lambda", "sigma2"),
-    function(x) {
-      abind::abind(draws1[[x]], draws2[[x]], along = 1)
-    })
-  names(x) = c("alpha", "lambda", "sigma2")
-  x
 }

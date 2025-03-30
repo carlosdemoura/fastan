@@ -8,9 +8,10 @@ library(tidyr)
 library(coda)
 library(ggridges)
 
+#devtools::install_github("carlosdemoura/fastan")
+#library(fastan)
 #devtools::load_all()
-#source("_shiny_online/utils.R")
-#source("utils.R")
+source("_shiny_online/utils.R")
 
 max_size_in_Mb_for_uploads = 500
 options(shiny.maxRequestSize = max_size_in_Mb_for_uploads*1024^2)
@@ -163,7 +164,7 @@ PanelConvergence = tabPanel(
       width = 3,
       selectInput("PanelConvergence.par",
                   label = "Parameter",
-                  choices = c("lp__", "alpha", "lambda", "sigma2")
+                  choices = c("LP", "alpha", "lambda", "sigma2")
       )),
     column(
       width = 3,
@@ -409,7 +410,7 @@ server = function(input, output, session) {
 
   observeEvent(input$PanelConvergence.par, {
 
-    if        (input$PanelConvergence.par == "lp__") {
+    if        (input$PanelConvergence.par == "LP") {
       row = col = 1
     } else if (input$PanelConvergence.par == "alpha") {
       row = project()$model$dim$al_row
@@ -441,17 +442,25 @@ server = function(input, output, session) {
 
     row = as.integer(input$PanelConvergence.row)
     col = as.integer(input$PanelConvergence.col)
-    par = input$PanelConvergence.par
-    par_name = ifelse(par == "lp__",
-                      "lp__", paste0(par, "[", row, ",", col, "]"))
-    combinedchains = get_chains_mcmc(project()$fit, par_name)
+    par_name = ifelse(input$PanelConvergence.par == "LP",
+                      "lp__", paste0(input$PanelConvergence.par, "[", row, ",", col, "]"))
+    par = ifelse(input$PanelConvergence.par == "LP",
+                 "lp__", input$PanelConvergence.par)
+
+    combinedchains =
+      project()$draws[[par]][,,row,col] |>
+      {\(x) lapply(seq_len(ncol(x)), function(i) coda::as.mcmc(x[,i]))}() |>
+      coda::mcmc.list()
+
 
     PanelConvergence.div_par_name(paste0("Selected parameter: ", par_name))
 
     output$PanelConvergence.traceplot = renderPlot({
       plot_trace(
         project()$fit,
-        par, row, col
+        par  = ifelse(input$PanelConvergence.par == "LP", "lp__", input$PanelConvergence.par),
+        row, col,
+        smry = project()$summary
       )
     })
 
@@ -467,13 +476,12 @@ server = function(input, output, session) {
       coda::geweke.diag(combinedchains)
     })
 
-
-    density_type = input$PanelConvergence.density_type |> as.vector()
+    par = ifelse(input$PanelConvergence.par == "LP", "lp__", input$PanelConvergence.par)
+    type = input$PanelConvergence.density_type |> as.vector()
 
     output$PanelConvergence.density = renderPlot({
-      plot_posterior(project()$fit, par, row, col, density_type)
+      plot_posterior(project()$fit, par, row, col, type)
     })
-
 
     output$PanelConvergence.rhat_neff = renderPrint({
       diagnostic_statistics(project()$fit) |>
@@ -490,9 +498,9 @@ server = function(input, output, session) {
   ### PanelConvergence ###
 
   observeEvent(input$PanelConvergence.density_type, {
-    row  = as.integer(input$PanelConvergence.row)
-    col  = as.integer(input$PanelConvergence.col)
-    par  = input$PanelConvergence.par
+    row = as.integer(input$PanelConvergence.row)
+    col = as.integer(input$PanelConvergence.col)
+    par = ifelse(input$PanelConvergence.par == "LP", "lp__", input$PanelConvergence.par)
     type = input$PanelConvergence.density_type |> as.vector()
 
     if (PanelConvergence.select.clicks()) {
@@ -558,12 +566,3 @@ shiny4fastan = function() {
 }
 
 shiny4fastan()
-
-
-# > fit@date
-# [1] "Wed Mar 26 03:07:44 2025"
-# > rstan::get_elapsed_time(fit)
-# warmup  sample
-# chain:1 1423.41 6785.45
-# chain:2 1367.77 6848.28
-# > fit@stan_args

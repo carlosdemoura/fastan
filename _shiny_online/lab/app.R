@@ -8,9 +8,20 @@ library(tidyr)
 library(coda)
 library(ggridges)
 
-#devtools::load_all()
+library(abind)
+library(posterior)
+library(purrr)
+library(utils)
+
+
+#devtools::install_github("carlosdemoura/fastan")
+#library(fastan)
+devtools::load_all()
 #source("_shiny_online/utils.R")
-#source("utils.R")
+#source("_shiny_online/utils2.R")
+#source("utils2.R")
+#source("plots.R")
+
 
 max_size_in_Mb_for_uploads = 500
 options(shiny.maxRequestSize = max_size_in_Mb_for_uploads*1024^2)
@@ -45,7 +56,8 @@ PanelHome = tabPanel(
     ),
     column(
       width = 4,
-      fileInput("PanelHome.project_file", NULL, buttonLabel = "Choose project", multiple = FALSE, accept = c(".rds"))
+      fileInput("PanelHome.project_file", NULL, buttonLabel = "Choose project", multiple = FALSE, accept = c(".rds")),
+      #selectInput(inputId = "PanelHome.project_file", label = "Choose project 2", choices = c("proj_tmax_conf_p1.rds", "proj_tmax_conf_p2.rds", "proj_tmax_semiconf.rds", "proj_tmax_semiconf_100.rds"))
     )
   ),
   fluidRow(
@@ -116,38 +128,6 @@ PanelModel = tabPanel(
 ##################################
 PanelConvergence = tabPanel(
   title = "Convergence Diagnose",
-
-  ### General Diagnose ###
-
-  fluidRow(
-    column(
-      width = 12,
-      element("#1E929E", "12vh", "General diagnose")
-    )
-  ),
-
-  fluidRow(
-    column(
-      width = 2,
-      selectInput("PanelConvergence.general_par",
-                  label = "Parameters",
-                  choices = c("All", "alpha", "lambda", "sigma2")
-                  )
-    ),
-    column(
-      width = 5,
-      element("#27BDCC", "8vh", "Neff"),
-      plotlyOutput("PanelConvergence.neff_plot"),
-      verbatimTextOutput("PanelConvergence.neff_print")
-    ),
-    column(
-      width = 5,
-      element("#27BDCC", "8vh", "Rhat"),
-      plotlyOutput("PanelConvergence.rhat_plot"),
-      verbatimTextOutput("PanelConvergence.rhat_print")
-    )
-  ),
-
 
   ### Specific Diagnose ###
 
@@ -316,6 +296,7 @@ ui = navbarPage(
 server = function(input, output, session) {
 
   project = reactive(readRDS(input$PanelHome.project_file$datapath))
+  #project = reactive(readRDS(paste0("projetos2/", input$PanelHome.project_file)))
   real = reactive(!is.null(project()$model$real))
 
   PanelConvergence.div_par_name = reactiveVal("Select Parameter")
@@ -373,40 +354,6 @@ server = function(input, output, session) {
 
   ### PanelConvergence ###
 
-  observeEvent(input$PanelConvergence.general_par, {
-    if (PanelHome.project_file.clicks()) {
-
-    par = input$PanelConvergence.general_par |>
-      {\(.) if (. == "All") NULL  else . }()
-
-    diag_smry = diagnostic_statistics(project()$fit) |>
-      {\(.) if(!is.null(par)) dplyr::filter(., par == !!par) else .}() |>
-      {\(.) list(rhat = .$rhat,
-                 neff = .$neff)}()
-
-    output$PanelConvergence.neff_plot = renderPlotly({
-      plot_diagnostic(project()$fit, stat = "neff", par = par) %>%
-        ggplotly()
-    })
-
-    output$PanelConvergence.rhat_plot = renderPlotly({
-      plot_diagnostic(project()$fit, stat = "rhat", par = par) %>%
-        ggplotly()
-    })
-
-    output$PanelConvergence.neff_print = renderPrint({
-      summary(diag_smry$neff)
-    })
-
-    output$PanelConvergence.rhat_print = renderPrint({
-      summary(diag_smry$rhat)
-    })
-
-  }})
-
-
-  ### PanelConvergence ###
-
   observeEvent(input$PanelConvergence.par, {
 
     if        (input$PanelConvergence.par == "lp__") {
@@ -444,14 +391,20 @@ server = function(input, output, session) {
     par = input$PanelConvergence.par
     par_name = ifelse(par == "lp__",
                       "lp__", paste0(par, "[", row, ",", col, "]"))
-    combinedchains = get_chains_mcmc(project()$fit, par_name)
+
+    combinedchains =
+      project()$draws[[par]][,,row,col] |>
+      {\(.) if(is.null(dim(.))) as.matrix(.) else . }() |>
+      {\(x) lapply(seq_len(ncol(x)), function(i) coda::as.mcmc(x[,i]))}() |>
+      coda::mcmc.list()
 
     PanelConvergence.div_par_name(paste0("Selected parameter: ", par_name))
 
     output$PanelConvergence.traceplot = renderPlot({
       plot_trace(
-        project()$fit,
-        par, row, col
+        project()$draws,
+        par = par,
+        row, col
       )
     })
 
@@ -467,21 +420,14 @@ server = function(input, output, session) {
       coda::geweke.diag(combinedchains)
     })
 
-
-    density_type = input$PanelConvergence.density_type |> as.vector()
+    type = input$PanelConvergence.density_type |> as.vector()
 
     output$PanelConvergence.density = renderPlot({
-      plot_posterior(project()$fit, par, row, col, density_type)
+      plot_posterior(project()$draws, par, row, col, type)
     })
 
-
     output$PanelConvergence.rhat_neff = renderPrint({
-      diagnostic_statistics(project()$fit) |>
-        dplyr::filter(par == !!par,
-                      row == !!row,
-                      col == !!col) |>
-        dplyr::select(dplyr::all_of(c("neff", "rhat"))) |>
-        unlist()
+      cat("neff\t", effectiveSize(combinedchains) |> unname())
     })
 
   })
@@ -490,14 +436,14 @@ server = function(input, output, session) {
   ### PanelConvergence ###
 
   observeEvent(input$PanelConvergence.density_type, {
-    row  = as.integer(input$PanelConvergence.row)
-    col  = as.integer(input$PanelConvergence.col)
-    par  = input$PanelConvergence.par
+    row = as.integer(input$PanelConvergence.row)
+    col = as.integer(input$PanelConvergence.col)
+    par = input$PanelConvergence.par
     type = input$PanelConvergence.density_type |> as.vector()
 
     if (PanelConvergence.select.clicks()) {
       output$PanelConvergence.density = renderPlot({
-        plot_posterior(project()$fit, par, row, col, type)
+        plot_posterior(project()$draws, par, row, col, type)
       })
     }
   })
@@ -558,12 +504,3 @@ shiny4fastan = function() {
 }
 
 shiny4fastan()
-
-
-# > fit@date
-# [1] "Wed Mar 26 03:07:44 2025"
-# > rstan::get_elapsed_time(fit)
-# warmup  sample
-# chain:1 1423.41 6785.45
-# chain:2 1367.77 6848.28
-# > fit@stan_args

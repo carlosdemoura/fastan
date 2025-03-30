@@ -26,9 +26,9 @@ plot_contrast = function(smry, par = "alpha", stat = "mean") {
     {if (stat == "hpd_contains_0") {
       scale_fill_manual(values = c("Yes" = "black", "No" = "white"),
                         guide = guide_legend(override.aes = list(color = "black", size = 5, stroke = 1)) )
-      } else {
-        scale_fill_gradient2(low = "blue", mid = "white", high = "red", midpoint = 0)
-      }
+    } else {
+      scale_fill_gradient2(low = "blue", mid = "white", high = "red", midpoint = 0)
+    }
     } +
     scale_y_reverse() +
     labs(fill = ifelse(stat == "hpd_contains_0", "Factor is significative", stat),
@@ -53,9 +53,6 @@ plot_hpd = function(smry, par, row = NULL, col = NULL, stat = c("mean", "median"
   df = df[df[[loc.name]] == get(loc.name), ]
   real = "real" %in% colnames(df)
 
-  y_min = min(smry[[par]][,,"hpd_min"])
-  y_max = max(smry[[par]][,,"hpd_max"])
-
   ggplot(df) +
     {if (loc.name == "row") { aes(x = col) }
       else { aes(x = row) } } +
@@ -69,7 +66,6 @@ plot_hpd = function(smry, par, row = NULL, col = NULL, stat = c("mean", "median"
       title = paste(par, "posterior", loc.name, c(row, col)),
       color = "Legend"
     ) +
-    ylim(y_min, y_max) +
     {if (real) { scale_color_manual(values = c("HPD" = "black", "Mean" = "red", "Median" = "blue", "Real" = "green")) }
       else { scale_color_manual(values = c("HPD" = "black", "Mean" = "red", "Median" = "blue")) } } +
     theme_minimal() +
@@ -87,7 +83,7 @@ plot_hpd = function(smry, par, row = NULL, col = NULL, stat = c("mean", "median"
 #' @export
 #'
 #' @import ggplot2
-plot_lambda = function(smry, stat = "mean") {
+plot_lambda = function(smry, stat = "mean", mod = 0) {
   df = matrix_to_df(smry$lambda)
 
   ggplot(df, aes(x = col, group = factor(row), color = factor(row), fill = factor(row))) +
@@ -126,15 +122,15 @@ plot_posterior = function(fit, par, row = 1, col = 1, type = c("hist", "dens")) 
   y_max = list(
     {ggplot(df, aes(x = x)) + geom_histogram(aes(y = ..density..), binwidth = 1)},
     {ggplot(df, aes(x = x)) + geom_density()}
-    ) |>
+  ) |>
     sapply( function(x){ x |> {\(.) ggplot_build(.)$data}() |> {\(.) max(.[[1]]$ymax)}() } ) |>
     max()
 
   ggplot(df, aes(x = x)) +
-    {if ("hist" %in% type) geom_histogram(aes(y = ..density..), fill = "grey")} +
+    {if ("hist" %in% type) geom_histogram(aes(y = ..density..), binwidth = 1, fill = "grey")} +
     {if ("dens" %in% type) geom_density(lwd = 1.5, col = "red")} +
     #{if ("real" %in% type) geom_density(lwd = 1.5, col = "red")} +
-    {if (par != "lp__") ylim(0, y_max)} +
+    ylim(0, y_max) +
     xlim(floor(min(df$x)), ceiling(max(df$x))) +
     theme_minimal()
 }
@@ -148,10 +144,14 @@ plot_posterior = function(fit, par, row = 1, col = 1, type = c("hist", "dens")) 
 #'
 #' @import ggplot2
 #' @import rstan
-plot_trace = function(fit, par, row = 1, col = 1){
+plot_trace = function(fit, par, row = 1, col = 1, smry = NA){
   par_ = par |>
     {\(.) if (par == "lp__") .
       else paste0(., "[", row, ",", col, "]")}()
+
+  #rstan::traceplot(fit, pars = par_, inc_warmup = T)
+
+  real = try({smry[[par]][row, col, "real"]} |> unname(), T)
 
   df = get_chains_mcmc(fit, par_) |>
     sapply(function(x) {x |> c()}) |>
@@ -166,42 +166,19 @@ plot_trace = function(fit, par, row = 1, col = 1){
   ggplot(df, aes(x = iteration, y = value, color = chain)) +
     geom_line() +
     theme_minimal() +
+    {if (!inherits(real, "try-error") & (par != "lp__")) {
+      geom_hline(aes(yintercept = real,
+                     linetype = "real value"),
+                 colour = "red",
+                 lwd = 1,
+      ) }} +
     labs(
-      title = paste0("MCMC for ", ifelse(par == "lp__", "Log-likelihood", paste0(par, "[", row, ",", col, "]"))),
+      title = paste0("MCMC for ", ifelse(par_ == "lp__", "Log-likelihood", par_)),
       x = "Iteration",
       y = "Value"
     ) +
     theme_minimal()
-}
 
-
-#' Plot n_eff or Rhat
-#'
-#' @import dplyr
-#' @import ggplot2
-plot_diagnostic = function(fit, stat, par = NULL) {
-  stopifnot("stat must bet either 'rhat' or 'neff'" = stat %in% c("rhat", "neff"))
-
-  df = diagnostic_statistics(fit) |>
-    {\(.) if(!is.null(par)) dplyr::filter(., .$par == !!par)
-      else .}() |>
-    dplyr::select(dplyr::all_of(stat)) |>
-    `colnames<-`("x")
-
-  title =
-    "Histogram of" |>
-    paste(stat) |>
-    {\(.) if(is.null(par)) paste(., "for all parameters")
-      else paste(., "for", par) }()
-
-  ggplot(df, aes(x = x)) +
-    geom_histogram(fill = "grey", color = "black") +
-    labs(
-      title = title,
-      x = stat,
-      y = "Frequency"
-    ) +
-    theme_minimal()
 }
 
 
@@ -250,7 +227,7 @@ print_table = function(smry, par, row = NULL, col = NULL, stat = c("mean", "medi
 
   cat("\\textbf{", ifelse(loc.name != "col", "Column", "Row") ,"}", sep = "")
   for (each in stat) {
-           if (each == "real"   ){cat(" & \\textbf{Real value}"    , sep = "")
+    if (each == "real"   ){cat(" & \\textbf{Real value}"    , sep = "")
     } else if (each == "mean"   ){cat(" & \\textbf{Mean}"          , sep = "")
     } else if (each == "median" ){cat(" & \\textbf{Median}"        , sep = "")
     } else if (each == "sd"     ){cat(" & \\textbf{St dev}"        , sep = "")
@@ -279,6 +256,36 @@ print_table = function(smry, par, row = NULL, col = NULL, stat = c("mean", "medi
     "\\end{tabular}",
     "\\end{center}",
     sep = "\n")
+}
+
+
+#' Plot n_eff or Rhat
+#'
+#' @import dplyr
+#' @import ggplot2
+plot_diagnostic = function(fit, stat, par = NULL) {
+  stopifnot("stat must bet either 'rhat' or 'neff'" = stat %in% c("rhat", "neff"))
+
+  df = diagnostic_statistics(fit) |>
+    {\(.) if(!is.null(par)) dplyr::filter(., .$par == !!par)
+      else .}() |>
+    dplyr::select(dplyr::all_of(stat)) |>
+    `colnames<-`("x")
+
+  title =
+    "Histogram of" |>
+    paste(stat) |>
+    {\(.) if(is.null(par)) paste(., "for all parameters")
+      else paste(., "for", par) }()
+
+  ggplot(df, aes(x = x)) +
+    geom_histogram(fill = "grey", color = "black") +
+    labs(
+      title = title,
+      x = stat,
+      y = "Frequency"
+    ) +
+    theme_minimal()
 }
 
 
@@ -325,3 +332,91 @@ matrix_to_df = function(m) {
 #' @param stat .
 #' @param warmup .
 plot_mock_doc = function() {}
+
+#' Transform `rstan` fit into `coda::mcmc.list()`
+#'
+#' @param fit `rstan::stan()` object.
+#' @param param string; must be in rstan::stan fit format.
+#'
+#' @return `coda::mcmc.list()`
+#'
+#' @export
+get_chains_mcmc = function(fit, param) {
+  #get_chains_mcmc = function(project_folder, param) {
+  draws = posterior::as_draws(fit)
+  chains = list()
+  for (i in 1:length(fit@inits)) {
+    chains[[i]] = posterior::subset_draws(draws, chain=i, variable=param) |> c() |> coda::mcmc()
+  }
+  coda::as.mcmc.list(chains)
+}
+
+
+#' Get summary from `rstan::stan()` fit object
+#'
+#' @param fit `rstan::stan()` fit object.
+#' @param model fastan model object
+#'
+#' @return list of matrices.
+#'
+#' @export
+#'
+#' @import abind
+#' @import coda
+#' @import rstan
+summary_matrix = function(fit, model = NULL) {
+  samp = rstan::extract(fit)
+  matrices = list()
+
+  for (parameter in setdiff(names(samp), "lp__") ) {
+
+    hpd_temp = apply( samp[parameter][[1]], c(2,3),
+                      function(x) {
+                        coda::HPDinterval(coda::as.mcmc(x))[,c("lower", "upper")] |>
+                          as.numeric() |>
+                          list()
+                      })
+
+    matrices[[parameter]] = list(
+      "mean"    = apply( samp[parameter][[1]], c(2,3), mean   )                          ,
+      "median"  = apply( samp[parameter][[1]], c(2,3), median )                          ,
+      "sd"      = apply( samp[parameter][[1]], c(2,3), sd     )                          ,
+      "hpd_min" = apply( hpd_temp, c(1,2), function(x) { unlist(x) |> purrr::pluck(1) }) ,
+      "hpd_max" = apply( hpd_temp, c(1,2), function(x) { unlist(x) |> purrr::pluck(2) }) ,
+      "hpd_amp" = apply( hpd_temp, c(1,2), function(x) { unlist(x) |> diff() })
+    )
+
+    if (parameter == "alpha") {
+      matrices[[parameter]][["hpd_contains_0"]] = ifelse((matrices[[parameter]][["hpd_max"]] >= 0) & (matrices[[parameter]][["hpd_min"]] <= 0), T, F)
+    }
+
+    if (!is.null(model) & !is.null(model$real)) {
+      matrices[[parameter]][["real"]] = model[["real"]][[parameter]]
+    }
+  }
+
+  sapply(matrices, function(x) { abind::abind(x, along = 3) })
+}
+
+
+#' Invert the signal of a column of lambda on the MCMC
+invert_lambda_signal = function() {
+
+}
+
+
+#' Get diagnostic statistics in a data.frame
+#'
+#' @import dplyr
+#' @import tidyr
+diagnostic_statistics = function(fit) {
+  df =
+    summary(fit)$summary |>
+    as.data.frame() |>
+    {\(.) dplyr::mutate(., par = row.names(.))}() |>
+    dplyr::select(dplyr::all_of(c("n_eff", "Rhat", "par"))) |>
+    dplyr::rename(neff = "n_eff", rhat = "Rhat") |>
+    tidyr::extract(par, into = c("par", "row", "col"), regex = "([a-zA-Z0-9_]+)\\[(\\d+),(\\d+)\\]", convert = TRUE)
+  df[nrow(df),] = c(df[nrow(df),1:2], "lp__", 1, 1)
+  df
+}

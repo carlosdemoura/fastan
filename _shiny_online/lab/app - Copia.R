@@ -10,7 +10,11 @@ library(ggridges)
 
 #devtools::install_github("carlosdemoura/fastan")
 #library(fastan)
-devtools::load_all()
+#devtools::load_all()
+#source("_shiny_online/utils.R")
+source("_shiny_online/utils2.R")
+#source("plots.R")
+
 
 max_size_in_Mb_for_uploads = 500
 options(shiny.maxRequestSize = max_size_in_Mb_for_uploads*1024^2)
@@ -117,38 +121,6 @@ PanelModel = tabPanel(
 PanelConvergence = tabPanel(
   title = "Convergence Diagnose",
 
-  ### General Diagnose ###
-
-  fluidRow(
-    column(
-      width = 12,
-      element("#1E929E", "12vh", "General diagnose")
-    )
-  ),
-
-  fluidRow(
-    column(
-      width = 2,
-      selectInput("PanelConvergence.general_par",
-                  label = "Parameters",
-                  choices = c("All", "alpha", "lambda", "sigma2")
-                  )
-    ),
-    column(
-      width = 5,
-      element("#27BDCC", "8vh", "Neff"),
-      plotlyOutput("PanelConvergence.neff_plot"),
-      verbatimTextOutput("PanelConvergence.neff_print")
-    ),
-    column(
-      width = 5,
-      element("#27BDCC", "8vh", "Rhat"),
-      plotlyOutput("PanelConvergence.rhat_plot"),
-      verbatimTextOutput("PanelConvergence.rhat_print")
-    )
-  ),
-
-
   ### Specific Diagnose ###
 
   fluidRow(
@@ -163,7 +135,7 @@ PanelConvergence = tabPanel(
       width = 3,
       selectInput("PanelConvergence.par",
                   label = "Parameter",
-                  choices = c("LP", "alpha", "lambda", "sigma2")
+                  choices = c("lp__", "alpha", "lambda", "sigma2")
       )),
     column(
       width = 3,
@@ -373,43 +345,9 @@ server = function(input, output, session) {
 
   ### PanelConvergence ###
 
-  observeEvent(input$PanelConvergence.general_par, {
-    if (PanelHome.project_file.clicks()) {
-
-    par = input$PanelConvergence.general_par |>
-      {\(.) if (. == "All") NULL  else . }()
-
-    diag_smry = diagnostic_fit(project()$fit) |>
-      {\(.) if(!is.null(par)) dplyr::filter(., par == !!par) else .}() |>
-      {\(.) list(rhat = .$rhat,
-                 neff = .$neff)}()
-
-    output$PanelConvergence.neff_plot = renderPlotly({
-      plot_diagnostic(project()$fit, stat = "neff", par = par) %>%
-        ggplotly()
-    })
-
-    output$PanelConvergence.rhat_plot = renderPlotly({
-      plot_diagnostic(project()$fit, stat = "rhat", par = par) %>%
-        ggplotly()
-    })
-
-    output$PanelConvergence.neff_print = renderPrint({
-      summary(diag_smry$neff)
-    })
-
-    output$PanelConvergence.rhat_print = renderPrint({
-      summary(diag_smry$rhat)
-    })
-
-  }})
-
-
-  ### PanelConvergence ###
-
   observeEvent(input$PanelConvergence.par, {
 
-    if        (input$PanelConvergence.par == "LP") {
+    if        (input$PanelConvergence.par == "lp__") {
       row = col = 1
     } else if (input$PanelConvergence.par == "alpha") {
       row = project()$model$dim$al_row
@@ -441,25 +379,23 @@ server = function(input, output, session) {
 
     row = as.integer(input$PanelConvergence.row)
     col = as.integer(input$PanelConvergence.col)
-    par_name = ifelse(input$PanelConvergence.par == "LP",
-                      "lp__", paste0(input$PanelConvergence.par, "[", row, ",", col, "]"))
-    par = ifelse(input$PanelConvergence.par == "LP",
-                 "lp__", input$PanelConvergence.par)
+    par = input$PanelConvergence.par
+    par_name = ifelse(par == "lp__",
+                      "lp__", paste0(par, "[", row, ",", col, "]"))
 
     combinedchains =
       project()$draws[[par]][,,row,col] |>
+      {\(.) if(is.null(dim(.))) as.matrix(.) else . }() |>
       {\(x) lapply(seq_len(ncol(x)), function(i) coda::as.mcmc(x[,i]))}() |>
       coda::mcmc.list()
-
 
     PanelConvergence.div_par_name(paste0("Selected parameter: ", par_name))
 
     output$PanelConvergence.traceplot = renderPlot({
       plot_trace(
-        project()$fit,
-        par  = ifelse(input$PanelConvergence.par == "LP", "lp__", input$PanelConvergence.par),
-        row, col,
-        smry = project()$summary
+        project()$draws,
+        par = par,
+        row, col
       )
     })
 
@@ -475,20 +411,14 @@ server = function(input, output, session) {
       coda::geweke.diag(combinedchains)
     })
 
-    par = ifelse(input$PanelConvergence.par == "LP", "lp__", input$PanelConvergence.par)
     type = input$PanelConvergence.density_type |> as.vector()
 
     output$PanelConvergence.density = renderPlot({
-      plot_posterior(project()$fit, par, row, col, type)
+      plot_posterior(project()$draws, par, row, col, type)
     })
 
     output$PanelConvergence.rhat_neff = renderPrint({
-      diagnostic_fit(project()$fit) |>
-        dplyr::filter(par == !!par,
-                      row == !!row,
-                      col == !!col) |>
-        dplyr::select(dplyr::all_of(c("neff", "rhat"))) |>
-        unlist()
+      cat("neff\t", effectiveSize(combinedchains) |> unname())
     })
 
   })
@@ -499,12 +429,12 @@ server = function(input, output, session) {
   observeEvent(input$PanelConvergence.density_type, {
     row = as.integer(input$PanelConvergence.row)
     col = as.integer(input$PanelConvergence.col)
-    par = ifelse(input$PanelConvergence.par == "LP", "lp__", input$PanelConvergence.par)
+    par = input$PanelConvergence.par
     type = input$PanelConvergence.density_type |> as.vector()
 
     if (PanelConvergence.select.clicks()) {
       output$PanelConvergence.density = renderPlot({
-        plot_posterior(project()$fit, par, row, col, type)
+        plot_posterior(project()$draws, par, row, col, type)
       })
     }
   })
