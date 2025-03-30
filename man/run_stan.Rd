@@ -4,7 +4,7 @@
 \alias{run_stan}
 \title{Run STAN MCMC}
 \usage{
-run_stan(model, init = NULL, chains = 1, pred = F, ...)
+run_stan(model, init = NULL, chains = 1, ...)
 }
 \arguments{
 \item{model}{.}
@@ -13,12 +13,10 @@ run_stan(model, init = NULL, chains = 1, pred = F, ...)
 
 \item{chains}{.}
 
-\item{pred}{.}
-
 \item{...}{arguments that will be passed to \code{rstan::stan()}}
 }
 \value{
-rstan::stan fit object.
+rstan::stanfit object.
 }
 \description{
 Run STAN MCMC

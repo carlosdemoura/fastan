@@ -6,9 +6,6 @@
 #'
 #' @return A integer.
 #'
-#' @examples
-#' fiat_sentinel(matrix(1:4, ncol = 2))
-#'
 #' @export
 fiat_sentinel = function(m){
   stopifnot(is.numeric(m))

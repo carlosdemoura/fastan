@@ -2,10 +2,17 @@
 % Please edit documentation in R/plots.R
 \name{plot_diagnostic}
 \alias{plot_diagnostic}
-\title{Plot n_eff or Rhat}
+\title{Plot Neff or Rhat}
 \usage{
 plot_diagnostic(fit, stat, par = NULL)
 }
+\arguments{
+\item{fit}{.}
+
+\item{stat}{.}
+
+\item{par}{.}
+}
 \description{
-Plot n_eff or Rhat
+Plot Neff or Rhat
 }

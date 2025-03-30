@@ -7,7 +7,7 @@
 fiat_init_from_last_value(fit)
 }
 \arguments{
-\item{draws}{fastanModel object.}
+\item{fit}{stanfit object.}
 }
 \value{
 list; for each

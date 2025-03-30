@@ -16,6 +16,10 @@ model_data_sc(data, value, group, row, col, semi.conf, factor_name = NULL)
 \item{row}{string; name of the column containing rows/loadings.}
 
 \item{col}{string; name of the column containing columns/factor-levels.}
+
+\item{semi.conf}{.}
+
+\item{factor_name}{.}
 }
 \value{
 \code{fastan} model object

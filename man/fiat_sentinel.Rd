@@ -15,7 +15,3 @@ A integer.
 \description{
 Generate distinct sentinel values based on your data (generally the first multiple of 1000 one order above the entries of your argument).
 }
-\examples{
-fiat_sentinel(matrix(1:4, ncol = 2))
-
-}

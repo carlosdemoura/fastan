@@ -15,12 +15,10 @@ fiat_init = function(model, chains) {
     init[[i]] = list(alpha  = matrix(1, nrow = model$dim$al_row,  ncol = model$dim$al_fac),
                      lambda = matrix(0, nrow = model$dim$al_fac,  ncol = model$dim$al_col),
                      sigma2 = matrix(1, nrow = model$dim$al_row,  ncol = 1)
-                     #,
-                     #pred   = matrix(param$pred[i]  , nrow = model$dim$obs_row, ncol = model$dim$obs_col)
-    )
+                     )
 
-    if(is.null(T)) {
-      init[[1]]$pred = matrix(as.numeric(pred), nrow = data$obs_row, ncol = data$obs_col)
+    if(!is.null(model$pred)) {
+      init[[i]]$pred = matrix(0, nrow = nrow(model$pred), ncol = 1)
     }
   }
 
@@ -30,7 +28,7 @@ fiat_init = function(model, chains) {
 
 #' Generate initial values for STAN MCMC from another fit
 #'
-#' @param draws fastanModel object.
+#' @param fit stanfit object.
 #'
 #' @return list; for each
 #'
@@ -73,18 +71,31 @@ fiat_init_from_last_value = function(fit) {
 #' @export
 #'
 #' @import purrr
+#' @import dplyr
 adjust_data_interface = function(model) {
-  list(
-    obs_arg         = model$data[,1] |> as.vector() |> unname() |> purrr::pluck(1),
+  data = list(
+    obs             = model$data[,1] |> as.vector() |> unname() |> purrr::pluck(1),
     obs_coor        = model$data[,2:3] |> as.matrix() |> unname(),
     al_row          = model$dim$al_row,
     al_col          = model$dim$al_col,
     al_fac          = model$dim$al_fac,
-    obs_row         = model$dim$obs_row,
-    obs_col         = model$dim$obs_col,
-    var_alpha_prior = model$var_alpha_prior,
-    sentinel        = model$sentinel
-  )
+    var_alpha_prior = model$var_alpha_prior
+    ) |>
+    {\(.) c(., list(obs_n = length(.$obs)))}()
+
+  if (is.null(model$pred)) {
+    data_pred = list(
+      pred_coor     = matrix(1:2, nrow = 1),
+      pred_n        = 0
+      )
+  } else {
+    data_pred = list(
+      pred_coor     = model$pred[,2:3] |> as.matrix() |> unname()
+      ) |>
+      {\(.) c(., list(pred_n = nrow(.$pred_coor)))}()
+  }
+
+  return(c(data, data_pred))
 }
 
 
@@ -93,15 +104,14 @@ adjust_data_interface = function(model) {
 #' @param model .
 #' @param init .
 #' @param chains .
-#' @param pred .
 #' @param ... arguments that will be passed to `rstan::stan()`
 #'
-#' @return rstan::stan fit object.
+#' @return rstan::stanfit object.
 #'
 #' @export
 #'
 #' @import rstan
-run_stan = function(model, init = NULL, chains = 1, pred = F, ...) {
+run_stan = function(model, init = NULL, chains = 1, ...) {
   if (is.null(init)) {
     init = fiat_init(model, chains)
   }
@@ -127,18 +137,12 @@ run_stan = function(model, init = NULL, chains = 1, pred = F, ...) {
 #' @import abind
 #' @import coda
 #' @import rstan
+#' @import stats
 summary_matrix = function(fit, model = NULL) {
-  if (class(fit) == "stanfit") {
-    samp = rstan::extract(fit)
-  } else {
-    samp = fit |>
-      lapply(function(x) {dim(x) = c(prod(utils::head(dim(x), -2)), utils::tail(dim(x), 2)); x})
-  }
-
+  samp = rstan::extract(fit)
   matrices = list()
 
   for (parameter in setdiff(names(samp), "lp__") ) {
-
     hpd_temp = apply( samp[parameter][[1]], c(2,3),
                       function(x) {
                         coda::HPDinterval(coda::as.mcmc(x))[,c("lower", "upper")] |>
@@ -147,9 +151,9 @@ summary_matrix = function(fit, model = NULL) {
                       })
 
     matrices[[parameter]] = list(
-      "mean"    = apply( samp[parameter][[1]], c(2,3), mean   )                          ,
-      "median"  = apply( samp[parameter][[1]], c(2,3), median )                          ,
-      "sd"      = apply( samp[parameter][[1]], c(2,3), sd     )                          ,
+      "mean"    = apply( samp[parameter][[1]], c(2,3), mean          )                   ,
+      "median"  = apply( samp[parameter][[1]], c(2,3), stats::median )                   ,
+      "sd"      = apply( samp[parameter][[1]], c(2,3), stats::sd     )                   ,
       "hpd_min" = apply( hpd_temp, c(1,2), function(x) { unlist(x) |> purrr::pluck(1) }) ,
       "hpd_max" = apply( hpd_temp, c(1,2), function(x) { unlist(x) |> purrr::pluck(2) }) ,
       "hpd_amp" = apply( hpd_temp, c(1,2), function(x) { unlist(x) |> diff() })
@@ -159,7 +163,12 @@ summary_matrix = function(fit, model = NULL) {
       matrices[[parameter]][["hpd_contains_0"]] = ifelse((matrices[[parameter]][["hpd_max"]] >= 0) & (matrices[[parameter]][["hpd_min"]] <= 0), T, F)
     }
 
-    if (!is.null(model) & !is.null(model$real)) {
+    if ((parameter == "pred") & !is.null(model)) {
+      matrices[[parameter]][["row_"]] = model$pred$row |> as.matrix()
+      matrices[[parameter]][["col_"]] = model$pred$col |> as.matrix()
+    }
+
+    if (!is.null(model) & !is.null(model$real) & (parameter != "pred")) {
       matrices[[parameter]][["real"]] = model[["real"]][[parameter]]
     }
   }
@@ -176,6 +185,9 @@ summary_matrix = function(fit, model = NULL) {
 #' @return `coda::mcmc.list()`
 #'
 #' @export
+#'
+#' @import coda
+#' @import posterior
 get_chains_mcmc = function(fit, param) {
   #get_chains_mcmc = function(project_folder, param) {
   draws = posterior::as_draws(fit)
@@ -188,6 +200,8 @@ get_chains_mcmc = function(fit, param) {
 
 
 #' Get diagnostic statistics from fit
+#'
+#' @param fit stanfit object
 #'
 #' @export
 #'

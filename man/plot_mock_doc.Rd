@@ -4,12 +4,10 @@
 \alias{plot_mock_doc}
 \title{Mock function for the sole purpose of documentation}
 \usage{
-plot_mock_doc()
+plot_mock_doc(fit, smry, mod, par, row, col, type, stat, warmup)
 }
 \arguments{
 \item{fit}{.}
-
-\item{draws}{.}
 
 \item{smry}{.}
 

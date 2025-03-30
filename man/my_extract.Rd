@@ -6,6 +6,9 @@
 \usage{
 my_extract(object)
 }
+\arguments{
+\item{object}{stanfit object}
+}
 \description{
 My extract
 }

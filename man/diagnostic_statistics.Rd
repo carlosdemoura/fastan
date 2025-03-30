@@ -6,6 +6,9 @@
 \usage{
 diagnostic_statistics(fit)
 }
+\arguments{
+\item{fit}{stanfit object}
+}
 \description{
 Get diagnostic statistics from fit
 }

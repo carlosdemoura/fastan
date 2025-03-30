@@ -13,6 +13,8 @@
 #'
 #' @import dplyr
 #' @import tidyr
+#' @import stats
+#' @import utils
 generate_data_sc = function(rows.by.group, columns, cicles = 1, semi.conf = F) {
   #rows.by.group = rep(10, 3); columns = 8; cicles = 1; semi.conf = T
   stopifnot(
@@ -33,9 +35,9 @@ generate_data_sc = function(rows.by.group, columns, cicles = 1, semi.conf = F) {
                   nrow = n.fac)
 
   for (i in 1:n.fac) {
-    alpha[groups_limits[[1]][i] : groups_limits[[2]][i], i] = runif(rows.by.group[i], -5, 5)
+    alpha[groups_limits[[1]][i] : groups_limits[[2]][i], i] = stats::runif(rows.by.group[i], -5, 5)
 
-    lambda[i, ] = sort(rnorm(columns, 0, 1), decreasing = as.logical(i %/% 2))
+    lambda[i, ] = stats::rnorm(columns, 0, 1) |> sort(decreasing = as.logical(i %/% 2))
   }
 
   if (semi.conf) {
@@ -69,8 +71,8 @@ generate_data_sc = function(rows.by.group, columns, cicles = 1, semi.conf = F) {
       row = paste0("row ", 1:sum(rows.by.group)),
       group = paste0("group ", 1:n.fac) |>
         {\(.) if(semi.conf)
-          rep(., head(rows.by.group, -1)) |>
-            c("group extra" |> rep(tail(rows.by.group, 1)))
+          rep(., utils::head(rows.by.group, -1)) |>
+            c("group extra" |> rep(utils::tail(rows.by.group, 1)))
           else
             rep(., rows.by.group)
         }()
@@ -106,6 +108,8 @@ generate_data_sc = function(rows.by.group, columns, cicles = 1, semi.conf = F) {
 #' @param group string; name of the column containing groups.
 #' @param row string; name of the column containing rows/loadings.
 #' @param col string; name of the column containing columns/factor-levels.
+#' @param semi.conf .
+#' @param factor_name .
 #'
 #' @return `fastan` model object
 #' About sentinel
@@ -116,6 +120,7 @@ generate_data_sc = function(rows.by.group, columns, cicles = 1, semi.conf = F) {
 #' @export
 #'
 #' @import dplyr
+#' @import utils
 model_data_sc = function(data, value, group, row, col, semi.conf, factor_name = NULL) {
   #data = x; row = "row"; group = "group"; col = "col"; value = "value"
   labels = list(
@@ -129,7 +134,7 @@ model_data_sc = function(data, value, group, row, col, semi.conf, factor_name = 
   } else {
     labels$factor_name = levels(data[[col]])
     if (semi.conf) {
-      labels$factor_name = head(labels$factor_name, -1)
+      labels$factor_name = utils::head(labels$factor_name, -1)
     }
   }
 
@@ -173,12 +178,9 @@ model_data_sc = function(data, value, group, row, col, semi.conf, factor_name = 
     data = data_fa,
     dim = list(al_row  = max(data_fa$row),
                al_col  = max(data_fa$col),
-               al_fac  = max(data_fa$group) - as.numeric(semi.conf),
-               obs_row = nrow(data_fa),
-               obs_col = ncol(data_fa)
+               al_fac  = max(data_fa$group) - as.numeric(semi.conf)
                ),
     var_alpha_prior = var_alpha_prior,
-    sentinel = fiat_sentinel(data_fa$value),
     labels = labels
   )
 }

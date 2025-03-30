@@ -4,10 +4,10 @@
 \alias{plot_ridges}
 \title{FALTA MUITO}
 \usage{
-plot_ridges(model)
+plot_ridges(mod)
 }
 \arguments{
-\item{model}{.}
+\item{mod}{.}
 }
 \value{
 ggridges plot

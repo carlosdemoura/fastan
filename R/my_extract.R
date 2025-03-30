@@ -1,5 +1,7 @@
 #' My extract
 #'
+#' @param object stanfit object
+#'
 #' @export
 my_extract = function(object) {
   pars <- object@sim$pars_oi #|> head(-1)

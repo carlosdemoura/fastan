@@ -4,7 +4,16 @@
 \alias{plot_trace}
 \title{Posterior sample trace plot}
 \usage{
-plot_trace(draws, par, row = 1, col = 1)
+plot_trace(fit, par, row = 1, col = 1)
+}
+\arguments{
+\item{fit}{.}
+
+\item{par}{.}
+
+\item{row}{.}
+
+\item{col}{.}
 }
 \value{
 ggplot2 plot

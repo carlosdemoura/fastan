@@ -212,6 +212,7 @@ PanelConvergence = tabPanel(
       plotOutput("PanelConvergence.traceplot"),
     ),
     column(
+      width = 6,
       checkboxGroupInput(
         "PanelConvergence.density_type",
         label = "Density sample",
@@ -222,8 +223,14 @@ PanelConvergence = tabPanel(
         selected = c("hist", "dens"),
         inline = TRUE
       ),
-      width = 6,
       plotOutput("PanelConvergence.density"),
+    )
+  ),
+
+  fluidRow(
+    column(6),
+    column(6,
+           verbatimTextOutput("PanelConvergence.stats")
     )
   ),
 
@@ -389,6 +396,13 @@ server = function(input, output, session) {
   ### PanelConvergence ###
 
   observeEvent(input$PanelHome.project_file, {
+    if (!is.null(project()$model$pred)) {
+      updateSelectInput(
+        session, "PanelConvergence.par",
+        choices = c("lp__", "alpha", "lambda", "sigma2", "pred")
+      )
+    }
+
     output$PanelConvergence.general_info_date = renderPrint({
       project()$fit@date |>
         {\(.) cat(
@@ -402,7 +416,8 @@ server = function(input, output, session) {
       table = rstan::get_elapsed_time(project()$fit) / 60
       cat("Elapsed time (mins.)\n")
       print(table |> round(2))
-      cat("Total: ", table |> sum() |> round(2))
+      tot = table |> sum()
+      cat("Total: ", tot |> round(2), " mins.  = ", (tot / 60) |> round(2), " h.", sep = "")
     })
 
     output$PanelConvergence.general_info_args = renderPrint({
@@ -466,6 +481,9 @@ server = function(input, output, session) {
     } else if (input$PanelConvergence.par == "sigma2") {
       row = project()$model$dim$al_row
       col = 1
+    } else if (input$PanelConvergence.par == "pred") {
+      row = dim(project()$summary$pred)[1]
+      col = 1
     }
 
     updateSelectInput(
@@ -513,13 +531,22 @@ server = function(input, output, session) {
       coda::geweke.diag(combinedchains)
     })
 
+    output$PanelConvergence.stats = renderPrint({
+      project()$summary[[par]][row, col, ] |>
+        as.matrix() |>
+        as.data.frame() |>
+        mutate(V1 = V1 |> round(2)) |>
+        as.matrix() |>
+        t() |>
+        `row.names<-`("") |>
+        print()
+    })
 
     density_type = input$PanelConvergence.density_type |> as.vector()
 
     output$PanelConvergence.density = renderPlot({
       plot_posterior(project()$fit, par, row, col, density_type)
     })
-
 
     output$PanelConvergence.rhat_neff = renderPrint({
       diagnostic_statistics(project()$fit) |>

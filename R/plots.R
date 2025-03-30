@@ -142,6 +142,8 @@ plot_posterior = function(fit, par, row = 1, col = 1, type = c("hist", "dens")) 
 
 #' Posterior sample trace plot
 #'
+#' @inheritParams plot_mock_doc
+#'
 #' @return ggplot2 plot
 #'
 #' @export
@@ -175,7 +177,9 @@ plot_trace = function(fit, par, row = 1, col = 1){
 }
 
 
-#' Plot n_eff or Rhat
+#' Plot Neff or Rhat
+#'
+#' @inheritParams plot_mock_doc
 #'
 #' @import dplyr
 #' @import ggplot2
@@ -209,7 +213,7 @@ plot_diagnostic = function(fit, stat, par = NULL) {
 #'
 #' Plot ridges
 #'
-#' @param model .
+#' @inheritParams plot_mock_doc
 #'
 #' @return ggridges plot
 #'
@@ -217,9 +221,9 @@ plot_diagnostic = function(fit, stat, par = NULL) {
 #'
 #' @import ggplot2
 #' @import ggridges
-plot_ridges = function(model) {
+plot_ridges = function(mod) {
   # FALTA AGRUPAR POR LINHA DATA FA
-  ggplot(model$data, aes(x = value, y = factor(row))) +
+  ggplot(mod$data, aes(x = value, y = factor(row))) +
     geom_density_ridges_gradient(scale = 3, rel_min_height = 0.01) +
     theme_minimal()
 }
@@ -232,8 +236,6 @@ plot_ridges = function(model) {
 #' @inheritParams plot_mock_doc
 #'
 #' @export
-#'
-#' @import ggplot2
 print_table = function(smry, par, row = NULL, col = NULL, stat = c("mean", "median")) {
   df = matrix_to_df(smry[[par]])
   loc.name = list(row=row,col=col) |> {\(.) names(.)[!sapply(., is.null)]}()
@@ -324,4 +326,4 @@ matrix_to_df = function(m) {
 #' @param type .
 #' @param stat .
 #' @param warmup .
-plot_mock_doc = function() {}
+plot_mock_doc = function(fit, smry, mod, par, row, col, type, stat, warmup) {}
