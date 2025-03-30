@@ -128,6 +128,21 @@ PanelConvergence = tabPanel(
 
   fluidRow(
     column(
+      width = 4,
+      verbatimTextOutput("PanelConvergence.general_info_date")
+    ),
+    column(
+      width = 4,
+      verbatimTextOutput("PanelConvergence.general_info_time")
+    ),
+    column(
+      width = 4,
+      verbatimTextOutput("PanelConvergence.general_info_args")
+    )
+  ),
+
+  fluidRow(
+    column(
       width = 2,
       selectInput("PanelConvergence.general_par",
                   label = "Parameters",
@@ -373,7 +388,38 @@ server = function(input, output, session) {
 
   ### PanelConvergence ###
 
-  observeEvent(input$PanelConvergence.general_par, {
+  observeEvent(input$PanelHome.project_file, {
+    output$PanelConvergence.general_info_date = renderPrint({
+      project()$fit@date |>
+        {\(.) cat(
+          "MCMC Date\n",
+          .,
+          sep = ""
+        )}()
+    })
+
+    output$PanelConvergence.general_info_time = renderPrint({
+      table = rstan::get_elapsed_time(project()$fit) / 60
+      cat("Elapsed time (mins.)\n")
+      print(table |> round(2))
+      cat("Total: ", table |> sum() |> round(2))
+    })
+
+    output$PanelConvergence.general_info_args = renderPrint({
+      project()$fit@stan_args[[1]] |>
+        {\(.) cat(
+          "STAN arguments",
+          "\nChains\t", length(project()$fit@stan_args), "\t\tIter\t"  , .$iter,
+          "\nThin\t", .$thin                           , "\t\tWarmup\t", .$warmup
+        )}()
+    })
+
+  })
+
+
+  ### PanelConvergence ###
+
+  observeEvent(c(input$PanelHome.project_file, input$PanelConvergence.general_par), {
     if (PanelHome.project_file.clicks()) {
 
     par = input$PanelConvergence.general_par |>
@@ -544,9 +590,7 @@ server = function(input, output, session) {
 
   })
 
-
 }
-
 
 
 ##########################
@@ -558,12 +602,3 @@ shiny4fastan = function() {
 }
 
 shiny4fastan()
-
-
-# > fit@date
-# [1] "Wed Mar 26 03:07:44 2025"
-# > rstan::get_elapsed_time(fit)
-# warmup  sample
-# chain:1 1423.41 6785.45
-# chain:2 1367.77 6848.28
-# > fit@stan_args
