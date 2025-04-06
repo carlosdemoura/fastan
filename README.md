@@ -1,4 +1,4 @@
-# fastan <a href="https://github.com/carlosdemoura/meteobr"><img src="man/figures/logo.png" align="right" height="138" /></a>
+# fastan <a href="https://github.com/carlosdemoura/fastan"><img src="man/figures/logo.png" align="right" height="138" /></a>
 
 <!-- badges: start -->
 <!-- badges: end -->
