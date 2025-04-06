@@ -9,8 +9,8 @@ data{
   vector[obs_n] obs;
   int obs_coor[obs_n, 2];
 
-  int<lower=1> pred_n;
-  int pred_coor[pred_n, 2];
+  int<lower=0> pred_n;
+  int pred_coor[max(pred_n, 1), 2];
 }
 
 parameters{

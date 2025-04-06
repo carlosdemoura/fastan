@@ -220,6 +220,31 @@ diagnostic_statistics = function(fit) {
 }
 
 
+#' Get percentage of parameters that are in HPD
+#'
+#' @param smry fastan summary
+#'
+#' @export
+#'
+#' @import stats
+percentage_hits = function(smry) {
+  table =
+    matrix(0, nrow = 4, ncol = 2) |>
+    as.data.frame() |>
+    `colnames<-`(c("p", "total")) |>
+    `rownames<-`(c("alpha", "lambda", "sigma2", "all"))
+  for (par in c("alpha", "lambda", "sigma2")) {
+    x =
+      smry[[par]][,,"real"] |>
+      {\(.) (. >= smry[[par]][,,"hpd_min"]) & (. <= smry[[par]][,,"hpd_max"])}() |>
+      as.numeric()
+    table[par, ] = c(mean(x), length(x))
+  }
+  table["all",] = stats::weighted.mean(table$p, table$total) |> c(sum(table$total))
+  table
+}
+
+
 #' Invert the signal of a column of lambda on the MCMC
 invert_lambda_signal = function() {
 }

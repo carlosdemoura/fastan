@@ -44,16 +44,16 @@ generate_data_sc = function(rows.by.group, columns, cicles = 1, semi.conf = F) {
     i = i + 1
     alpha[groups_limits[[1]][i] : groups_limits[[2]][i], ] =
       matrix(
-        runif(rows.by.group[i] * n.fac, -5, 5),
+        stats::runif(rows.by.group[i] * n.fac, -5, 5),
         nrow = rows.by.group[i],
         ncol = n.fac
       )
   }
 
-  sigma2 = runif(sum(rows.by.group), .5, 5)
+  sigma2 = stats::runif(sum(rows.by.group), .5, 5)
 
   epsilon = matrix(
-    rnorm(sum(rows.by.group)*columns*cicles, 0, sqrt(sigma2)) ,
+    stats::rnorm(sum(rows.by.group)*columns*cicles, 0, sqrt(sigma2)) ,
     ncol = columns*cicles,
     byrow = F
   )
@@ -112,10 +112,6 @@ generate_data_sc = function(rows.by.group, columns, cicles = 1, semi.conf = F) {
 #' @param factor_name .
 #'
 #' @return `fastan` model object
-#' About sentinel
-#' * sentinel + 0 missing data for mcmc
-#' * sentinel + 1 missing data, but do nothing
-#' * sentinel + 2 data for test of adjustment
 #'
 #' @export
 #'

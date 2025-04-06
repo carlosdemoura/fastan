@@ -8,7 +8,7 @@ library(tidyr)
 library(coda)
 library(ggridges)
 
-#devtools::load_all()
+devtools::load_all()
 #source("_shiny_online/utils.R")
 #source("utils.R")
 
