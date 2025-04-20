@@ -23,12 +23,6 @@ model_data_sc(data, value, group, row, col, semi.conf, factor_name = NULL)
 }
 \value{
 \code{fastan} model object
-About sentinel
-\itemize{
-\item sentinel + 0 missing data for mcmc
-\item sentinel + 1 missing data, but do nothing
-\item sentinel + 2 data for test of adjustment
-}
 }
 \description{
 Process data in \code{fastan} model format (confirmatory or semi-confirmatory models)

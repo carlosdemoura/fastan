@@ -315,10 +315,9 @@ PanelInference = tabPanel(
   fluidRow(
     column(
       width = 12,
-      element("#fdc6a7", "8vh", "Map")
+      uiOutput("PanelInference.prediction")
     )
   )
-
 
 )
 
@@ -371,12 +370,24 @@ server = function(input, output, session) {
       )
 
     output$lambdas = renderPlotly({
-      plot_lambda(project()$summary) %>%
+      if (real()) {
+        stat = c("mean", "real")
+      } else {
+        stat = c("mean")
+      }
+      #plot_lambda(project()$summary) %>%
+      plot_lambda(project()$summary, stat = stat) %>%
         ggplotly()
     })
 
     output$alpha_hpd = renderPlotly({
-      plot_hpd(project()$summary, "alpha", col = input$PanelInference.alpha_col |> as.integer()) %>%
+      if (real()) {
+        stat = c("mean", "real")
+      } else {
+        stat = c("mean")
+      }
+      #plot_hpd(project()$summary, "alpha", col = input$PanelInference.alpha_col |> as.integer()) %>%
+      plot_hpd(project()$summary, "alpha", stat = stat, col = input$PanelInference.alpha_col |> as.integer()) %>%
         ggplotly()
     })
 
@@ -386,10 +397,68 @@ server = function(input, output, session) {
     })
 
     output$sigma2 = renderPlotly({
-      plot_hpd(project()$summary, "sigma2", col = 1) %>%
+      if (real()) {
+        stat = c("mean", "real")
+      } else {
+        stat = c("mean", "median")
+      }
+      #plot_hpd(project()$summary, "sigma2", col = 1) %>%
+      plot_hpd(project()$summary, "sigma2", stat = stat, col = 1) %>%
         ggplotly()
     })
 
+    if (!is.null(project()$model$pred)) {
+    output$PanelInference.prediction = renderUI({
+      tagList(
+        fluidRow(
+          column(
+            width = 12,
+            element("#fdc6a7", "8vh", "predictions")
+          )
+        ),
+
+        fluidRow(
+          column(
+            width = 6,
+            plotlyOutput("pred_contrast")
+          ),
+          column(
+            width = 6,
+            plotlyOutput("pred_posterior")
+          )
+        )
+      )
+    })
+
+    output$pred_contrast = renderPlotly({
+      plot_missing(project()$model) %>%
+        ggplotly(source = "pred_contrast_source")
+    })
+    }
+  })
+
+  output$pred_posterior = renderPlotly({
+    coord = pred_contrast_click()
+    print(coord)
+    if (!is.null(coord)){
+      # pred_arg =
+      #   project()$model$pred %>%
+      #   dplyr::mutate(
+      #     x = 1:nrow(.)
+      #   ) %>%
+      #   dplyr::filter(row == coord[1], col == coord[2]) %>%
+      #   select(x) %>%
+      #   purrr::pluck(1)
+      #
+      # plot_posterior(project()$fit, "pred", row = pred_arg) %>%
+      #   ggplotly()
+      plot_posterior(project()$fit, "pred", row = coord$y) %>%
+        ggplotly()
+    }
+  })
+
+  pred_contrast_click <- reactive({
+    event_data("plotly_click", source = "pred_contrast_source")
   })
 
 

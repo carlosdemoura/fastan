@@ -229,6 +229,59 @@ plot_ridges = function(mod) {
 }
 
 
+#' Plot missing values pattern
+#'
+#' @export
+#'
+#' @import ggplot2
+#' @import dplyr
+plot_missing = function(mod, grid = T) {
+  df =
+    mod$pred |>
+    dplyr::mutate(
+      missing = factor(TRUE, levels = c(TRUE, FALSE)),
+      row     = factor(row, levels = rev(unique(row))),
+    )
+
+  # Add line with present value
+  for (i in 1:length(unique(df$row))) {
+    for (j in 1:length(unique(df$col))) {
+      r = unique(df$row)[i]
+      c = unique(df$col)[j]
+      if (dplyr::filter(df, row == r, col == c) |> nrow() == 0) {
+        df =
+          df |>
+          dplyr::bind_rows(tibble::tibble(
+            value = NA,
+            group = 1,
+            col = c,
+            row = factor(r),
+            missing = factor(FALSE, levels = c(TRUE, FALSE))
+          ))
+        stop = T
+        break
+      }
+    }
+    if(stop){break}
+  }
+
+  row_labels = levels(df$row)
+  row_labels[seq_along(row_labels) %% 5 < 4] = ""
+
+  ggplot(df, aes(col, row, fill = missing)) +
+    geom_tile() +
+    scale_fill_manual(
+      values = c("FALSE" = "white",   "TRUE" = "black"),
+      labels = c("FALSE" = "Present", "TRUE" = "Missing"),
+      guide = guide_legend(override.aes = list(color = "black", size = 1))
+    ) +
+    { if (grid){theme_minimal()} else {theme_classic() + theme(axis.ticks.y=element_blank())} } +
+    scale_y_discrete(labels = row_labels) +
+    labs(x = "Column", y = "Row", fill = "", title = "Missing pattern", subtitle = "Considering only rows with missings") +
+    theme(legend.position = "bottom", legend.direction = "horizontal")
+}
+
+
 #' ESSA PORRA TÁ CERTA?
 #'
 #' Print LaTeX table

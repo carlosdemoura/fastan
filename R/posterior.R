@@ -220,7 +220,7 @@ diagnostic_statistics = function(fit) {
 }
 
 
-#' Get percentage of parameters that are in HPD
+#' Get percentage of parameters that are in HPD from simdata
 #'
 #' @param smry fastan summary
 #'
