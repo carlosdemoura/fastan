@@ -94,11 +94,11 @@ plot_lambda = function(smry, stat = "mean") {
     geom_ribbon(aes(ymin = hpd_min, ymax = hpd_max), alpha = 0.2, color = NA) +
     {if ("mean" %in% stat)   geom_line(aes(y = mean)  , size = 1)} +
     {if ("median" %in% stat) geom_line(aes(y = median), size = 1)} +
-    {if ("real" %in% stat)   geom_line(aes(y = real)  , size = 1, color = "green")} +
+    {if ("real" %in% stat)   geom_line(aes(y = real)  , size = 1)} +
     scale_color_brewer(name = "Factor", palette = "Set1") +
     scale_fill_brewer(name = "Factor", palette = "Set1") +
     labs(
-      title = "lambda posterior (HPD & mean)",
+      title = paste0("lambda posterior (HPD & ", paste0(stat, collapse = "& "), ")"),
       x = "Column",
       y = "Value"
     ) +
