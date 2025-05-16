@@ -16,6 +16,10 @@
 #' @import stats
 #' @import utils
 generate_data_sc = function(rows.by.group, columns, cicles = 1, semi.conf = F) {
+  normalize = function(x) {
+    (x - min(x)) / (max(x)-min(x)) * 3
+  }
+
   #rows.by.group = rep(10, 3); columns = 8; cicles = 1; semi.conf = T
   stopifnot(
     "if the model is semi.conf there
@@ -36,9 +40,16 @@ generate_data_sc = function(rows.by.group, columns, cicles = 1, semi.conf = F) {
 
   for (i in 1:n.fac) {
     alpha[groups_limits[[1]][i] : groups_limits[[2]][i], i] = stats::runif(rows.by.group[i], -5, 5)
-
-    lambda[i, ] = stats::rnorm(columns, 0, 1) |> sort(decreasing = as.logical(i %/% 2))
+    for (j in 2:columns) {
+      lambda[i,j] = rnorm(1, lambda[i,j-1])
+    }
   }
+
+  lambda =
+    lambda |>
+    #apply(1, function(x){ x |> scale() |>  {\(.) if(min(.) <= 0) . + abs(min(.)) + .1 else . + .1}()}) |>
+    apply(1, normalize) |>
+    t()
 
   if (semi.conf) {
     i = i + 1
@@ -50,7 +61,7 @@ generate_data_sc = function(rows.by.group, columns, cicles = 1, semi.conf = F) {
       )
   }
 
-  sigma2 = stats::runif(sum(rows.by.group), .5, 5)
+  sigma2 = stats::runif(sum(rows.by.group), 1, 5)
 
   epsilon = matrix(
     stats::rnorm(sum(rows.by.group)*columns*cicles, 0, sqrt(sigma2)) ,

@@ -115,7 +115,7 @@ run_stan = function(model, init = NULL, chains = 1, ...) {
   if (is.null(init)) {
     init = fiat_init(model, chains)
   }
-  rstan::stan(file   = file.path("inst/stan/interface_fa_sc.stan"),
+  rstan::stan(file   = system.file("stan", "interface_fa_sc.stan", package = "fastan"),
               data   = adjust_data_interface(model),
               pars   = c("alpha", "lambda", "sigma2") |> {\(.) if (!is.null(model$pred)) append(., "pred") else .}(),
               init   = init,
@@ -138,7 +138,7 @@ run_stan = function(model, init = NULL, chains = 1, ...) {
 #' @import coda
 #' @import rstan
 #' @import stats
-summary_matrix = function(fit, model = NULL) {
+summary_matrix = function(fit, model = NULL, adjust = T) {
   samp = rstan::extract(fit)
   matrices = list()
 
@@ -173,7 +173,12 @@ summary_matrix = function(fit, model = NULL) {
     }
   }
 
-  sapply(matrices, function(x) { abind::abind(x, along = 3) })
+  smry = sapply(matrices, function(x) { abind::abind(x, along = 3) })
+  if (!is.null(model) & !is.null(model$real) & adjust) {
+    return(adjust_summary(smry))
+  } else {
+    return(smry)
+  }
 }
 
 
@@ -245,6 +250,16 @@ percentage_hits = function(smry) {
 }
 
 
-#' Invert the signal of a column of lambda on the MCMC
-invert_lambda_signal = function() {
+#' Adjust summary for real values
+#'
+#' @param smry fastan summary
+#'
+#' @export
+adjust_summary = function(smry) {
+  for (i in 1:dim(smry$alpha)[2]) {
+    c = (smry$alpha[1,1,"mean"] / smry$alpha[1,1,"real"]) |> unname()
+    smry$lambda[,,c("mean", "median", "sd", "hpd_min", "hpd_max", "hpd_amp")] = c * smry$lambda[,,c("mean", "median", "sd", "hpd_min", "hpd_max", "hpd_amp"), drop = F]
+    smry$alpha[,,c("mean", "median", "sd", "hpd_min", "hpd_max", "hpd_amp")]  = (1/c) * smry$alpha[,,c("mean", "median", "sd", "hpd_min", "hpd_max", "hpd_amp"), drop = F]
+  }
+  smry
 }

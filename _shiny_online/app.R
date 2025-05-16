@@ -337,7 +337,8 @@ ui = navbarPage(
 server = function(input, output, session) {
 
   project = reactive(readRDS(input$PanelHome.project_file$datapath))
-  real = reactive(!is.null(project()$model$real))
+  #real = reactive(!is.null(project()$model$real))
+  real = reactive(F)
 
   PanelConvergence.div_par_name = reactiveVal("Select Parameter")
   output$PanelConvergence.par_name = renderUI({
