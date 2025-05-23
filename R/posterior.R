@@ -257,9 +257,9 @@ percentage_hits = function(smry) {
 #' @export
 adjust_summary = function(smry) {
   for (i in 1:dim(smry$alpha)[2]) {
-    c = (smry$alpha[1,1,"mean"] / smry$alpha[1,1,"real"]) |> unname()
-    smry$lambda[,,c("mean", "median", "sd", "hpd_min", "hpd_max", "hpd_amp")] = c * smry$lambda[,,c("mean", "median", "sd", "hpd_min", "hpd_max", "hpd_amp"), drop = F]
-    smry$alpha[,,c("mean", "median", "sd", "hpd_min", "hpd_max", "hpd_amp")]  = (1/c) * smry$alpha[,,c("mean", "median", "sd", "hpd_min", "hpd_max", "hpd_amp"), drop = F]
+    c = (smry$lambda[i,1,"mean"] / smry$lambda[i,1,"real"]) |> unname()
+    smry$lambda[,,c("mean", "median", "sd", "hpd_min", "hpd_max", "hpd_amp")] = (1/c) * smry$lambda[,,c("mean", "median", "sd", "hpd_min", "hpd_max", "hpd_amp"), drop = F]
+    smry$alpha[,,c("mean", "median", "sd", "hpd_min", "hpd_max", "hpd_amp")]  = c * smry$alpha[,,c("mean", "median", "sd", "hpd_min", "hpd_max", "hpd_amp"), drop = F]
   }
   smry
 }
