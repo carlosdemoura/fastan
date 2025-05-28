@@ -181,15 +181,28 @@ model_data_sc = function(data, value, group, row, col, semi.conf, factor_name = 
     var_alpha_prior[sc_coor, ] = 10
   }
 
-  list(
-    data = data_fa,
-    dim = list(al_row  = max(data_fa$row),
-               al_col  = max(data_fa$col),
-               al_fac  = max(data_fa$group) - as.numeric(semi.conf)
-               ),
-    var_alpha_prior = var_alpha_prior,
-    labels = labels
+  mod =
+    list(
+      data = data_fa,
+      dim = list(al_row  = max(data_fa$row),
+                 al_col  = max(data_fa$col),
+                 al_fac  = max(data_fa$group) - as.numeric(semi.conf)
+                 ),
+      var_alpha_prior = var_alpha_prior,
+      labels = labels
   )
+
+  if(any(is.na(mod$data$value))) {
+    mod$pred =
+      mod$data |>
+      {\(.) dplyr::filter(., is.na(.$value))}()
+
+    mod$data =
+      mod$data |>
+      {\(.) dplyr::filter(., !is.na(.$value))}()
+  }
+
+  mod
 }
 
 

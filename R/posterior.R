@@ -256,10 +256,24 @@ percentage_hits = function(smry) {
 #'
 #' @export
 adjust_summary = function(smry) {
-  for (i in 1:dim(smry$alpha)[2]) {
-    c = (smry$lambda[i,1,"mean"] / smry$lambda[i,1,"real"]) |> unname()
-    smry$lambda[,,c("mean", "median", "sd", "hpd_min", "hpd_max", "hpd_amp")] = (1/c) * smry$lambda[,,c("mean", "median", "sd", "hpd_min", "hpd_max", "hpd_amp"), drop = F]
-    smry$alpha[,,c("mean", "median", "sd", "hpd_min", "hpd_max", "hpd_amp")]  = c * smry$alpha[,,c("mean", "median", "sd", "hpd_min", "hpd_max", "hpd_amp"), drop = F]
+  stats = c("mean", "median", "sd", "hpd_min", "hpd_max", "hpd_amp")
+  smry2 = smry
+  for (factor in 1:dim(smry$lambda)[1]) {
+
+    c = numeric(dim(smry$lambda)[2])
+    p = numeric(dim(smry$lambda)[2])
+
+    for (col in 1:dim(smry$lambda)[2]) {
+      c[col] = (smry$lambda[factor,col,"mean"] / smry$lambda[factor,col,"real"]) |> unname()
+      smry2$lambda[factor,,stats] = (1/c[col]) * smry$lambda[factor,,stats, drop = F]
+      smry2$alpha[factor,,stats]  = c[col]     * smry$alpha[factor,,stats, drop = F]
+      p[col] = percentage_hits(smry2)["all", "p"]
+    }
+
+    c = c[which(p == max(p))[1]]
+    smry$lambda[factor,,stats] = (1/c) * smry$lambda[factor,,stats, drop = F]
+    smry$alpha[factor,,stats]  = c     * smry$alpha[factor,,stats, drop = F]
+
   }
   smry
 }
