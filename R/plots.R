@@ -183,19 +183,26 @@ plot_trace = function(fit, par, row = 1, col = 1){
 #'
 #' @import dplyr
 #' @import ggplot2
-plot_diagnostic = function(fit, stat, par = NULL) {
-  stopifnot("stat must bet either 'rhat' or 'neff'" = stat %in% c("rhat", "neff"))
+plot_diagnostic = function(fit, stat, par = "all") {
+  stopifnot("stat must bet either 'rhat', 'neff', or 'geweke'" = stat %in% c("rhat", "neff", "geweke"))
 
-  df = diagnostic_statistics(fit) |>
-    {\(.) if(!is.null(par)) dplyr::filter(., .$par == !!par)
-      else .}() |>
-    dplyr::select(dplyr::all_of(stat)) |>
-    `colnames<-`("x")
+  if (stat == "geweke") {
+    df =
+      data.frame(
+        x = get_geweke(fit, par)
+      )
+  } else {
+    df = diagnostic_statistics(fit) |>
+      {\(.) if(par != "all") dplyr::filter(., .$par == !!par)
+        else .}() |>
+      dplyr::select(dplyr::all_of(stat)) |>
+      `colnames<-`("x")
+  }
 
   title =
     "Histogram of" |>
     paste(stat) |>
-    {\(.) if(is.null(par)) paste(., "for all parameters")
+    {\(.) if(par == "all") paste(., "for all parameters")
       else paste(., "for", par) }()
 
   ggplot(df, aes(x = x)) +
@@ -206,6 +213,32 @@ plot_diagnostic = function(fit, stat, par = NULL) {
       y = "Frequency"
     ) +
     theme_minimal()
+}
+
+
+#' Export most common plots of a project
+#'
+#' @param proj fastan project
+#'
+#' @export
+#'
+#' @import ggplot2
+plot_everything = function(proj) {
+  real = ifelse(!is.null(proj$model$real), T, F)
+  pred = ifelse(!is.null(proj$summary$pred), T, F)
+  if (all(real, pred)) {
+    for (fac in 1:proj$model$dim$al_fac) {
+      plot_hpd(proj$summary, "alpha", col = fac, stat = c("mean"))
+    }
+    plot_contrast(proj$summary, par = "alpha")
+    plot_contrast(proj$summary, par = "lambda")
+    plot_lambda(proj$summary)
+    plot_trace(proj$fit, par = "alpha")
+
+   # for para
+    plot_diagnostic(proj$fit, "rhat", "pred")
+
+  }
 }
 
 

@@ -44,7 +44,7 @@ model {
 
   for(k in 1:al_fac) {
     for(i in 1:al_row) {
-      alpha[i,k] ~ normal(0, var_alpha_prior[i,k]);
+      alpha[i,k] ~ normal(0, sqrt(var_alpha_prior[i,k]));
     }
     lambda[k,] ~ multi_normal(lambda_mean, lambda_cov);;
   }

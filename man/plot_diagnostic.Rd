@@ -4,7 +4,7 @@
 \alias{plot_diagnostic}
 \title{Plot Neff or Rhat}
 \usage{
-plot_diagnostic(fit, stat, par = NULL)
+plot_diagnostic(fit, stat, par = "all")
 }
 \arguments{
 \item{fit}{.}

@@ -138,7 +138,7 @@ run_stan = function(model, init = NULL, chains = 1, ...) {
 #' @import coda
 #' @import rstan
 #' @import stats
-summary_matrix = function(fit, model = NULL, adjust = T) {
+summary_matrix = function(fit, model = NULL) {
   samp = rstan::extract(fit)
   matrices = list()
 
@@ -173,12 +173,7 @@ summary_matrix = function(fit, model = NULL, adjust = T) {
     }
   }
 
-  smry = sapply(matrices, function(x) { abind::abind(x, along = 3) })
-  if (!is.null(model) & !is.null(model$real) & adjust) {
-    return(adjust_summary(smry))
-  } else {
-    return(smry)
-  }
+  sapply(matrices, function(x) { abind::abind(x, along = 3) })
 }
 
 
@@ -247,6 +242,24 @@ percentage_hits = function(smry) {
   }
   table["all",] = stats::weighted.mean(table$p, table$total) |> c(sum(table$total))
   table
+}
+
+#' Get gewekes
+#'
+#' @param fit stan fit
+#' @param par parameter
+#'
+#' @import rstan
+#' @import coda
+#' @import purrr
+#'
+#' @export
+get_geweke = function(fit, par = "all") {
+  fit |>
+    {\(.) if (par != "all") rstan::extract(., permuted = F, par = par)
+      else rstan::extract(., permuted = F)}() |>
+    apply(c(2, 3), function(x) {coda::geweke.diag(x) |> purrr::pluck(1) |> unname()} ) |>
+    as.vector()
 }
 
 

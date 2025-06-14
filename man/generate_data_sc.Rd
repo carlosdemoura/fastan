@@ -4,7 +4,13 @@
 \alias{generate_data_sc}
 \title{Generate data (confirmatory or semi-confirmatory models)}
 \usage{
-generate_data_sc(rows.by.group, columns, cicles = 1, semi.conf = F)
+generate_data_sc(
+  rows.by.group,
+  columns,
+  cicles = 1,
+  semi.conf = F,
+  param = list(alpha = c(-10, 10), lambda = c(0.1, 2), sigma2 = c(1, 5))
+)
 }
 \arguments{
 \item{rows.by.group}{integer vector; size (number of loadings - or rows in the wider format) of each group.}
@@ -13,7 +19,9 @@ generate_data_sc(rows.by.group, columns, cicles = 1, semi.conf = F)
 
 \item{cicles}{integer; UNDER DEVELOPMENT.}
 
-\item{semi.conf}{boolean:
+\item{semi.conf}{boolean:}
+
+\item{param}{list of parameters for generate data:
 \itemize{
 \item \code{TRUE} if it's semi-confirmatory (then the last group is considered to be the semi-confirmatory group);
 \item \code{FALSE} if it's confirmatory (DEFAULT).

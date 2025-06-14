@@ -4,6 +4,7 @@
 #' @param columns integer; number of columns in the wider format.
 #' @param cicles integer; UNDER DEVELOPMENT.
 #' @param semi.conf boolean:
+#' @param param list of parameters for generate data:
 #' * `TRUE` if it's semi-confirmatory (then the last group is considered to be the semi-confirmatory group);
 #' * `FALSE` if it's confirmatory (DEFAULT).
 #'
@@ -15,9 +16,9 @@
 #' @import tidyr
 #' @import stats
 #' @import utils
-generate_data_sc = function(rows.by.group, columns, cicles = 1, semi.conf = F) {
+generate_data_sc = function(rows.by.group, columns, cicles = 1, semi.conf = F, param = list(alpha = c(-10,10), lambda = c(.1,2), sigma2 = c(1,5))) {
   normalize = function(x) {
-    (x - min(x)) / (max(x)-min(x)) * 3
+    param$lambda[1] + (x - min(x)) / (max(x) - min(x)) * (param$lambda[2] - param$lambda[1])
   }
 
   #rows.by.group = rep(10, 3); columns = 8; cicles = 1; semi.conf = T
@@ -39,7 +40,7 @@ generate_data_sc = function(rows.by.group, columns, cicles = 1, semi.conf = F) {
                   nrow = n.fac)
 
   for (i in 1:n.fac) {
-    alpha[groups_limits[[1]][i] : groups_limits[[2]][i], i] = stats::runif(rows.by.group[i], -5, 5)
+    alpha[groups_limits[[1]][i] : groups_limits[[2]][i], i] = stats::runif(rows.by.group[i], param$alpha[1], param$alpha[2])
     for (j in 2:columns) {
       lambda[i,j] = rnorm(1, lambda[i,j-1])
     }
@@ -53,15 +54,21 @@ generate_data_sc = function(rows.by.group, columns, cicles = 1, semi.conf = F) {
 
   if (semi.conf) {
     i = i + 1
-    alpha[groups_limits[[1]][i] : groups_limits[[2]][i], ] =
+    mat1 =
       matrix(
-        stats::runif(rows.by.group[i] * n.fac, -5, 5),
+        rep(stats::runif(rows.by.group[i], param$alpha[1], param$alpha[2]), n.fac),
         nrow = rows.by.group[i],
         ncol = n.fac
-      )
+    )
+    mat2 =
+      replicate(
+        rows.by.group[i],
+        stats::rbeta(n.fac, 0.1, 0.2) |> {\(.) ./sum(.)}()
+      ) |> t()
+    alpha[groups_limits[[1]][i] : groups_limits[[2]][i], ] = mat1 * mat2 |> {\(.) ifelse(. < 1e-2, 0, .)}()
   }
 
-  sigma2 = stats::runif(sum(rows.by.group), 1, 5)
+  sigma2 = stats::runif(sum(rows.by.group), param$sigma2[1], param$sigma2[2])
 
   epsilon = matrix(
     stats::rnorm(sum(rows.by.group)*columns*cicles, 0, sqrt(sigma2)) ,
@@ -121,6 +128,7 @@ generate_data_sc = function(rows.by.group, columns, cicles = 1, semi.conf = F) {
 #' @param col string; name of the column containing columns/factor-levels.
 #' @param semi.conf .
 #' @param factor_name .
+#' @param normalize .
 #'
 #' @return `fastan` model object
 #'
@@ -128,7 +136,7 @@ generate_data_sc = function(rows.by.group, columns, cicles = 1, semi.conf = F) {
 #'
 #' @import dplyr
 #' @import utils
-model_data_sc = function(data, value, group, row, col, semi.conf, factor_name = NULL) {
+model_data_sc = function(data, value, group, row, col, semi.conf, factor_name = NULL, normalize = F) {
   #data = x; row = "row"; group = "group"; col = "col"; value = "value"
   labels = list(
     factor_level = unique(data[[col]])  ,
@@ -202,7 +210,33 @@ model_data_sc = function(data, value, group, row, col, semi.conf, factor_name = 
       {\(.) dplyr::filter(., !is.na(.$value))}()
   }
 
+  if (normalize) {
+    mod$data = normalize(mod$data, "value", "row")
+  }
+
   mod
+}
+
+
+#' Normalize df
+#' @import dplyr
+#' @import rlang
+normalize = function(df, value, row) {
+  value = rlang::ensym(value)
+  row = rlang::ensym(row)
+
+  df |>
+    dplyr::group_by(!!row) |>
+    dplyr::mutate(
+      !!value := (!!value - mean(!!value)) / sd(!!value)
+    ) |>
+    dplyr::ungroup()
+  # df |>
+  # dplyr::group_by_at(row) |>
+  # dplyr::mutate(
+  #   value = (value - mean(value)) / sd(value)
+  # ) |>
+  # dplyr::ungroup()
 }
 
 

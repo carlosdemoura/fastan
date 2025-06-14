@@ -4,7 +4,16 @@
 \alias{model_data_sc}
 \title{Process data in \code{fastan} model format (confirmatory or semi-confirmatory models)}
 \usage{
-model_data_sc(data, value, group, row, col, semi.conf, factor_name = NULL)
+model_data_sc(
+  data,
+  value,
+  group,
+  row,
+  col,
+  semi.conf,
+  factor_name = NULL,
+  normalize = F
+)
 }
 \arguments{
 \item{data}{data.frame in the longer format.}
@@ -20,6 +29,8 @@ model_data_sc(data, value, group, row, col, semi.conf, factor_name = NULL)
 \item{semi.conf}{.}
 
 \item{factor_name}{.}
+
+\item{normalize}{.}
 }
 \value{
 \code{fastan} model object
