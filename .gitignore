@@ -5,5 +5,5 @@
 .DS_Store
 .quarto
 _lab/proj/
-_shiny_online/fastan_shiny_prototype/
-_shiny_online/projetos/
+_lab/shiny_online/fastan_shiny_prototype/
+_lab/shiny_online/projetos/
