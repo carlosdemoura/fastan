@@ -24,3 +24,20 @@ fiat_groups_limits = function(x) {
   )
   return(y)
 }
+
+
+fastan_report = function(proj) {
+  paste0(
+    "Fastan project report",
+    "\n\ninfo\t\t"    , proj$info,
+    "\n\nFastan model",
+    "\ntype\t\t"      ,
+    "\ndata dim.\t"   ,
+    "\n\nSTAN args"   ,
+    "\nchains\t\t"    , length(proj$fit@stan_args),
+    "\niter\t\t"      , proj$fit@stan_args[[1]]$iter,
+    "\nwarmup\t\t"    , proj$fit@stan_args[[1]]$warmup,
+    "\nthinning\t"    , proj$fit@stan_args[[1]]$thin,
+    "\nseed\t\t"      , proj$fit@stan_args[[1]]$seed
+  )
+}

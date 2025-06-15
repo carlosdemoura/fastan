@@ -1,111 +1,53 @@
-library(shiny)
-library(glue)
-library(dplyr)
-library(plotly)
-library(sf)
-library(ggplot2)
-library(tidyr)
-library(coda)
-library(ggridges)
-
-devtools::load_all()
-#source("_shiny_online/utils.R")
-#source("utils.R")
-
-max_size_in_Mb_for_uploads = 500
-options(shiny.maxRequestSize = max_size_in_Mb_for_uploads*1024^2)
-
-element = function(color, height, title) {
-  div(
-    style = glue("
-      background-color: {color};
-      color: #3e3e3e;
-      font-size: 35px;
-      height: calc({height} - 10px);
-      line-height: calc({height} - 10px);
-      text-align: center;
-      margin: 5px 2.5px;
-      border-radius: 10px;
-    "),
-    title
-  )
+header_col = function(title, color, height, width) {
+  column(width,
+         div(
+           style = paste0(
+             "background-color:", color, ";",
+             "color: #3e3e3e;
+             font-size: 35px;
+             height: calc(",height," - 10px);",
+             "line-height: calc(", height," - 10px);",
+             "text-align: center;
+             margin: 5px 2.5px;
+             border-radius: 10px;
+             "),
+           title
+           )
+         )
 }
 
 
-##################
-###### Home ######
-##################
-PanelHome = tabPanel(
-  title = "Home",
+#' Title
+#'
+#' @return
+#'
+#' @import plotly
+ui = function() {
+####################
+######  Model ######
+####################
 
-  fluidRow(
-    column(
-      width = 8,
-      element("#55DA5E", "60vh", "List of all projects")
-    ),
-    column(
-      width = 4,
-      fileInput("PanelHome.project_file", NULL, buttonLabel = "Choose project", multiple = FALSE, accept = c(".rds"))
-    )
-  ),
-  fluidRow(
-    column(
-      width = 8,
-      tags$p("This is a prototype for an interface of a package under development. Some functions may be ill implemented.")
-    )
-  )
-)
-
-
-##################################
-###### Exploratory Analysis ######
-##################################
-PanelExplore = tabPanel(
-  title = "Explore",
-
-  fluidRow(
-    column(
-      width = 7,
-      element("#fdc6a7", "60vh", "GGridges")
-    ),
-    column(
-      width = 5,
-      element("#fdc6a7", "60vh", "Tests")
-    )
-  )
-)
-
-
-###############################
-###### Statistical Model ######
-###############################
 PanelModel = tabPanel(
   title = "Statistical Model",
+  fluidRow(fileInput("Model.project_file", NULL, buttonLabel = "Choose project", multiple = FALSE, accept = c(".rds"))),
+  fluidRow(header_col("Model", "#87C2CC", "12vh", 12)),
+  fluidRow(header_col("Likelihood", "#a8f2fe", "8vh", 6), header_col("Priors", "#a8f2fe", "8vh", 6)),
   fluidRow(
-    column(
-      width = 12,
-      element("#87C2CC", "12vh", "Model")
-    )
-  ),
-
-  fluidRow(
-    column(
-      width = 6,
-      element("#a8f2fe", "8vh", "Likelihood"),
-      uiOutput("PanelModel.like")
+    column(6,
+      uiOutput("Model.like")
     ),
-    column(
-      width = 6,
-      element("#a8f2fe", "8vh", "Priors"),
-      uiOutput("PanelModel.prior")
+    column(6,
+      uiOutput("Model.prior")
     )
   ),
 
+  fluidRow(header_col("Info", "#a8f2fe", "8vh", 6), header_col("STAN args.", "#a8f2fe", "8vh", 6)),
   fluidRow(
-    column(
-      width = 12,
-      element("#a8f2fe", "8vh", "Info"),
-      uiOutput("PanelModel.info")
+    column(6,
+    uiOutput("Model.info")
+    ),
+    column(6,
+    uiOutput("Model.stan")
     )
   )
 )
@@ -114,107 +56,74 @@ PanelModel = tabPanel(
 ##################################
 ###### Convergence Diagnose ######
 ##################################
+
 PanelConvergence = tabPanel(
   title = "Convergence Diagnose",
 
-  ### General Diagnose ###
+  fluidRow(header_col("Convergence Diagnose", "#1E929E", "12vh", 12)),
 
   fluidRow(
-    column(
-      width = 12,
-      element("#1E929E", "12vh", "General diagnose")
+    column(6,
+      verbatimTextOutput("Convergence.general_info_time")
+    ),
+    column(6,
+      verbatimTextOutput("Convergence.general_info_args")
     )
   ),
 
   fluidRow(
-    column(
-      width = 4,
-      verbatimTextOutput("PanelConvergence.general_info_date")
+    header_col("rhat",   "#27BDCC", "8vh", 4),
+    header_col("neff",   "#27BDCC", "8vh", 4),
+    header_col("geweke", "#27BDCC", "8vh", 4)
     ),
-    column(
-      width = 4,
-      verbatimTextOutput("PanelConvergence.general_info_time")
-    ),
-    column(
-      width = 4,
-      verbatimTextOutput("PanelConvergence.general_info_args")
-    )
-  ),
-
   fluidRow(
-    column(
-      width = 2,
-      selectInput("PanelConvergence.general_par",
-                  label = "Parameters",
-                  choices = c("All", "alpha", "lambda", "sigma2")
-                  )
+    column(4,
+      plotOutput("Convergence.general_rhat"),
     ),
-    column(
-      width = 5,
-      element("#27BDCC", "8vh", "Neff"),
-      plotlyOutput("PanelConvergence.neff_plot"),
-      verbatimTextOutput("PanelConvergence.neff_print")
+    column(4,
+      plotOutput("Convergence.general_neff"),
     ),
-    column(
-      width = 5,
-      element("#27BDCC", "8vh", "Rhat"),
-      plotlyOutput("PanelConvergence.rhat_plot"),
-      verbatimTextOutput("PanelConvergence.rhat_print")
+    column(4,
+      plotOutput("Convergence.general_geweke"),
     )
   ),
 
 
-  ### Specific Diagnose ###
-
   fluidRow(
-    column(
-      width = 12,
-      uiOutput("PanelConvergence.par_name")
+    column(12,
+      uiOutput("Convergence.par_name")
     )
   ),
 
   fluidRow(
-    column(
-      width = 3,
-      selectInput("PanelConvergence.par",
+    column(3,
+      selectInput("Convergence.par",
                   label = "Parameter",
                   choices = c("lp__", "alpha", "lambda", "sigma2")
       )),
-    column(
-      width = 3,
-      selectInput("PanelConvergence.row",
+    column(3,
+      selectInput("Convergence.row",
                   label = "Row",
                   choices = 1,
       )),
-    column(
-      width = 3,
-      selectInput("PanelConvergence.col",
+    column(3,
+      selectInput("Convergence.col",
                   label = "Column",
                   choices = 1,
       )),
-    column(
-      width = 3,
+    column(3,
       tags$div(style = "height: 25px;"),
-      actionButton("PanelConvergence.select", label = "Show diagnose")
+      actionButton("Convergence.select", label = "Show diagnose")
     )
   ),
 
   fluidRow(
-    column(
-      width = 12,
-      element("#27BDCC", "8vh", "Traceplot and sampled posterior")
-    )
-  ),
-
-  fluidRow(
-    column(
-      width = 6,
-      plotOutput("PanelConvergence.traceplot"),
+    column(6,
+      plotOutput("Convergence.traceplot"),
     ),
-    column(
-      width = 6,
+    column(6,
       checkboxGroupInput(
-        "PanelConvergence.density_type",
+        "Convergence.density_type",
         label = "Density sample",
         choices = list(
           "histogram" = "hist",
@@ -223,435 +132,243 @@ PanelConvergence = tabPanel(
         selected = c("hist", "dens"),
         inline = TRUE
       ),
-      plotOutput("PanelConvergence.density"),
+      plotOutput("Convergence.density"),
     )
   ),
 
   fluidRow(
     column(6),
     column(6,
-           verbatimTextOutput("PanelConvergence.stats")
+      verbatimTextOutput("Convergence.stats")
     )
   ),
 
   fluidRow(
-    column(
-      width = 6,
-      element("#27BDCC", "8vh", "Gelman-Rubin Diagnose"),
-      plotOutput("PanelConvergence.gr_plot"),
-      verbatimTextOutput("PanelConvergence.gr_print")
+    header_col("Gelman-Rubin", "#27BDCC", "8vh", 4),
+    header_col("Geweke", "#27BDCC", "8vh", 4),
+    header_col("Rhat & Neff", "#27BDCC", "8vh", 4)
+  ),
+
+  fluidRow(
+    column(4,
+      plotOutput("Convergence.gr_plot"),
+      verbatimTextOutput("Convergence.gr_print")
     ),
 
-    column(
-      width = 6,
-      element("#27BDCC", "8vh", "Rhat & Neff"),
+    column(4,
       tags$div(style = "height: 20px;"),
-      verbatimTextOutput("PanelConvergence.rhat_neff"),
+      verbatimTextOutput("Convergence.rhat_neff"),
       tags$div(style = "height: 30px;"),
+    ),
 
-      element("#27BDCC", "8vh", "Geweke Diagnose"),
+    column(4,
       tags$div(style = "height: 20px;"),
-      verbatimTextOutput("PanelConvergence.geweke")
+      verbatimTextOutput("Convergence.geweke")
     )
   )
 
 )
 
 
-################################
-###### Bayesian Inference ######
-################################
+########################
+######  Inference ######
+########################
+
 PanelInference = tabPanel(
   title = "Bayesian Inference",
 
+  fluidRow(header_col("Posterior analysis", "#fdc6a7", "10vh", 12)),
+
   fluidRow(
-    column(
-      width = 12,
-      element("#fdc6a7", "8vh", "Alpha posterior")
+    column(12,
+      uiOutput("Inference.accuracy")
     )
   ),
 
+  fluidRow(header_col("Alpha posterior", "#fdc6a7", "8vh", 12)),
+
   fluidRow(
-    column(
-      selectInput("PanelInference.alpha_col", label = "Column", choices = 1),
-      width = 6,
-      plotlyOutput("alpha_hpd")
+    column(7,
+      selectInput("Inference.alpha_col", label = "Column", choices = 1),
+      plotly::plotlyOutput("alpha_hpd")
     ),
-    column(
-      selectInput("PanelInference.contrast_type", label = "Type", choices = c("mean", "median", "hpd_contains_0")),
-      width = 6,
-      plotlyOutput("contrast")
+    column(5,
+      selectInput("Inference.contrast_type", label = "Type", choices = c("mean", "hpd_contains_0")),
+      plotly::plotlyOutput("contrast")
+    )
+  ),
+
+  fluidRow(header_col("Lambda posterior", "#fdc6a7", "8vh", 12)),
+
+  fluidRow(
+    column(8,
+      plotly::plotlyOutput("lambdas")
+    )
+  ),
+
+  fluidRow(header_col("Sigma^2 posterior", "#fdc6a7", "8vh", 12)),
+
+  fluidRow(
+    column(12,
+      plotly::plotlyOutput("sigma2")
     )
   ),
 
   fluidRow(
-    column(
-      width = 12,
-      element("#fdc6a7", "8vh", "Lambda posterior")
-    )
-  ),
-
-  fluidRow(
-    column(
-      width = 8,
-      plotlyOutput("lambdas")
-    )
-  ),
-
-  fluidRow(
-    column(
-      width = 12,
-      element("#fdc6a7", "8vh", "sigma2 posterior")
-    )
-  ),
-
-  fluidRow(
-    column(
-      width = 12,
-      plotlyOutput("sigma2")
-    )
-  ),
-
-  fluidRow(
-    column(
-      width = 12,
-      uiOutput("PanelInference.prediction")
+    column(12,
+      uiOutput("Inference.prediction")
     )
   )
 
 )
 
-
-############################
-###### User Interface ######
-############################
-ui = navbarPage(
-  title = "FAstan App",
-  PanelHome, PanelExplore, PanelModel, PanelConvergence, PanelInference
+navbarPage(
+  title = "fastan App",
+  PanelModel, PanelConvergence, PanelInference
 )
 
+}
 
-####################
-###### Server ######
-####################
-server = function(input, output, session) {
 
-  project = reactive(readRDS(input$PanelHome.project_file$datapath))
-  #real = reactive(!is.null(project()$model$real))
-  real = reactive(F)
+#' Title
+#'
+#' @param proj
+#' @param input
+#' @param output
+#' @param session
+#'
+#' @return
+#'
+#' @import plotly
+#' @import coda
+#' @import rstan
+#' @import dplyr
+server = function(proj = NULL, input, output, session) {
 
-  PanelConvergence.div_par_name = reactiveVal("Select Parameter")
-  output$PanelConvergence.par_name = renderUI({
-    tags$div(PanelConvergence.div_par_name(),
-    style = "
-    background-color: #1E929E;
-    color: #3e3e3e;
-    font-size: 35px;
-    height: calc(12vh - 10px);
-    line-height: calc(12vh - 10px);
-    text-align: center;
-    margin: 5px 2.5px;
-    border-radius: 10px;
-    "
-    )
+server0 = function(input, output, session) {
+
+  project_rv = reactiveVal()
+  if (!is.null(proj)) {
+    project_rv(proj)
+  }
+  observeEvent(input$Model.project_file, {
+    input$Model.project_file$datapath |>
+      readRDS() |>
+      project_rv()
+  })
+  project = reactive({
+    req(project_rv())
   })
 
-  PanelHome.project_file.clicks  = reactiveVal(0)
-  PanelConvergence.select.clicks = reactiveVal(0)
+  real = reactive(!is.null(project()$model$real))
+  stat = reactive(c("mean") |> {\(.) if (real()) c(., "real") else .}())
 
 
   ### PanelInference ###
 
-  observeEvent(input$PanelHome.project_file, {
-    PanelHome.project_file.clicks(PanelHome.project_file.clicks()+1)
-
+  observeEvent(project(), {
     updateSelectInput(
-      session, "PanelInference.alpha_col",
+      session, "Inference.alpha_col",
       choices = 1:project()$model$dim$al_fac
       )
 
-    output$lambdas = renderPlotly({
-      if (real()) {
-        stat = c("mean", "real")
-      } else {
-        stat = c("mean")
-      }
-      #plot_lambda(project()$summary) %>%
-      plot_lambda(project()$summary, stat = stat) %>%
-        ggplotly()
+    output$lambdas = plotly::renderPlotly({
+      plot_lambda(project()$summary, stat = ifelse("real" %in% stat(), "real", "mean")) |>
+        plotly::ggplotly()
     })
 
-    output$alpha_hpd = renderPlotly({
-      if (real()) {
-        stat = c("mean", "real")
-      } else {
-        stat = c("mean")
-      }
-      #plot_hpd(project()$summary, "alpha", col = input$PanelInference.alpha_col |> as.integer()) %>%
-      plot_hpd(project()$summary, "alpha", stat = stat, col = input$PanelInference.alpha_col |> as.integer()) %>%
-        ggplotly()
+    output$alpha_hpd = plotly::renderPlotly({
+      plot_hpd(project()$summary, "alpha", stat = stat(), col = input$Inference.alpha_col |> as.integer()) |>
+        plotly::ggplotly()
     })
 
-    output$contrast = renderPlotly({
-      plot_contrast(project()$summary, "alpha", stat = input$PanelInference.contrast_type) %>%
-        ggplotly()
+    output$contrast = plotly::renderPlotly({
+      plot_contrast(project()$summary, "alpha", stat = input$Inference.contrast_type) |>
+        plotly::ggplotly()
     })
 
-    output$sigma2 = renderPlotly({
-      if (real()) {
-        stat = c("mean", "real")
-      } else {
-        stat = c("mean", "median")
-      }
-      #plot_hpd(project()$summary, "sigma2", col = 1) %>%
-      plot_hpd(project()$summary, "sigma2", stat = stat, col = 1) %>%
-        ggplotly()
+    output$sigma2 = plotly::renderPlotly({
+      plot_hpd(project()$summary, "sigma2", stat = stat(), col = 1) |>
+        plotly::ggplotly()
     })
 
-    if (!is.null(project()$model$pred)) {
-    output$PanelInference.prediction = renderUI({
+    updateSelectInput(
+      session, "Inference.contrast_type",
+      choices =  c("mean", "hpd_contains_0") |> {\(.) if (real()) c("mean", "real", "hpd_contains_0") else .}()
+    )
+
+    if (real()) {
+    output$Inference.accuracy = renderUI({
       tagList(
-        fluidRow(
-          column(
-            width = 12,
-            element("#fdc6a7", "8vh", "predictions")
-          )
-        ),
+        fluidRow(header_col("Accuracy", "#fdc6a7", "8vh", 12)),
 
         fluidRow(
-          column(
-            width = 6,
-            plotlyOutput("pred_contrast")
-          ),
-          column(
-            width = 6,
-            plotlyOutput("pred_posterior")
+          column(12,
+            verbatimTextOutput("Inference.accuracy_table")
           )
         )
       )
     })
 
-    output$pred_contrast = renderPlotly({
-      plot_missing(project()$model) %>%
-        ggplotly(source = "pred_contrast_source")
-    })
+    output$Inference.accuracy_table = renderPrint(fastan::percentage_hits(project()$summary))
     }
-  })
 
-  output$pred_posterior = renderPlotly({
-    coord = pred_contrast_click()
-    print(coord)
-    if (!is.null(coord)){
-      # pred_arg =
-      #   project()$model$pred %>%
-      #   dplyr::mutate(
-      #     x = 1:nrow(.)
-      #   ) %>%
-      #   dplyr::filter(row == coord[1], col == coord[2]) %>%
-      #   select(x) %>%
-      #   purrr::pluck(1)
-      #
-      # plot_posterior(project()$fit, "pred", row = pred_arg) %>%
-      #   ggplotly()
-      plot_posterior(project()$fit, "pred", row = coord$y) %>%
-        ggplotly()
-    }
-  })
-
-  pred_contrast_click <- reactive({
-    event_data("plotly_click", source = "pred_contrast_source")
-  })
-
-
-  ### PanelConvergence ###
-
-  observeEvent(input$PanelHome.project_file, {
     if (!is.null(project()$model$pred)) {
-      updateSelectInput(
-        session, "PanelConvergence.par",
-        choices = c("lp__", "alpha", "lambda", "sigma2", "pred")
-      )
-    }
+    output$Inference.prediction = renderUI({
+      tagList(
+        fluidRow(header_col("Predictions", "#fdc6a7", "8vh", 12)),
 
-    output$PanelConvergence.general_info_date = renderPrint({
-      project()$fit@date |>
-        {\(.) cat(
-          "MCMC Date\n",
-          .,
-          sep = ""
-        )}()
-    })
-
-    output$PanelConvergence.general_info_time = renderPrint({
-      table = rstan::get_elapsed_time(project()$fit) / 60
-      cat("Elapsed time (mins.)\n")
-      print(table |> round(2))
-      tot = table |> sum()
-      cat("Total: ", tot |> round(2), " mins.  = ", (tot / 60) |> round(2), " h.", sep = "")
-    })
-
-    output$PanelConvergence.general_info_args = renderPrint({
-      project()$fit@stan_args[[1]] |>
-        {\(.) cat(
-          "STAN arguments",
-          "\nChains\t", length(project()$fit@stan_args), "\t\tIter\t"  , .$iter,
-          "\nThin\t", .$thin                           , "\t\tWarmup\t", .$warmup
-        )}()
-    })
-
-  })
-
-
-  ### PanelConvergence ###
-
-  observeEvent(c(input$PanelHome.project_file, input$PanelConvergence.general_par), {
-    if (PanelHome.project_file.clicks()) {
-
-    par = input$PanelConvergence.general_par |>
-      {\(.) if (. == "All") NULL  else . }()
-
-    diag_smry = diagnostic_statistics(project()$fit) |>
-      {\(.) if(!is.null(par)) dplyr::filter(., par == !!par) else .}() |>
-      {\(.) list(rhat = .$rhat,
-                 neff = .$neff)}()
-
-    output$PanelConvergence.neff_plot = renderPlotly({
-      plot_diagnostic(project()$fit, stat = "neff", par = par) %>%
-        ggplotly()
-    })
-
-    output$PanelConvergence.rhat_plot = renderPlotly({
-      plot_diagnostic(project()$fit, stat = "rhat", par = par) %>%
-        ggplotly()
-    })
-
-    output$PanelConvergence.neff_print = renderPrint({
-      summary(diag_smry$neff)
-    })
-
-    output$PanelConvergence.rhat_print = renderPrint({
-      summary(diag_smry$rhat)
-    })
-
-  }})
-
-
-  ### PanelConvergence ###
-
-  observeEvent(input$PanelConvergence.par, {
-
-    if        (input$PanelConvergence.par == "lp__") {
-      row = col = 1
-    } else if (input$PanelConvergence.par == "alpha") {
-      row = project()$model$dim$al_row
-      col = project()$model$dim$al_fac
-    } else if (input$PanelConvergence.par == "lambda") {
-      row = project()$model$dim$al_fac
-      col = project()$model$dim$al_col
-    } else if (input$PanelConvergence.par == "sigma2") {
-      row = project()$model$dim$al_row
-      col = 1
-    } else if (input$PanelConvergence.par == "pred") {
-      row = dim(project()$summary$pred)[1]
-      col = 1
-    }
-
-    updateSelectInput(
-      session, "PanelConvergence.row",
-      choices = 1:row
-    )
-
-    updateSelectInput(
-      session, "PanelConvergence.col",
-      choices = 1:col
-    )
-  })
-
-
-  ### PanelConvergence ###
-
-  observeEvent(input$PanelConvergence.select, {
-    PanelConvergence.select.clicks(PanelConvergence.select.clicks() + 1)
-
-    row = as.integer(input$PanelConvergence.row)
-    col = as.integer(input$PanelConvergence.col)
-    par = input$PanelConvergence.par
-    par_name = ifelse(par == "lp__",
-                      "lp__", paste0(par, "[", row, ",", col, "]"))
-    combinedchains = get_chains_mcmc(project()$fit, par_name)
-
-    PanelConvergence.div_par_name(paste0("Selected parameter: ", par_name))
-
-    output$PanelConvergence.traceplot = renderPlot({
-      plot_trace(
-        project()$fit,
-        par, row, col
+        fluidRow(
+          column(
+            width = 6,
+            plotly::plotlyOutput("pred_contrast")
+          ),
+          column(
+            width = 6,
+            plotly::plotlyOutput("pred_posterior")
+          )
+        )
       )
     })
 
-    output$PanelConvergence.gr_plot = renderPlot({
-      coda::gelman.plot(combinedchains)
+    output$pred_contrast = plotly::renderPlotly({
+      plot_missing(project()$model) |>
+        plotly::ggplotly(source = "pred_contrast_source")
     })
-
-    output$PanelConvergence.gr_print = renderPrint({
-      coda::gelman.diag(combinedchains)
-    })
-
-    output$PanelConvergence.geweke = renderPrint({
-      coda::geweke.diag(combinedchains)
-    })
-
-    output$PanelConvergence.stats = renderPrint({
-      project()$summary[[par]][row, col, ] |>
-        as.matrix() |>
-        as.data.frame() |>
-        mutate(V1 = V1 |> round(2)) |>
-        as.matrix() |>
-        t() |>
-        `row.names<-`("") |>
-        print()
-    })
-
-    density_type = input$PanelConvergence.density_type |> as.vector()
-
-    output$PanelConvergence.density = renderPlot({
-      plot_posterior(project()$fit, par, row, col, density_type)
-    })
-
-    output$PanelConvergence.rhat_neff = renderPrint({
-      diagnostic_statistics(project()$fit) |>
-        dplyr::filter(par == !!par,
-                      row == !!row,
-                      col == !!col) |>
-        dplyr::select(dplyr::all_of(c("neff", "rhat"))) |>
-        unlist()
-    })
-
-  })
-
-
-  ### PanelConvergence ###
-
-  observeEvent(input$PanelConvergence.density_type, {
-    row  = as.integer(input$PanelConvergence.row)
-    col  = as.integer(input$PanelConvergence.col)
-    par  = input$PanelConvergence.par
-    type = input$PanelConvergence.density_type |> as.vector()
-
-    if (PanelConvergence.select.clicks()) {
-      output$PanelConvergence.density = renderPlot({
-        plot_posterior(project()$fit, par, row, col, type)
-      })
     }
   })
+  # # FALTA IMPLEMENTAR: CLICAR NO MISSING PATTERN E PLOTAR DENSIDADE
+  # output$pred_posterior = plotly::renderPlotly({
+  #   coord = pred_contrast_click()
+  #   print(coord)
+  #   if (!is.null(coord)){
+  #     # pred_arg =
+  #     #   project()$model$pred |>
+  #     #   dplyr::mutate(
+  #     #     x = 1:nrow(.)
+  #     #   ) |>
+  #     #   dplyr::filter(row == coord[1], col == coord[2]) |>
+  #     #   select(x) |>
+  #     #   purrr::pluck(1)
+  #     #
+  #     # plot_posterior(project()$fit, "pred", row = pred_arg) |>
+  #     #   plotly::ggplotly()
+  #     plot_posterior(project()$fit, "pred", row = coord$y) |>
+  #       plotly::ggplotly()
+  #   }
+  # })
+  #
+  # pred_contrast_click <- reactive({
+  #   event_data("plotly_click", source = "pred_contrast_source")
+  # })
 
 
   ### PanelModel ###
 
-  observeEvent(input$PanelHome.project_file, {
+  observeEvent(project(), {
     dim = project()$model$dim
 
-    output$PanelModel.like = renderUI({
+    output$Model.like = renderUI({
       paste0(
         "<p>\\[ X = \\alpha \\lambda + \\epsilon \\]</p>",
         "<p><b>Where:</b></p>",
@@ -666,7 +383,7 @@ server = function(input, output, session) {
         withMathJax()
     })
 
-    output$PanelModel.prior = renderUI({
+    output$Model.prior = renderUI({
       paste0(
         "<p>\\[ \\lambda_{i, \\bullet} = N_m(0_{", dim$al_col, "\\times 1}, I_{", dim$al_col, "}); \\]</p>",
         "<p>\\[ \\sigma^2 \\sim Gama_n(0.1, 0.1). \\]</p>"
@@ -675,7 +392,7 @@ server = function(input, output, session) {
         withMathJax()
     })
 
-    output$PanelModel.info = renderUI({
+    output$Model.info = renderUI({
       paste0(
         "<p>About: mock data</p>",
         "<p>Date:  09/02/2025</p>",
@@ -684,18 +401,206 @@ server = function(input, output, session) {
         HTML() |>
         withMathJax()
     })
+  })
 
+  ### PanelConvergence - General ###
+
+  observeEvent(project(), {
+    if (!is.null(project()$model$pred)) {  # Brief adjust on specific diagnose
+      updateSelectInput(
+        session, "Convergence.par",
+        choices = c("lp__", "alpha", "lambda", "sigma2", "pred")
+      )
+    }
+
+    output$Convergence.general_info_time = renderPrint({
+      table = rstan::get_elapsed_time(project()$fit) / 60
+      cat("Elapsed time (mins.)\n")
+      print(table |> round(2))
+      tot = table |> sum()
+      cat("Total: ", tot |> round(2), " mins.  = ", (tot / 60) |> round(2), " h.", sep = "")
+    })
+
+    output$Convergence.general_info_args = renderPrint({
+      project()$fit@stan_args[[1]] |>
+        {\(.) cat(
+          "STAN arguments",
+          "\nChains\t", length(project()$fit@stan_args), "\t\tIter\t"  , .$iter,
+          "\nThin\t", .$thin                           , "\t\tWarmup\t", .$warmup
+        )}()
+    })
+
+    output$Convergence.general_rhat = renderPlot({
+      plot_all_diagnostic(project()$fit, "rhat")
+    })
+
+    output$Convergence.general_neff = renderPlot({
+      plot_all_diagnostic(project()$fit, "neff")
+    })
+
+    output$Convergence.general_geweke = renderPlot({
+      plot_all_diagnostic(project()$fit, "geweke")
+    })
+  })
+
+  ### PanelConvergence ###
+
+  Convergence.div_par_name = reactiveVal("Select Parameter")
+  output$Convergence.par_name = renderUI({
+    tags$div(Convergence.div_par_name(),
+             style =
+               "background-color: #1E929E;
+    color: #3e3e3e;
+    font-size: 35px;
+    height: calc(12vh - 10px);
+    line-height: calc(12vh - 10px);
+    text-align: center;
+    margin: 5px 2.5px;
+    border-radius: 10px;"
+    )
+  })
+
+  Convergence.select.clicks = reactiveVal(0)
+
+
+  ### PanelConvergence ###
+
+
+
+  ### PanelConvergence ###
+
+  observeEvent(input$Model.project_file, {
+
+  })
+
+
+  ### PanelConvergence ###
+
+  observeEvent(input$Convergence.par, {
+
+    if        (input$Convergence.par == "lp__") {
+      row = col = 1
+    } else if (input$Convergence.par == "alpha") {
+      row = project()$model$dim$al_row
+      col = project()$model$dim$al_fac
+    } else if (input$Convergence.par == "lambda") {
+      row = project()$model$dim$al_fac
+      col = project()$model$dim$al_col
+    } else if (input$Convergence.par == "sigma2") {
+      row = project()$model$dim$al_row
+      col = 1
+    } else if (input$Convergence.par == "pred") {
+      row = dim(project()$summary$pred)[1]
+      col = 1
+    }
+
+    updateSelectInput(
+      session, "Convergence.row",
+      choices = 1:row
+    )
+
+    updateSelectInput(
+      session, "Convergence.col",
+      choices = 1:col
+    )
+  })
+
+
+  ### PanelConvergence ###
+
+  observeEvent(input$Convergence.select, {
+    Convergence.select.clicks(Convergence.select.clicks() + 1)
+
+    row = as.integer(input$Convergence.row)
+    col = as.integer(input$Convergence.col)
+    par = input$Convergence.par
+    par_name = ifelse(par == "lp__",
+                      "lp__", paste0(par, "[", row, ",", col, "]"))
+    combinedchains = get_chains_mcmc(project()$fit, par_name)
+
+    Convergence.div_par_name(paste0("Selected parameter: ", par_name))
+
+    output$Convergence.traceplot = renderPlot({
+      plot_trace(
+        project()$fit,
+        par, row, col
+      )
+    })
+
+    output$Convergence.gr_plot = renderPlot({
+      coda::gelman.plot(combinedchains)
+    })
+
+    output$Convergence.gr_print = renderPrint({
+      coda::gelman.diag(combinedchains)
+    })
+
+    output$Convergence.geweke = renderPrint({
+      coda::geweke.diag(combinedchains)
+    })
+
+    output$Convergence.stats = renderPrint({
+      project()$summary[[par]][row, col, ] |>
+        as.matrix() |>
+        as.data.frame() |>
+        mutate(V1 = V1 |> round(2)) |>
+        as.matrix() |>
+        t() |>
+        `row.names<-`("") |>
+        print()
+    })
+
+    density_type = input$Convergence.density_type |> as.vector()
+
+    output$Convergence.density = renderPlot({
+      plot_posterior(project()$fit, par, row, col, density_type)
+    })
+
+    output$Convergence.rhat_neff = renderPrint({
+      diagnostic_statistics(project()$fit) |>
+        dplyr::filter(par == !!par,
+                      row == !!row,
+                      col == !!col) |>
+        dplyr::select(dplyr::all_of(c("neff", "rhat"))) |>
+        unlist()
+    })
+
+  })
+
+
+  ### PanelConvergence ###
+
+  observeEvent(input$Convergence.density_type, {
+    row  = as.integer(input$Convergence.row)
+    col  = as.integer(input$Convergence.col)
+    par  = input$Convergence.par
+    type = input$Convergence.density_type |> as.vector()
+
+    if (Convergence.select.clicks()) {
+      output$Convergence.density = renderPlot({
+        plot_posterior(project()$fit, par, row, col, type)
+      })
+    }
   })
 
 }
 
-
-##########################
-###### Let it Shiny ######
-##########################
-
-shiny4fastan = function() {
-  shinyApp(ui = ui, server = server)
+server0
 }
 
-shiny4fastan()
+
+#' Title
+#'
+#' @param proj
+#'
+#' @return
+#'
+#' @export
+shiny = function(proj = NULL, max_size = 500) {
+  library(shiny)
+  options(shiny.maxRequestSize = max_size*1024^2)
+  shinyApp(ui = ui(), server = server(proj))
+}
+
+devtools::load_all()
+shiny()

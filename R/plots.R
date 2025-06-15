@@ -31,7 +31,7 @@ plot_contrast = function(smry, par = "alpha", stat = "mean") {
       }
     } +
     scale_y_reverse() +
-    labs(fill = ifelse(stat == "hpd_contains_0", "Factor is significative", stat),
+    labs(fill = ifelse(stat == "hpd_contains_0", "Factor is\nsignificative", stat),
          x = "Factor",
          y = "Row",
          title = "Alpha posterior contrast")
@@ -177,9 +177,11 @@ plot_trace = function(fit, par, row = 1, col = 1){
 }
 
 
-#' Plot Neff or Rhat
+#' Plot diagnostic stats
 #'
 #' @inheritParams plot_mock_doc
+#'
+#' @export
 #'
 #' @import dplyr
 #' @import ggplot2
@@ -213,6 +215,39 @@ plot_diagnostic = function(fit, stat, par = "all") {
       y = "Frequency"
     ) +
     theme_minimal()
+}
+
+
+#' Plot diagnostic stats in grid for each parameter
+#'
+#' @inheritParams plot_mock_doc
+#'
+#' @export
+#'
+#' @import gridExtra
+plot_all_diagnostic = function(fit, stat) {
+  plots = list()
+
+  for (par in c("all", "alpha", "lambda", "sigma2")) {
+    plots[[par]] = plot_diagnostic(fit, stat, par)
+  }
+  if (fit@par_dims$pred[1]) {  # ("pred" %in% fit@model_pars) não funciona
+    plots[["pred"]] = plot_diagnostic(fit, stat, "pred")
+  }
+
+  if (stat == "geweke"){
+    statlp = get_geweke(fit, "lp__")
+  } else if (stat == "rhat") {
+    statlp = summary(fit, par = "lp__")$summary[,"Rhat"]
+  } else if (stat == "neff") {
+    statlp = summary(fit, par = "lp__")$summary[,"n_eff"]
+  }
+  plots[["lp__"]] =
+    ggplot() +
+    annotate("text", x=0, y=0, label = paste(stat, "of lp__\n", round(statlp, 6))) +
+    theme_void()
+
+  gridExtra::grid.arrange(grobs = plots, ncol=2)
 }
 
 

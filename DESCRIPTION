@@ -12,6 +12,7 @@ Imports:
     abind,
     coda,
     dplyr,
+    gridExtra,
     posterior,
     purrr,
     rlang,
