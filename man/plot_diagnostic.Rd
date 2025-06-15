@@ -2,7 +2,7 @@
 % Please edit documentation in R/plots.R
 \name{plot_diagnostic}
 \alias{plot_diagnostic}
-\title{Plot Neff or Rhat}
+\title{Plot diagnostic stats}
 \usage{
 plot_diagnostic(fit, stat, par = "all")
 }
@@ -14,5 +14,5 @@ plot_diagnostic(fit, stat, par = "all")
 \item{par}{.}
 }
 \description{
-Plot Neff or Rhat
+Plot diagnostic stats
 }

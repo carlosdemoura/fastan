@@ -301,6 +301,9 @@ plot_ridges = function(mod) {
 #'
 #' @export
 #'
+#' @inheritParams plot_mock_doc
+#' @param grid .
+#'
 #' @import ggplot2
 #' @import dplyr
 plot_missing = function(mod, grid = T) {

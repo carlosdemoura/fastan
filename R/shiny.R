@@ -1,3 +1,9 @@
+#' Shiny column with HTML header
+#'
+#' @param title .
+#' @param color .
+#' @param height .
+#' @param width .
 header_col = function(title, color, height, width) {
   column(width,
          div(
@@ -17,19 +23,16 @@ header_col = function(title, color, height, width) {
 }
 
 
-#' Title
-#'
-#' @return
+#' Shiny UI
 #'
 #' @import plotly
 ui = function() {
 ####################
 ######  Model ######
 ####################
-
 PanelModel = tabPanel(
   title = "Statistical Model",
-  fluidRow(fileInput("Model.project_file", NULL, buttonLabel = "Choose project", multiple = FALSE, accept = c(".rds"))),
+  fluidRow(fileInput("General.project_file", NULL, buttonLabel = "Choose project", multiple = FALSE, accept = c(".rds"))),
   fluidRow(header_col("Model", "#87C2CC", "12vh", 12)),
   fluidRow(header_col("Likelihood", "#a8f2fe", "8vh", 6), header_col("Priors", "#a8f2fe", "8vh", 6)),
   fluidRow(
@@ -56,11 +59,10 @@ PanelModel = tabPanel(
 ##################################
 ###### Convergence Diagnose ######
 ##################################
-
 PanelConvergence = tabPanel(
   title = "Convergence Diagnose",
 
-  fluidRow(header_col("Convergence Diagnose", "#1E929E", "12vh", 12)),
+  fluidRow(header_col("Convergence Diagnose", "#87C2CC", "12vh", 12)),
 
   fluidRow(
     column(6,
@@ -72,9 +74,9 @@ PanelConvergence = tabPanel(
   ),
 
   fluidRow(
-    header_col("rhat",   "#27BDCC", "8vh", 4),
-    header_col("neff",   "#27BDCC", "8vh", 4),
-    header_col("geweke", "#27BDCC", "8vh", 4)
+    header_col("rhat",   "#a8f2fe", "8vh", 4),
+    header_col("neff",   "#a8f2fe", "8vh", 4),
+    header_col("geweke", "#a8f2fe", "8vh", 4)
     ),
   fluidRow(
     column(4,
@@ -144,9 +146,9 @@ PanelConvergence = tabPanel(
   ),
 
   fluidRow(
-    header_col("Gelman-Rubin", "#27BDCC", "8vh", 4),
-    header_col("Geweke", "#27BDCC", "8vh", 4),
-    header_col("Rhat & Neff", "#27BDCC", "8vh", 4)
+    header_col("Gelman-Rubin", "#a8f2fe", "8vh", 4),
+    header_col("Rhat & Neff", "#a8f2fe", "8vh", 4),
+    header_col("Geweke", "#a8f2fe", "8vh", 4)
   ),
 
   fluidRow(
@@ -173,11 +175,10 @@ PanelConvergence = tabPanel(
 ########################
 ######  Inference ######
 ########################
-
 PanelInference = tabPanel(
   title = "Bayesian Inference",
 
-  fluidRow(header_col("Posterior analysis", "#fdc6a7", "10vh", 12)),
+  fluidRow(header_col("Posterior analysis", "#87C2CC", "10vh", 12)),
 
   fluidRow(
     column(12,
@@ -185,7 +186,7 @@ PanelInference = tabPanel(
     )
   ),
 
-  fluidRow(header_col("Alpha posterior", "#fdc6a7", "8vh", 12)),
+  fluidRow(header_col("Alpha posterior", "#a8f2fe", "8vh", 12)),
 
   fluidRow(
     column(7,
@@ -198,7 +199,7 @@ PanelInference = tabPanel(
     )
   ),
 
-  fluidRow(header_col("Lambda posterior", "#fdc6a7", "8vh", 12)),
+  fluidRow(header_col("Lambda posterior", "#a8f2fe", "8vh", 12)),
 
   fluidRow(
     column(8,
@@ -206,7 +207,7 @@ PanelInference = tabPanel(
     )
   ),
 
-  fluidRow(header_col("Sigma^2 posterior", "#fdc6a7", "8vh", 12)),
+  fluidRow(header_col("Sigma^2 posterior", "#a8f2fe", "8vh", 12)),
 
   fluidRow(
     column(12,
@@ -223,21 +224,18 @@ PanelInference = tabPanel(
 )
 
 navbarPage(
-  title = "fastan App",
+  title = "fastan app",
   PanelModel, PanelConvergence, PanelInference
 )
-
 }
 
 
-#' Title
+#' Shiny server
 #'
-#' @param proj
-#' @param input
-#' @param output
-#' @param session
-#'
-#' @return
+#' @param proj .
+#' @param input .
+#' @param output .
+#' @param session .
 #'
 #' @import plotly
 #' @import coda
@@ -251,8 +249,8 @@ server0 = function(input, output, session) {
   if (!is.null(proj)) {
     project_rv(proj)
   }
-  observeEvent(input$Model.project_file, {
-    input$Model.project_file$datapath |>
+  observeEvent(input$General.project_file, {
+    input$General.project_file$datapath |>
       readRDS() |>
       project_rv()
   })
@@ -300,7 +298,7 @@ server0 = function(input, output, session) {
     if (real()) {
     output$Inference.accuracy = renderUI({
       tagList(
-        fluidRow(header_col("Accuracy", "#fdc6a7", "8vh", 12)),
+        fluidRow(header_col("Accuracy", "#a8f2fe", "8vh", 12)),
 
         fluidRow(
           column(12,
@@ -316,7 +314,7 @@ server0 = function(input, output, session) {
     if (!is.null(project()$model$pred)) {
     output$Inference.prediction = renderUI({
       tagList(
-        fluidRow(header_col("Predictions", "#fdc6a7", "8vh", 12)),
+        fluidRow(header_col("Predictions", "#a8f2fe", "8vh", 12)),
 
         fluidRow(
           column(
@@ -406,13 +404,6 @@ server0 = function(input, output, session) {
   ### PanelConvergence - General ###
 
   observeEvent(project(), {
-    if (!is.null(project()$model$pred)) {  # Brief adjust on specific diagnose
-      updateSelectInput(
-        session, "Convergence.par",
-        choices = c("lp__", "alpha", "lambda", "sigma2", "pred")
-      )
-    }
-
     output$Convergence.general_info_time = renderPrint({
       table = rstan::get_elapsed_time(project()$fit) / 60
       cat("Elapsed time (mins.)\n")
@@ -443,44 +434,19 @@ server0 = function(input, output, session) {
     })
   })
 
-  ### PanelConvergence ###
+  ### PanelConvergence - Specific - Options ###
 
-  Convergence.div_par_name = reactiveVal("Select Parameter")
-  output$Convergence.par_name = renderUI({
-    tags$div(Convergence.div_par_name(),
-             style =
-               "background-color: #1E929E;
-    color: #3e3e3e;
-    font-size: 35px;
-    height: calc(12vh - 10px);
-    line-height: calc(12vh - 10px);
-    text-align: center;
-    margin: 5px 2.5px;
-    border-radius: 10px;"
-    )
-  })
+  observeEvent(project(), {
+    if (!is.null(project()$model$pred)) {
+      updateSelectInput(
+        session, "Convergence.par",
+        choices = c("lp__", "alpha", "lambda", "sigma2", "pred")
+      )
+    }
 
-  Convergence.select.clicks = reactiveVal(0)
-
-
-  ### PanelConvergence ###
-
-
-
-  ### PanelConvergence ###
-
-  observeEvent(input$Model.project_file, {
-
-  })
-
-
-  ### PanelConvergence ###
-
-  observeEvent(input$Convergence.par, {
-
-    if        (input$Convergence.par == "lp__") {
+    if        (input$Convergence.par == "lp__")   {
       row = col = 1
-    } else if (input$Convergence.par == "alpha") {
+    } else if (input$Convergence.par == "alpha")  {
       row = project()$model$dim$al_row
       col = project()$model$dim$al_fac
     } else if (input$Convergence.par == "lambda") {
@@ -489,7 +455,7 @@ server0 = function(input, output, session) {
     } else if (input$Convergence.par == "sigma2") {
       row = project()$model$dim$al_row
       col = 1
-    } else if (input$Convergence.par == "pred") {
+    } else if (input$Convergence.par == "pred")   {
       row = dim(project()$summary$pred)[1]
       col = 1
     }
@@ -503,10 +469,18 @@ server0 = function(input, output, session) {
       session, "Convergence.col",
       choices = 1:col
     )
+
   })
 
+  Convergence.div_par_name = reactiveVal("Select Parameter")
+  output$Convergence.par_name = renderUI({
+    header_col(Convergence.div_par_name(), "#a8f2fe", "8vh", 12)
+  })
 
-  ### PanelConvergence ###
+  Convergence.select.clicks = reactiveVal(0)
+
+
+  ### PanelConvergence - Specific - plots ###
 
   observeEvent(input$Convergence.select, {
     Convergence.select.clicks(Convergence.select.clicks() + 1)
@@ -568,7 +542,7 @@ server0 = function(input, output, session) {
   })
 
 
-  ### PanelConvergence ###
+  ### PanelConvergence - Specific - density ###
 
   observeEvent(input$Convergence.density_type, {
     row  = as.integer(input$Convergence.row)
@@ -589,18 +563,14 @@ server0
 }
 
 
-#' Title
+#' Shiny App
 #'
-#' @param proj
-#'
-#' @return
+#' @param proj .
+#' @param upload_size .
 #'
 #' @export
-shiny = function(proj = NULL, max_size = 500) {
+shiny = function(proj = NULL, upload_size = 500) {
   library(shiny)
-  options(shiny.maxRequestSize = max_size*1024^2)
+  options(shiny.maxRequestSize = upload_size*1024^2)
   shinyApp(ui = ui(), server = server(proj))
 }
-
-devtools::load_all()
-shiny()
