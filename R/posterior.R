@@ -111,7 +111,7 @@ adjust_data_interface = function(model) {
 #' @export
 #'
 #' @import rstan
-run_stan = function(model, init = NULL, chains = 1, ...) {
+stan = function(model, init = NULL, chains = 1, ...) {
   if (is.null(init)) {
     init = fiat_init(model, chains)
   }

@@ -26,6 +26,11 @@ fiat_groups_limits = function(x) {
 }
 
 
+#' Title
+#'
+#' @param proj .
+
+#' @export
 fastan_report = function(proj) {
   paste0(
     "Fastan project report",

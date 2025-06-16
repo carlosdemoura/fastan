@@ -16,9 +16,9 @@
 #' @import tidyr
 #' @import stats
 #' @import utils
-generate_data_sc = function(rows.by.group, columns, cicles = 1, semi.conf = F, param = list(alpha = c(-10,10), lambda = c(.1,2), sigma2 = c(1,5))) {
+generate_data_sc = function(rows.by.group, columns, cicles = 1, semi.conf = F, real = list(alpha = c(-10,10), lambda = c(1,2), sigma2 = c(1,5))) {
   normalize = function(x) {
-    param$lambda[1] + (x - min(x)) / (max(x) - min(x)) * (param$lambda[2] - param$lambda[1])
+    real$lambda[1] + (x - min(x)) / (max(x) - min(x)) * (real$lambda[2] - real$lambda[1])
   }
 
   #rows.by.group = rep(10, 3); columns = 8; cicles = 1; semi.conf = T
@@ -40,7 +40,7 @@ generate_data_sc = function(rows.by.group, columns, cicles = 1, semi.conf = F, p
                   nrow = n.fac)
 
   for (i in 1:n.fac) {
-    alpha[groups_limits[[1]][i] : groups_limits[[2]][i], i] = stats::runif(rows.by.group[i], param$alpha[1], param$alpha[2])
+    alpha[groups_limits[[1]][i] : groups_limits[[2]][i], i] = stats::runif(rows.by.group[i], real$alpha[1], real$alpha[2])
     for (j in 2:columns) {
       lambda[i,j] = rnorm(1, lambda[i,j-1])
     }
@@ -56,7 +56,7 @@ generate_data_sc = function(rows.by.group, columns, cicles = 1, semi.conf = F, p
     i = i + 1
     mat1 =
       matrix(
-        rep(stats::runif(rows.by.group[i], param$alpha[1], param$alpha[2]), n.fac),
+        rep(stats::runif(rows.by.group[i], real$alpha[1], real$alpha[2]), n.fac),
         nrow = rows.by.group[i],
         ncol = n.fac
     )
@@ -68,7 +68,7 @@ generate_data_sc = function(rows.by.group, columns, cicles = 1, semi.conf = F, p
     alpha[groups_limits[[1]][i] : groups_limits[[2]][i], ] = mat1 * mat2 |> {\(.) ifelse(. < 1e-2, 0, .)}()
   }
 
-  sigma2 = stats::runif(sum(rows.by.group), param$sigma2[1], param$sigma2[2])
+  sigma2 = stats::runif(sum(rows.by.group), real$sigma2[1], real$sigma2[2])
 
   epsilon = matrix(
     stats::rnorm(sum(rows.by.group)*columns*cicles, 0, sqrt(sigma2)) ,
@@ -110,25 +110,22 @@ generate_data_sc = function(rows.by.group, columns, cicles = 1, semi.conf = F, p
                     row   = factor(.$row,   levels = unique(.$row))
       )}()
 
-  mod = model_data_sc(x, "value", "group", "row", "col", semi.conf)
-  mod$real = list(alpha = alpha,
-                  lambda = lambda,
-                  sigma2 = as.matrix(sigma2)
-                  )
-  return(mod)
+  data = process_data_sc(x, "value", "group", "row", "col")
+  data$real = list(alpha = alpha,
+                   lambda = lambda,
+                   sigma2 = as.matrix(sigma2)
+                   )
+  return(data)
 }
 
 
 #' Process data in `fastan` model format (confirmatory or semi-confirmatory models)
 #'
-#' @param data data.frame in the longer format.
+#' @param data data.frame in the longer format. ### obs já arranjado já com grupos como fatores, já com último fator como grupo semi.conf se for o caso
 #' @param value string; name of the column containing values.
 #' @param group string; name of the column containing groups.
 #' @param row string; name of the column containing rows/loadings.
 #' @param col string; name of the column containing columns/factor-levels.
-#' @param semi.conf .
-#' @param factor_name .
-#' @param normalize .
 #'
 #' @return `fastan` model object
 #'
@@ -136,7 +133,7 @@ generate_data_sc = function(rows.by.group, columns, cicles = 1, semi.conf = F, p
 #'
 #' @import dplyr
 #' @import utils
-model_data_sc = function(data, value, group, row, col, semi.conf, factor_name = NULL, normalize = F) {
+process_data_sc = function(data, value, group, row, col) {
   #data = x; row = "row"; group = "group"; col = "col"; value = "value"
   labels = list(
     factor_level = unique(data[[col]])  ,
@@ -144,16 +141,8 @@ model_data_sc = function(data, value, group, row, col, semi.conf, factor_name = 
     loading      = unique(data[[row]])
   )
 
-  if (!is.null(factor_name)) {
-    labels$factor_name = factor_name
-  } else {
-    labels$factor_name = levels(data[[col]])
-    if (semi.conf) {
-      labels$factor_name = utils::head(labels$factor_name, -1)
-    }
-  }
-
-  data_fa = data |>
+  data_fa =
+    data |>
     dplyr::rename("value" = !!value,
                   "row"   = !!row,
                   "col"   = !!col,
@@ -167,80 +156,47 @@ model_data_sc = function(data, value, group, row, col, semi.conf, factor_name = 
       group  = .$group |> factor(labels$group)        |> as.numeric()
     )}()
 
-  coor = data_fa |>
-    dplyr::select(all_of(c("row", "group"))) |>
-    unique()
+  group.sizes =
+    data_fa |>
+    dplyr::select(dplyr::all_of(c("row", "group"))) |>
+    unique() |>
+    dplyr::group_by_at("group") |>
+    dplyr::mutate(n = dplyr::n()) |>
+    dplyr::select(!dplyr::all_of("row")) |>
+    unique() |>
+    dplyr::ungroup() |>
+    dplyr::select(dplyr::all_of("n")) |>
+    purrr::pluck(1)
 
-  var_alpha_prior =
-    matrix(1e-2, nrow = max(data_fa$row), ncol = max(data_fa$group))
-  var_alpha_prior[cbind(coor$row, coor$group)] = 10
-
-  if (semi.conf) {
-    sc_coor =
-      data_fa |>
-      dplyr::filter( group == length(labels$group)  ) |>
-      dplyr::select(all_of(c("row"))) |>
-      unique() |>
-      c() |>
-      unlist() |>
-      unname()
-
-    var_alpha_prior = var_alpha_prior[,1:(max(data_fa$group) - as.numeric(semi.conf))]
-    var_alpha_prior[sc_coor, ] = 10
-  }
-
-  mod =
+  data =
     list(
-      data = data_fa,
-      dim = list(al_row  = max(data_fa$row),
-                 al_col  = max(data_fa$col),
-                 al_fac  = max(data_fa$group) - as.numeric(semi.conf)
-                 ),
-      var_alpha_prior = var_alpha_prior,
+      x = data_fa,
+      dim = list(row = max(data_fa$row),
+                 col = max(data_fa$col),
+                 group.n = max(data_fa$group),
+                 group.sizes = group.sizes),
       labels = labels
   )
 
-  if(any(is.na(mod$data$value))) {
-    mod$pred =
-      mod$data |>
+  if(any(is.na(data$x$value))) {
+    data$pred =
+      data$x |>
       {\(.) dplyr::filter(., is.na(.$value))}()
 
-    mod$data =
-      mod$data |>
+    data$x =
+      data$x |>
       {\(.) dplyr::filter(., !is.na(.$value))}()
   }
 
-  if (normalize) {
-    mod$data = normalize(mod$data, "value", "row")
-  }
-
-  mod
+  data
 }
 
 
-#' Normalize df
-#' @import dplyr
-#' @import rlang
-normalize = function(df, value, row) {
-  value = rlang::ensym(value)
-  row = rlang::ensym(row)
-
-  df |>
-    dplyr::group_by(!!row) |>
-    dplyr::mutate(
-      !!value := (!!value - mean(!!value)) / sd(!!value)
-    ) |>
-    dplyr::ungroup()
-  # df |>
-  # dplyr::group_by_at(row) |>
-  # dplyr::mutate(
-  #   value = (value - mean(value)) / sd(value)
-  # ) |>
-  # dplyr::ungroup()
-}
-
-
-#' Process data in `fastan` model format (cluster model)
-model_data_cluster = function() {
+#' Title
+#'
+#' @param proj .
+#'
+#' @export
+generate_data_from_project = function(proj, resize = list(x = 1, y = 1)) {
 
 }
