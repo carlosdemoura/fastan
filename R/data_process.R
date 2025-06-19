@@ -16,7 +16,7 @@
 #' @import tidyr
 #' @import stats
 #' @import utils
-generate_data_sc = function(rows.by.group, columns, cicles = 1, semi.conf = F, real = list(alpha = c(1,6), lambda = c(1,2), sigma2 = c(1,5))) {
+generate_data = function(rows.by.group, columns, cicles = 1, semi.conf = F, real = list(alpha = c(1,6), lambda = c(1,2), sigma2 = c(1,5))) {
   normalize = function(x) {
     real$lambda[1] + (x - min(x)) / (max(x) - min(x)) * (real$lambda[2] - real$lambda[1])
   }
@@ -110,7 +110,7 @@ generate_data_sc = function(rows.by.group, columns, cicles = 1, semi.conf = F, r
                     row   = factor(.$row,   levels = unique(.$row))
       )}()
 
-  data = process_data_sc(x, "value", "group", "row", "col")
+  data = process_data(x, "value", "group", "row", "col")
   data$real = list(alpha = alpha,
                    lambda = lambda,
                    sigma2 = as.matrix(sigma2)
@@ -133,7 +133,7 @@ generate_data_sc = function(rows.by.group, columns, cicles = 1, semi.conf = F, r
 #'
 #' @import dplyr
 #' @import utils
-process_data_sc = function(data, value, group, row, col) {
+process_data = function(data, value, group, row, col) {
   #data = x; row = "row"; group = "group"; col = "col"; value = "value"
   labels = list(
     factor_level = unique(data[[col]])  ,
