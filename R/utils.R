@@ -43,3 +43,16 @@ fastan_report = function(proj) {
     "\nseed\t\t"      , proj$fit@stan_args[[1]]$seed
   )
 }
+
+
+#' Title
+#'
+#' @param obj .
+#' @param class .
+validate_proj_arg = function(obj, class) {
+  if (inherits(obj, "project")) {
+    return(obj[[class]])
+  } else {
+    return(obj)
+  }
+}

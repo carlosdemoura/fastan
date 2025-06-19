@@ -174,6 +174,9 @@ summary_matrix = function(fit, model = NULL) {
     if ((parameter == "pred") & !is.null(model)) {
       matrices[[parameter]][["row_"]] = model$pred$row |> as.matrix()
       matrices[[parameter]][["col_"]] = model$pred$col |> as.matrix()
+      if (all(!is.na(model$pred$value))) {
+        matrices[[parameter]][["real"]] = model$pred$value |> as.matrix()
+      }
     }
 
     if (!is.null(model) & !is.null(model$real) & (parameter != "pred")) {
@@ -181,7 +184,9 @@ summary_matrix = function(fit, model = NULL) {
     }
   }
 
-  sapply(matrices, function(x) { abind::abind(x, along = 3) })
+  matrices = sapply(matrices, function(x) { abind::abind(x, along = 3) })
+  class(matrices) = "summary"
+  return(matrices)
 }
 
 
@@ -215,15 +220,32 @@ get_chains_mcmc = function(fit, param) {
 #'
 #' @import dplyr
 #' @import tidyr
-diagnostic_statistics = function(fit) {
+#' @import coda
+#' @import rstan
+#' @import purrr
+diagnostic = function(fit) {
+  fit = validate_proj_arg(fit, "fit")
+
+  get_geweke = function(fit) {
+    x =
+      fit |>
+      rstan::extract(permuted = F) |>
+      apply(c(2, 3), function(x) {coda::geweke.diag(x) |> purrr::pluck(1) |> unname()} )
+
+    rbind(colnames(x), unname(x)) |>
+      t() |>
+      as.data.frame() |>
+      `colnames<-`(c("par", paste0("geweke:", 1:nrow(x))))
+  }
+
   df =
     summary(fit)$summary |>
     as.data.frame() |>
     {\(.) dplyr::mutate(., par = row.names(.))}() |>
     dplyr::select(dplyr::all_of(c("n_eff", "Rhat", "par"))) |>
-    dplyr::rename(neff = "n_eff", rhat = "Rhat") |>
+    merge(get_geweke(fit), by = "par") |>
     tidyr::extract(par, into = c("par", "row", "col"), regex = "([a-zA-Z0-9_]+)\\[(\\d+),(\\d+)\\]", convert = TRUE)
-  df[nrow(df),] = c(df[nrow(df),1:2], "lp__", 1, 1)
+  df[is.na(df$par),c("par", "row", "col")] = c("lp__", 1, 1)
   df
 }
 
@@ -236,36 +258,22 @@ diagnostic_statistics = function(fit) {
 #'
 #' @import stats
 percentage_hits = function(smry) {
+  smry = validate_proj_arg(smry, "summary")
   table =
-    matrix(0, nrow = 4, ncol = 2) |>
+    matrix(0, nrow = 5, ncol = 2) |>
     as.data.frame() |>
     `colnames<-`(c("p", "total")) |>
-    `rownames<-`(c("alpha", "lambda", "sigma2", "all"))
-  for (par in c("alpha", "lambda", "sigma2")) {
+    `rownames<-`(c("alpha", "lambda", "sigma2", "pred", "all"))
+  for (par in c("alpha", "lambda", "sigma2", "pred")) {
     x =
       smry[[par]][,,"real"] |>
       {\(.) (. >= smry[[par]][,,"hpd_min"]) & (. <= smry[[par]][,,"hpd_max"])}() |>
       as.numeric()
     table[par, ] = c(mean(x), length(x))
   }
+  if (!("pred" %in% names(smry))) {
+    table = table[-4,]
+  }
   table["all",] = stats::weighted.mean(table$p, table$total) |> c(sum(table$total))
   table
-}
-
-#' Get gewekes
-#'
-#' @param fit stan fit
-#' @param par parameter
-#'
-#' @import rstan
-#' @import coda
-#' @import purrr
-#'
-#' @export
-get_geweke = function(fit, par = "all") {
-  fit |>
-    {\(.) if (par != "all") rstan::extract(., permuted = F, par = par)
-      else rstan::extract(., permuted = F)}() |>
-    apply(c(2, 3), function(x) {coda::geweke.diag(x) |> purrr::pluck(1) |> unname()} ) |>
-    as.vector()
 }

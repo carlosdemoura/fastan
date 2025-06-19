@@ -10,6 +10,7 @@
 #' @import dplyr
 #' @import tidyr
 plot_contrast = function(smry, par = "alpha", stat = "mean") {
+  smry = validate_proj_arg(smry, "summary")
   df = smry[[par]][,,stat, drop=F] |>
     as.data.frame() |>
     {\(.) `colnames<-`(., 1:ncol(.))}() |>
@@ -47,6 +48,7 @@ plot_contrast = function(smry, par = "alpha", stat = "mean") {
 #'
 #' @import ggplot2
 plot_hpd = function(smry, par, row = NULL, col = NULL, stat = c("mean", "median")) {
+  smry = validate_proj_arg(smry, "summary")
   df = matrix_to_df(smry[[par]])
   loc.name = list(row=row,col=col) |> {\(.) names(.)[!sapply(., is.null)]}()
   df = df[df[[loc.name]] == get(loc.name), ]
@@ -87,6 +89,7 @@ plot_hpd = function(smry, par, row = NULL, col = NULL, stat = c("mean", "median"
 #'
 #' @import ggplot2
 plot_lambda = function(smry, stat = "mean") {
+  smry = validate_proj_arg(smry, "summary")
   df = matrix_to_df(smry$lambda)
 
   ggplot(df, aes(x = col, group = factor(row), color = factor(row), fill = factor(row))) +
@@ -117,6 +120,7 @@ plot_lambda = function(smry, stat = "mean") {
 #' @import ggplot2
 #' @import rstan
 plot_posterior = function(fit, par, row = 1, col = 1, type = c("hist", "dens")) {
+  fit = validate_proj_arg(fit, "fit")
   df = rstan::extract(fit)[[par]] |>
     {\(.) if (par == "lp__") .
       else .[,row,col]}() |>
@@ -152,7 +156,8 @@ plot_posterior = function(fit, par, row = 1, col = 1, type = c("hist", "dens")) 
 #' @import rstan
 #' @import dplyr
 #' @import tidyr
-plot_trace = function(fit, par, row = 1, col = 1){
+plot_trace = function(fit, par, row = 1, col = 1) {
+  fit = validate_proj_arg(fit, "fit")
   par_ = par |>
     {\(.) if (par == "lp__") .
       else paste0(., "[", row, ",", col, "]")}()
@@ -188,6 +193,7 @@ plot_trace = function(fit, par, row = 1, col = 1){
 #' @import dplyr
 #' @import ggplot2
 plot_diagnostic = function(fit, stat, par = "all") {
+  fit = validate_proj_arg(fit, "fit")
   stopifnot("stat must bet either 'rhat', 'neff', or 'geweke'" = stat %in% c("rhat", "neff", "geweke"))
 
   if (stat == "geweke") {
@@ -228,6 +234,7 @@ plot_diagnostic = function(fit, stat, par = "all") {
 #'
 #' @import gridExtra
 plot_all_diagnostic = function(fit, stat) {
+  fit = validate_proj_arg(fit, "fit")
   plots = list()
 
   for (par in c("all", "alpha", "lambda", "sigma2")) {
@@ -289,9 +296,10 @@ plot_everything = function(proj) {
 #' @import ggplot2
 #' @import dplyr
 #' @import tibble
-plot_missing = function(mod, grid = T) {
+plot_missing = function(data, grid = T) {
+  data = validate_proj_arg(data, "data")
   df =
-    mod$pred |>
+    data$pred |>
     dplyr::mutate(
       missing = factor(TRUE, levels = c(TRUE, FALSE)),
       row     = factor(row, levels = rev(unique(row))),
@@ -300,6 +308,7 @@ plot_missing = function(mod, grid = T) {
   # Add line with present value
   for (i in 1:length(unique(df$row))) {
     for (j in 1:length(unique(df$col))) {
+      stop = F
       r = unique(df$row)[i]
       c = unique(df$col)[j]
       if (dplyr::filter(df, row == r, col == c) |> nrow() == 0) {
