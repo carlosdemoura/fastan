@@ -1,7 +1,8 @@
 prior_sc = function(data, dependence.lambda = F, dependence.alpha = F, semi.conf) {
   prior = list(lambda = list(mean = lambda_mean(data$dim$col)),
                alpha  = list(mean = alpha_mean(data$dim$group.sizes, semi.conf)),
-               sigma2 = list(scale = .01, shape=.01)
+               sigma2 = list(shape=.01, scale = .01),
+               semi.conf = semi.conf
                )
 
   if (dependence.lambda) {

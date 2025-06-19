@@ -8,21 +8,22 @@
 #' @return list; for each
 #'
 #' @export
-fiat_init = function(model, chains) {
+fiat_init = function(proj, chains) {
+  n.fac = n.fac(proj)
   init = list()
 
   for (i in 1:chains) {
-    init[[i]] = list(alpha  = matrix(1, nrow = model$dim$al_row,  ncol = model$dim$al_fac),
-                     lambda = matrix(0, nrow = model$dim$al_fac,  ncol = model$dim$al_col),
-                     sigma2 = matrix(1, nrow = model$dim$al_row,  ncol = 1)
+    init[[i]] = list(alpha  = matrix(1, nrow = proj$data$dim$row,  ncol = n.fac),
+                     lambda = matrix(0, nrow = n.fac            ,  ncol = proj$data$dim$col),
+                     sigma2 = matrix(1, nrow = proj$data$dim$row,  ncol = 1)
                      )
 
-    if(!is.null(model$pred)) {
-      init[[i]]$pred = matrix(0, nrow = nrow(model$pred), ncol = 1)
+    if(!is.null(proj$data$pred)) {
+      init[[i]]$pred = matrix(0, nrow = nrow(proj$data$pred), ncol = 1)
     }
   }
 
-  return(init)
+  init
 }
 
 
@@ -72,30 +73,36 @@ fiat_init_from_last_value = function(fit) {
 #'
 #' @import purrr
 #' @import dplyr
-adjust_data_interface = function(model) {
+interface = function(proj) {
   data = list(
-    obs             = model$data[,1] |> as.vector() |> unname() |> purrr::pluck(1),
-    obs_coor        = model$data[,2:3] |> as.matrix() |> unname(),
-    al_row          = model$dim$al_row,
-    al_col          = model$dim$al_col,
-    al_fac          = model$dim$al_fac,
-    var_alpha_prior = model$var_alpha_prior
-    ) |>
-    {\(.) c(., list(obs_n = length(.$obs)))}()
+    n_row        = proj$data$dim$row,
+    n_col        = proj$data$dim$col,
+    n_fac        = n.fac(proj),
 
-  if (is.null(model$pred)) {
+    sigma2_shape = proj$prior$sigma2$shape,
+    sigma2_scale = proj$prior$sigma2$scale,
+    alpha_var    = proj$prior$alpha$var,
+    lambda_cov   = proj$prior$lambda$cov,
+    lambda_mean  = proj$prior$lambda$mean,
+
+    obs          = proj$data$x[,1] |> as.vector() |> unname() |> purrr::pluck(1),
+    obs_coor     = proj$data$x[,2:3] |> as.matrix() |> unname()
+  ) |>
+    {\(.) c(., list(n_obs = length(.$obs)))}()
+
+  if (is.null(proj$data$pred)) {
     data_pred = list(
       pred_coor     = matrix(1:2, nrow = 1),
-      pred_n        = 0
+      n_pred        = 0
       )
   } else {
     data_pred = list(
-      pred_coor     = model$pred[,2:3] |> as.matrix() |> unname()
+      pred_coor     = proj$data$pred[,2:3] |> as.matrix() |> unname()
       ) |>
-      {\(.) c(., list(pred_n = nrow(.$pred_coor)))}()
+      {\(.) c(., list(n_pred = nrow(.$pred_coor)))}()
   }
 
-  return(c(data, data_pred))
+  c(data, data_pred)
 }
 
 
@@ -111,13 +118,13 @@ adjust_data_interface = function(model) {
 #' @export
 #'
 #' @import rstan
-stan = function(model, init = NULL, chains = 1, ...) {
+stan = function(proj, init = NULL, chains = 1, ...) {
   if (is.null(init)) {
-    init = fiat_init(model, chains)
+    init = fiat_init(proj, chains)
   }
-  rstan::stan(file   = system.file("stan", "interface_fa_sc.stan", package = "fastan"),
-              data   = adjust_data_interface(model),
-              pars   = c("alpha", "lambda", "sigma2") |> {\(.) if (!is.null(model$pred)) append(., "pred") else .}(),
+  rstan::stan(file   = system.file("stan", "interface_fa_normal.stan", package = "fastan"),
+              data   = interface(proj),
+              pars   = c("alpha", "lambda", "sigma2") |> {\(.) if (!is.null(proj$data$pred)) append(., "pred") else .}(),
               init   = init,
               chains = chains,
               ...
@@ -260,33 +267,4 @@ get_geweke = function(fit, par = "all") {
       else rstan::extract(., permuted = F)}() |>
     apply(c(2, 3), function(x) {coda::geweke.diag(x) |> purrr::pluck(1) |> unname()} ) |>
     as.vector()
-}
-
-
-#' Adjust summary for real values
-#'
-#' @param smry fastan summary
-#'
-#' @export
-adjust_summary = function(smry) {
-  stats = c("mean", "median", "sd", "hpd_min", "hpd_max", "hpd_amp")
-  smry2 = smry
-  for (factor in 1:dim(smry$lambda)[1]) {
-
-    c = numeric(dim(smry$lambda)[2])
-    p = numeric(dim(smry$lambda)[2])
-
-    for (col in 1:dim(smry$lambda)[2]) {
-      c[col] = (smry$lambda[factor,col,"mean"] / smry$lambda[factor,col,"real"]) |> unname()
-      smry2$lambda[factor,,stats] = (1/c[col]) * smry$lambda[factor,,stats, drop = F]
-      smry2$alpha[factor,,stats]  = c[col]     * smry$alpha[factor,,stats, drop = F]
-      p[col] = percentage_hits(smry2)["all", "p"]
-    }
-
-    c = c[which(p == max(p))[1]]
-    smry$lambda[factor,,stats] = (1/c) * smry$lambda[factor,,stats, drop = F]
-    smry$alpha[factor,,stats]  = c     * smry$alpha[factor,,stats, drop = F]
-
-  }
-  smry
 }

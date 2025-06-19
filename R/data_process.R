@@ -16,7 +16,7 @@
 #' @import tidyr
 #' @import stats
 #' @import utils
-generate_data_sc = function(rows.by.group, columns, cicles = 1, semi.conf = F, real = list(alpha = c(-10,10), lambda = c(1,2), sigma2 = c(1,5))) {
+generate_data_sc = function(rows.by.group, columns, cicles = 1, semi.conf = F, real = list(alpha = c(1,6), lambda = c(1,2), sigma2 = c(1,5))) {
   normalize = function(x) {
     real$lambda[1] + (x - min(x)) / (max(x) - min(x)) * (real$lambda[2] - real$lambda[1])
   }
