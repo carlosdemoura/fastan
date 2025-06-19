@@ -2,7 +2,7 @@
 #'
 #' Generate initial values for STAN MCMC
 #'
-#' @param model fastanModel object.
+#' @param proj fastan project object.
 #' @param chains integer; number of chains.
 #'
 #' @return list; for each
@@ -65,9 +65,9 @@ fiat_init_from_last_value = function(fit) {
 
 #' Adjust the data argument on `rstan::stan()`
 #'
-#' @param model fastan model object.
+#' @param proj fastan proj object.
 #'
-#' @return list; goes on the data argument in `rstan::stan()`.
+#' @return list that goes on the data argument in `rstan::stan()`.
 #'
 #' @export
 #'
@@ -108,7 +108,7 @@ interface = function(proj) {
 
 #' Run STAN MCMC
 #'
-#' @param model .
+#' @param proj .
 #' @param init .
 #' @param chains .
 #' @param ... arguments that will be passed to `rstan::stan()`

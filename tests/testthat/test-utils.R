@@ -1,7 +1,8 @@
-test_that("fiat_sentinel() return sentinel values", {
-  expect_equal(fiat_sentinel(matrix(1:4, nrow = 2)), 1000)
-})
-
-test_that("fiat_sentinel() validates argument", {
-  expect_error(fiat_sentinel("1"))
+test_that("fiat_groups_limits() works", {
+  ans =
+    list(
+      c(1, 2, 4),
+      c(1, 3, 6)
+    )
+  expect_equal(fiat_groups_limits(1:3), ans)
 })

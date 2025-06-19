@@ -6,6 +6,11 @@
 \usage{
 plot_missing(mod, grid = T)
 }
+\arguments{
+\item{mod}{.}
+
+\item{grid}{.}
+}
 \description{
 Plot missing values pattern
 }

@@ -49,6 +49,7 @@ lambda_cov_indep = function(col) {
 #' Title
 #'
 #' @param col .
+#' @param mean .
 lambda_mean = function(col, mean = 0) {
   rep(mean, col)
 }
@@ -58,6 +59,7 @@ lambda_mean = function(col, mean = 0) {
 #'
 #' @param group.sizes .
 #' @param semi.conf .
+#' @param mean .
 alpha_mean = function(group.sizes, semi.conf, mean = 0) {
   matrix(mean, nrow = sum(group.sizes), ncol = length(group.sizes) - as.numeric(semi.conf))
 }

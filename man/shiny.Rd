@@ -4,10 +4,12 @@
 \alias{shiny}
 \title{Shiny App}
 \usage{
-shiny(proj = NULL, max_size = 500)
+shiny(proj = NULL, upload_size = 500)
 }
 \arguments{
 \item{proj}{.}
+
+\item{upload_size}{.}
 }
 \description{
 Shiny App

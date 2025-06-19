@@ -4,10 +4,10 @@
 \alias{fiat_init}
 \title{FALTA PREDICTION}
 \usage{
-fiat_init(model, chains)
+fiat_init(proj, chains)
 }
 \arguments{
-\item{model}{fastanModel object.}
+\item{proj}{fastan project object.}
 
 \item{chains}{integer; number of chains.}
 }

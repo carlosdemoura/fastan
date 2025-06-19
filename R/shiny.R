@@ -178,7 +178,7 @@ PanelConvergence = tabPanel(
 PanelInference = tabPanel(
   title = "Bayesian Inference",
 
-  fluidRow(header_col("Posterior analysis", "#87C2CC", "10vh", 12)),
+  fluidRow(header_col("Posterior analysis", "#87C2CC", "12vh", 12)),
 
   fluidRow(
     column(12,
@@ -570,7 +570,6 @@ server0
 #'
 #' @export
 shiny = function(proj = NULL, upload_size = 500) {
-  library(shiny)
   options(shiny.maxRequestSize = upload_size*1024^2)
   shinyApp(ui = ui(), server = server(proj))
 }

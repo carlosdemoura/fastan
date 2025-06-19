@@ -4,10 +4,7 @@
 #' @param columns integer; number of columns in the wider format.
 #' @param cicles integer; UNDER DEVELOPMENT.
 #' @param semi.conf boolean:
-#' @param param list of parameters for generate data:
-#' * `TRUE` if it's semi-confirmatory (then the last group is considered to be the semi-confirmatory group);
-#' * `FALSE` if it's confirmatory (DEFAULT).
-#'
+#' @param real .
 #' @return fastan model object
 #'
 #' @export
@@ -189,14 +186,4 @@ process_data = function(data, value, group, row, col) {
   }
 
   data
-}
-
-
-#' Title
-#'
-#' @param proj .
-#'
-#' @export
-generate_data_from_project = function(proj, resize = list(x = 1, y = 1)) {
-
 }
