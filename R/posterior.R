@@ -1,5 +1,3 @@
-#' FALTA PREDICTION
-#'
 #' Generate initial values for STAN MCMC
 #'
 #' @param proj fastan project object.
@@ -72,7 +70,6 @@ fiat_init_from_last_value = function(fit) {
 #' @export
 #'
 #' @import purrr
-#' @import dplyr
 interface = function(proj) {
   data = list(
     n_row        = proj$data$dim$row,
@@ -135,7 +132,7 @@ stan = function(proj, init = NULL, chains = 1, ...) {
 #' Get summary from `rstan::stan()` fit object
 #'
 #' @param fit `rstan::stan()` fit object.
-#' @param model fastan model object
+#' @param data fastan data object
 #'
 #' @return list of matrices.
 #'
@@ -146,7 +143,7 @@ stan = function(proj, init = NULL, chains = 1, ...) {
 #' @import rstan
 #' @import stats
 #' @import purrr
-summary_matrix = function(fit, model = NULL) {
+summary_matrix = function(fit, data = NULL) {
   samp = rstan::extract(fit)
   matrices = list()
 
@@ -171,44 +168,22 @@ summary_matrix = function(fit, model = NULL) {
       matrices[[parameter]][["hpd_contains_0"]] = ifelse((matrices[[parameter]][["hpd_max"]] >= 0) & (matrices[[parameter]][["hpd_min"]] <= 0), T, F)
     }
 
-    if ((parameter == "pred") & !is.null(model)) {
-      matrices[[parameter]][["row_"]] = model$pred$row |> as.matrix()
-      matrices[[parameter]][["col_"]] = model$pred$col |> as.matrix()
-      if (all(!is.na(model$pred$value))) {
-        matrices[[parameter]][["real"]] = model$pred$value |> as.matrix()
+    if ((parameter == "pred") & !is.null(data)) {
+      matrices[[parameter]][["row_"]] = data$pred$row |> as.matrix()
+      matrices[[parameter]][["col_"]] = data$pred$col |> as.matrix()
+      if (all(!is.na(data$pred$value))) {
+        matrices[[parameter]][["real"]] = data$pred$value |> as.matrix()
       }
     }
 
-    if (!is.null(model) & !is.null(model$real) & (parameter != "pred")) {
-      matrices[[parameter]][["real"]] = model[["real"]][[parameter]]
+    if (!is.null(data) & !is.null(data$real) & (parameter != "pred")) {
+      matrices[[parameter]][["real"]] = data[["real"]][[parameter]]
     }
   }
 
   matrices = sapply(matrices, function(x) { abind::abind(x, along = 3) })
   class(matrices) = "summary"
   return(matrices)
-}
-
-
-#' Transform `rstan` fit into `coda::mcmc.list()`
-#'
-#' @param fit `rstan::stan()` object.
-#' @param param string; must be in rstan::stan fit format.
-#'
-#' @return `coda::mcmc.list()`
-#'
-#' @export
-#'
-#' @import coda
-#' @import posterior
-get_chains_mcmc = function(fit, param) {
-  #get_chains_mcmc = function(project_folder, param) {
-  draws = posterior::as_draws(fit)
-  chains = list()
-  for (i in 1:length(fit@inits)) {
-    chains[[i]] = posterior::subset_draws(draws, chain=i, variable=param) |> c() |> coda::mcmc()
-  }
-  coda::as.mcmc.list(chains)
 }
 
 
@@ -276,4 +251,26 @@ percentage_hits = function(smry) {
   }
   table["all",] = stats::weighted.mean(table$p, table$total) |> c(sum(table$total))
   table
+}
+
+
+#' Transform `rstan` fit into `coda::mcmc.list()`
+#'
+#' @param fit `rstan::stan()` object.
+#' @param param string; must be in rstan::stan fit format.
+#'
+#' @return `coda::mcmc.list()`
+#'
+#' @export
+#'
+#' @import coda
+#' @import posterior
+get_chains_mcmc = function(fit, param) {
+  #get_chains_mcmc = function(project_folder, param) {
+  draws = posterior::as_draws(fit)
+  chains = list()
+  for (i in 1:length(fit@inits)) {
+    chains[[i]] = posterior::subset_draws(draws, chain=i, variable=param) |> c() |> coda::mcmc()
+  }
+  coda::as.mcmc.list(chains)
 }
