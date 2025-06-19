@@ -145,6 +145,7 @@ stan = function(proj, init = NULL, chains = 1, ...) {
 #' @import coda
 #' @import rstan
 #' @import stats
+#' @import purrr
 summary_matrix = function(fit, model = NULL) {
   samp = rstan::extract(fit)
   matrices = list()

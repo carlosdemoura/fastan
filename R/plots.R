@@ -1,6 +1,3 @@
-#library(ggplot2)
-#ibrary(ggridges)
-
 #' Plot contrast matrix
 #'
 #' @inheritParams plot_mock_doc
@@ -10,6 +7,8 @@
 #' @export
 #'
 #' @import ggplot2
+#' @import dplyr
+#' @import tidyr
 plot_contrast = function(smry, par = "alpha", stat = "mean") {
   df = smry[[par]][,,stat, drop=F] |>
     as.data.frame() |>
@@ -116,6 +115,7 @@ plot_lambda = function(smry, stat = "mean") {
 #' @export
 #'
 #' @import ggplot2
+#' @import rstan
 plot_posterior = function(fit, par, row = 1, col = 1, type = c("hist", "dens")) {
   df = rstan::extract(fit)[[par]] |>
     {\(.) if (par == "lp__") .
@@ -150,6 +150,8 @@ plot_posterior = function(fit, par, row = 1, col = 1, type = c("hist", "dens")) 
 #'
 #' @import ggplot2
 #' @import rstan
+#' @import dplyr
+#' @import tidyr
 plot_trace = function(fit, par, row = 1, col = 1){
   par_ = par |>
     {\(.) if (par == "lp__") .
@@ -277,26 +279,6 @@ plot_everything = function(proj) {
 }
 
 
-#' FALTA MUITO
-#'
-#' Plot ridges
-#'
-#' @inheritParams plot_mock_doc
-#'
-#' @return ggridges plot
-#'
-#' @export
-#'
-#' @import ggplot2
-#' @import ggridges
-plot_ridges = function(mod) {
-  # FALTA AGRUPAR POR LINHA DATA FA
-  ggplot(mod$data, aes(x = value, y = factor(row))) +
-    geom_density_ridges_gradient(scale = 3, rel_min_height = 0.01) +
-    theme_minimal()
-}
-
-
 #' Plot missing values pattern
 #'
 #' @export
@@ -306,6 +288,7 @@ plot_ridges = function(mod) {
 #'
 #' @import ggplot2
 #' @import dplyr
+#' @import tibble
 plot_missing = function(mod, grid = T) {
   df =
     mod$pred |>
@@ -350,61 +333,6 @@ plot_missing = function(mod, grid = T) {
     scale_y_discrete(labels = row_labels) +
     labs(x = "Column", y = "Row", fill = "", title = "Missing pattern", subtitle = "Considering only rows with missings") +
     theme(legend.position = "bottom", legend.direction = "horizontal")
-}
-
-
-#' ESSA PORRA TÁ CERTA?
-#'
-#' Print LaTeX table
-#'
-#' @inheritParams plot_mock_doc
-#'
-#' @export
-print_table = function(smry, par, row = NULL, col = NULL, stat = c("mean", "median")) {
-  df = matrix_to_df(smry[[par]])
-  loc.name = list(row=row,col=col) |> {\(.) names(.)[!sapply(., is.null)]}()
-  df = df[df[[loc.name]] == get(loc.name), c("row", "col", stat)]
-  df$loc = get(loc.name)
-  real = "real" %in% colnames(df)
-
-  cat(
-    "\\begin{center}",
-    paste("Summary of the MCMC for the posterior distribution of", par, ifelse(loc.name == "col", "column", "row"), c(row, col), "\\\\"),
-    paste0(c("\\begin{tabular}{|", rep("m{1.5cm}|", length(stat)), "}"), collapse = ""),
-    "\\hline",
-    sep = "\n")
-
-  cat("\\textbf{", ifelse(loc.name != "col", "Column", "Row") ,"}", sep = "")
-  for (each in stat) {
-           if (each == "real"   ){cat(" & \\textbf{Real value}"    , sep = "")
-    } else if (each == "mean"   ){cat(" & \\textbf{Mean}"          , sep = "")
-    } else if (each == "median" ){cat(" & \\textbf{Median}"        , sep = "")
-    } else if (each == "sd"     ){cat(" & \\textbf{St dev}"        , sep = "")
-    } else if (each == "hpd_min"){cat(" & \\textbf{HPD LB}"        , sep = "")
-    } else if (each == "hpd_max"){cat(" & \\textbf{HPD UP}"        , sep = "")
-    } else if (each == "hpd_amp"){cat(" & \\textbf{HPD amplitude}" , sep = "")}
-  }
-  cat(
-    "\\\\",
-    "\\hline",
-    sep = "\n")
-
-  for (i in 1:nrow(df)){
-    for (j in 1:ncol(df)){
-
-      cat(round(as.numeric(df[i,j]), 2))
-      if (j < ncol(df)){
-        cat(" & ")
-      }
-
-    }
-    cat("\\\\\n\\hline\n")
-  }
-
-  cat(
-    "\\end{tabular}",
-    "\\end{center}",
-    sep = "\n")
 }
 
 

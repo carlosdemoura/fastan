@@ -3,6 +3,9 @@
 #' @param object stanfit object
 #'
 #' @export
+#'
+#' @import rstan
+#' @import utils
 my_extract = function(object) {
   pars <- object@sim$pars_oi #|> head(-1)
   tidx <- rstan:::pars_total_indexes(object@sim$pars_oi,

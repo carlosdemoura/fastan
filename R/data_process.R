@@ -13,6 +13,7 @@
 #' @import tidyr
 #' @import stats
 #' @import utils
+#' @import purrr
 generate_data = function(rows.by.group, columns, cicles = 1, semi.conf = F, real = list(alpha = c(1,6), lambda = c(1,2), sigma2 = c(1,5))) {
   normalize = function(x) {
     real$lambda[1] + (x - min(x)) / (max(x) - min(x)) * (real$lambda[2] - real$lambda[1])
@@ -130,6 +131,7 @@ generate_data = function(rows.by.group, columns, cicles = 1, semi.conf = F, real
 #'
 #' @import dplyr
 #' @import utils
+#' @import purrr
 process_data = function(data, value, group, row, col) {
   #data = x; row = "row"; group = "group"; col = "col"; value = "value"
   labels = list(
