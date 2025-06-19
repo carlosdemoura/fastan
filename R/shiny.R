@@ -258,7 +258,7 @@ server0 = function(input, output, session) {
     req(project_rv())
   })
 
-  real = reactive(!is.null(project()$model$real))
+  real = reactive(!is.null(project()$data$real))
   stat = reactive(c("mean") |> {\(.) if (real()) c(., "real") else .}())
 
 
@@ -267,7 +267,7 @@ server0 = function(input, output, session) {
   observeEvent(project(), {
     updateSelectInput(
       session, "Inference.alpha_col",
-      choices = 1:project()$model$dim$al_fac
+      choices = 1:n.fac(project())
       )
 
     output$lambdas = plotly::renderPlotly({
@@ -311,7 +311,7 @@ server0 = function(input, output, session) {
     output$Inference.accuracy_table = renderPrint(fastan::percentage_hits(project()$summary))
     }
 
-    if (!is.null(project()$model$pred)) {
+    if (!is.null(project()$data$pred)) {
     output$Inference.prediction = renderUI({
       tagList(
         fluidRow(header_col("Predictions", "#a8f2fe", "8vh", 12)),
@@ -330,7 +330,7 @@ server0 = function(input, output, session) {
     })
 
     output$pred_contrast = plotly::renderPlotly({
-      plot_missing(project()$model) |>
+      plot_missing(project()$data) |>
         plotly::ggplotly(source = "pred_contrast_source")
     })
     }
@@ -364,18 +364,18 @@ server0 = function(input, output, session) {
   ### PanelModel ###
 
   observeEvent(project(), {
-    dim = project()$model$dim
+    dim = c(project()$data$dim, list(fac = n.fac(project())))
 
     output$Model.like = renderUI({
       paste0(
         "<p>\\[ X = \\alpha \\lambda + \\epsilon \\]</p>",
         "<p><b>Where:</b></p>",
-        "<p>(i) \\( X \\in \\mathbb{R}^{",          dim$al_row ,"\\times", dim$al_col, "} \\) is the matrix of observed values;</p>",
-        "<p>(ii) \\( \\alpha \\in \\mathbb{R}^{",   dim$al_row, "\\times", dim$al_fac, "} \\) is the loadings matrix;</p>",
-        "<p>(iii) \\( \\lambda \\in \\mathbb{R}^{", dim$al_fac, "\\times", dim$al_col, "} \\) is the factor(s) matrix;</p>",
-        "<p>(iv) \\( \\epsilon \\in \\mathbb{R}^{", dim$al_row ,"\\times", dim$al_col, "} \\) is the stochastic component such that
+        "<p>(i) \\( X \\in \\mathbb{R}^{",          dim$row ,"\\times", dim$col, "} \\) is the matrix of observed values;</p>",
+        "<p>(ii) \\( \\alpha \\in \\mathbb{R}^{",   dim$row, "\\times", dim$fac, "} \\) is the loadings matrix;</p>",
+        "<p>(iii) \\( \\lambda \\in \\mathbb{R}^{", dim$fac, "\\times", dim$col, "} \\) is the factor(s) matrix;</p>",
+        "<p>(iv) \\( \\epsilon \\in \\mathbb{R}^{", dim$row ,"\\times", dim$col, "} \\) is the stochastic component such that
        \\( \\epsilon_{i,j} \\sim N(0, \\sigma^2_i) \\) independently, and
-       \\( \\sigma^2 = (\\sigma^2_1, \\dots, \\sigma^2_{", dim$al_row, "})' \\).</p>"
+       \\( \\sigma^2 = (\\sigma^2_1, \\dots, \\sigma^2_{", dim$row, "})' \\).</p>"
       ) |>
         HTML() |>
         withMathJax()
@@ -383,7 +383,7 @@ server0 = function(input, output, session) {
 
     output$Model.prior = renderUI({
       paste0(
-        "<p>\\[ \\lambda_{i, \\bullet} = N_m(0_{", dim$al_col, "\\times 1}, I_{", dim$al_col, "}); \\]</p>",
+        "<p>\\[ \\lambda_{i, \\bullet} = N_m(0_{", dim$col, "\\times 1}, I_{", dim$col, "}); \\]</p>",
         "<p>\\[ \\sigma^2 \\sim Gama_n(0.1, 0.1). \\]</p>"
       ) |>
         HTML() |>
@@ -437,7 +437,7 @@ server0 = function(input, output, session) {
   ### PanelConvergence - Specific - Options ###
 
   observeEvent(project(), {
-    if (!is.null(project()$model$pred)) {
+    if (!is.null(project()$data$pred)) {
       updateSelectInput(
         session, "Convergence.par",
         choices = c("lp__", "alpha", "lambda", "sigma2", "pred")
@@ -447,13 +447,13 @@ server0 = function(input, output, session) {
     if        (input$Convergence.par == "lp__")   {
       row = col = 1
     } else if (input$Convergence.par == "alpha")  {
-      row = project()$model$dim$al_row
-      col = project()$model$dim$al_fac
+      row = project()$data$dim$row
+      col = n.fac(project())
     } else if (input$Convergence.par == "lambda") {
-      row = project()$model$dim$al_fac
-      col = project()$model$dim$al_col
+      row = n.fac(project())
+      col = project()$data$dim$col
     } else if (input$Convergence.par == "sigma2") {
-      row = project()$model$dim$al_row
+      row = project()$data$dim$row
       col = 1
     } else if (input$Convergence.par == "pred")   {
       row = dim(project()$summary$pred)[1]
