@@ -189,3 +189,14 @@ process_data = function(data, value, group, row, col) {
 
   data
 }
+
+
+#' Title
+#'
+#' @param proj .
+#' @param ... .
+#'
+#' @export
+generate_data_from_project = function(proj, ...) {
+  generate_data(rows.by.group = proj$data$dim$group.sizes, columns = proj$data$dim$col, ...)
+}

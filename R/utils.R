@@ -159,3 +159,43 @@ elapsed_time_table = function(fit, round = 4) {
     {\(.) `rownames<-`(., c(rownames(.)[-nrow(.)], "total"))}() |>
     {\(.) `colnames<-`(., c(colnames(.)[-3], "total"))}()
 }
+
+
+#' Title
+#'
+#' @param proj .
+#' @param log .
+#'
+#' @export
+#'
+#' @import dplyr
+#' @import purrr
+loglik = function(data) {
+  stopifnot(
+    "for now, can only calculate loglik with true value of parameters" = is.null(data$real),
+    "for now, can only calculate loglik without missings"              = is.null(data$pred)
+    )
+
+  data = validate_proj_arg(data, "data")
+
+  loglik = 0
+  alpha_lambda = data$real$alpha %*% data$real$lambda
+
+  for (row_ in unique(data$x$row)) {
+    x =
+      data$x |>
+      dplyr::filter(data$x$row == row_) |>
+      dplyr::select(dplyr::all_of("value")) |>
+      purrr::pluck(1)
+
+    loglik_ =
+      dnorm(x, alpha_lambda[row_,], sqrt(data$real$sigma2[row_,]) * diag(length(x))) |>
+      diag() |>
+      prod() |>
+      log()
+
+    loglik = loglik + loglik_
+  }
+
+  loglik
+}

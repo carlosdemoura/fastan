@@ -77,9 +77,9 @@ PanelConvergence = tabPanel(
   ),
 
   fluidRow(
-    header_col("rhat",   "#a8f2fe", "8vh", 4),
-    header_col("neff",   "#a8f2fe", "8vh", 4),
-    header_col("geweke", "#a8f2fe", "8vh", 4)
+    header_col("Rhat",   "#a8f2fe", "8vh", 4),
+    header_col("n_eff",   "#a8f2fe", "8vh", 4),
+    header_col("Geweke", "#a8f2fe", "8vh", 4)
     ),
   fluidRow(
     column(4,
@@ -150,7 +150,7 @@ PanelConvergence = tabPanel(
 
   fluidRow(
     header_col("Gelman-Rubin", "#a8f2fe", "8vh", 4),
-    header_col("Rhat & Neff", "#a8f2fe", "8vh", 4),
+    header_col("Rhat & n_eff", "#a8f2fe", "8vh", 4),
     header_col("Geweke", "#a8f2fe", "8vh", 4)
   ),
 
@@ -245,6 +245,8 @@ navbarPage(
 #' @import rstan
 #' @import dplyr
 #' @import zip
+#' @import purrr
+#' @import stats
 server = function(proj = NULL, input, output, session) {
 
 server0 = function(input, output, session) {
@@ -409,9 +411,9 @@ server0 = function(input, output, session) {
 
     output$Model.info = renderUI({
       paste0(
-        "<p>About: mock data</p>",
-        "<p>Date:  09/02/2025</p>",
-        "<p>Model type: FA SC</p>"
+        "<p>Info: ", project()$info, "</p>",
+        "<p>Number of groups:\t" , project()$data$dim$group.n, "</p>",
+        "<p>Number of factors:\t", n.fac(project()), "</p>"
       ) |>
         HTML() |>
         withMathJax()
@@ -530,14 +532,22 @@ server0 = function(input, output, session) {
     })
 
     output$Convergence.stats = renderPrint({
-      project()$summary[[par]][row, col, ] |>
-        as.matrix() |>
-        as.data.frame() |>
-        mutate(V1 = V1 |> round(2)) |>
-        as.matrix() |>
-        t() |>
-        `row.names<-`("") |>
-        print()
+      if (par == "lp__") {
+        rstan::extract(project()$fit, par = "lp__") |>
+          purrr::pluck(1) |>
+          {\(.) data.frame(mean = mean(.), median = stats::median(.), sd = stats::sd(.), real = loglik(project()))}() |>
+          `row.names<-`("") |>
+          print()
+      } else {
+        project()$summary[[par]][row, col, ] |>
+          as.matrix() |>
+          as.data.frame() |>
+          mutate(V1 = V1 |> round(2)) |>
+          as.matrix() |>
+          t() |>
+          `row.names<-`("") |>
+          print()
+      }
     })
 
     density_type = input$Convergence.density_type |> as.vector()

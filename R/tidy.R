@@ -19,7 +19,12 @@ set_info = function(proj, info) {
 #' @export
 set_data = function(proj, simdata = F, ...) {
   if (simdata) {
-    proj$data = generate_data(...)
+    if (is.null(proj$data)) {
+      proj$data = generate_data(...)
+    } else {
+      #semi.conf = ifelse(!is.null(proj$prior), proj$prior$semi.conf, F)
+      proj$data = generate_data_from_project(proj, ...)
+    }
   } else {
     proj$data = process_data(...)
   }

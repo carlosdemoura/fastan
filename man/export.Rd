@@ -4,12 +4,14 @@
 \alias{export}
 \title{Export most common plots of a project}
 \usage{
-export(proj, export_proj = T, plot.extension = "png")
+export(proj, path_dump = getwd(), rds = T, plot.extension = "png")
 }
 \arguments{
 \item{proj}{fastan project}
 
-\item{export_proj}{.}
+\item{path_dump}{.}
+
+\item{rds}{.}
 
 \item{plot.extension}{.}
 }
