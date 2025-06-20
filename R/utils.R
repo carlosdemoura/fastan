@@ -26,27 +26,21 @@ fiat_groups_limits = function(x) {
 #' Export most common plots of a project
 #'
 #' @param proj fastan project
-#' @param export_proj .
+#' @param path_dump .
+#' @param rds .
 #' @param plot.extension .
 #'
 #' @export
 #'
 #' @import ggplot2
-#' @import cli
-export = function(proj, export_proj = T, plot.extension = "png") {
+export = function(proj, path_dump = getwd(), rds = T, plot.extension = "png") {
   real = ifelse(!is.null(proj$data$real), T, F)
-  md5 = cli::hash_obj_md5(proj)
+  path = paste0(path_dump, "/fastanExport_", format(Sys.time(), "%Y-%m-%d-%Hh%Mm%Ss"))
 
-  for (i in 1:100) {
-    path = md5 |> substr(1,10) |> {\(.) paste0("proj_export_plots_", ., "_", i)}()
-    if (!dir.exists(path)) {
-      dir.create(path, recursive = T)
-      break
-    }
-  }
-
-  if (!dir.exists(path)) {
-    stop("failed to create folder on current directory")
+  if (dir.exists(path)) {
+    stop("failed to create folder on specified directory")
+  } else {
+    dir.create(path, recursive = T)
   }
 
   img = function(file) {
@@ -105,9 +99,11 @@ export = function(proj, export_proj = T, plot.extension = "png") {
     sink()
   }
 
-  if (export_proj) {
+  if (rds) {
     saveRDS(proj, file.path(path, "proj.rds"))
   }
+
+  return(path)
 }
 
 
@@ -126,8 +122,10 @@ fastan_report = function(proj) {
     "\niter\t\t"      , proj$fit@stan_args[[1]]$iter,
     "\nwarmup\t\t"    , proj$fit@stan_args[[1]]$warmup,
     "\nthinning\t"    , proj$fit@stan_args[[1]]$thin,
-    "\nseed\t\t"      , proj$fit@stan_args[[1]]$seed
-  )
+    "\nseed\t\t"      , proj$fit@stan_args[[1]]$seed,
+    "\n\nSTAN elapsed time (mins.)\n"
+  ) |>
+    paste0(paste0(capture.output(print(elapsed_time_table(proj$fit))), collapse = "\n"))
 }
 
 
@@ -141,4 +139,23 @@ validate_proj_arg = function(obj, class) {
   } else {
     return(obj)
   }
+}
+
+
+#' Title
+#'
+#' @param fit stan fit
+#' @param round .
+#'
+#' @export
+#'
+#' @import rstan
+elapsed_time_table = function(fit, round = 4) {
+  (rstan::get_elapsed_time(fit) / 60) |>
+    round(round) |>
+    as.data.frame() |>
+    {\(.) rbind(., colSums(.))}() |>
+    {\(.) cbind(., rowSums(.))}() |>
+    {\(.) `rownames<-`(., c(rownames(.)[-nrow(.)], "total"))}() |>
+    {\(.) `colnames<-`(., c(colnames(.)[-3], "total"))}()
 }

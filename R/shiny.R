@@ -32,7 +32,13 @@ ui = function() {
 ####################
 PanelModel = tabPanel(
   title = "Statistical Model",
-  fluidRow(fileInput("General.project_file", NULL, buttonLabel = "Choose project", multiple = FALSE, accept = c(".rds"))),
+  fluidRow(
+    column(6,
+      fileInput("General.project_file", NULL, buttonLabel = "Choose project", multiple = FALSE, accept = c(".rds"))
+    ),
+    column(6,
+      downloadButton("Model.export", "Export project")
+    )),
   fluidRow(header_col("Model", "#87C2CC", "12vh", 12)),
   fluidRow(header_col("Likelihood", "#a8f2fe", "8vh", 6), header_col("Priors", "#a8f2fe", "8vh", 6)),
   fluidRow(
@@ -44,13 +50,10 @@ PanelModel = tabPanel(
     )
   ),
 
-  fluidRow(header_col("Info", "#a8f2fe", "8vh", 6), header_col("STAN args.", "#a8f2fe", "8vh", 6)),
+  fluidRow(header_col("Info", "#a8f2fe", "8vh", 12)),
   fluidRow(
     column(6,
-    uiOutput("Model.info")
-    ),
-    column(6,
-    uiOutput("Model.stan")
+      uiOutput("Model.info")
     )
   )
 )
@@ -202,7 +205,7 @@ PanelInference = tabPanel(
   fluidRow(header_col("Lambda posterior", "#a8f2fe", "8vh", 12)),
 
   fluidRow(
-    column(8,
+    column(10,
       plotly::plotlyOutput("lambdas")
     )
   ),
@@ -241,9 +244,12 @@ navbarPage(
 #' @import coda
 #' @import rstan
 #' @import dplyr
+#' @import zip
 server = function(proj = NULL, input, output, session) {
 
 server0 = function(input, output, session) {
+
+  ### Import/Export ###
 
   project_rv = reactiveVal()
   if (!is.null(proj)) {
@@ -260,6 +266,19 @@ server0 = function(input, output, session) {
 
   real = reactive(!is.null(project()$data$real))
   stat = reactive(c("mean") |> {\(.) if (real()) c(., "real") else .}())
+
+  output$Model.export = downloadHandler(
+    filename = function() {
+      paste0("fastanExport_", format(Sys.time(), "%Y-%m-%d-%Hh%Mm%Ss"), ".zip")
+    },
+    content = function(file) {
+      dir_temp = tempfile("fastanExport")
+      dir.create(dir_temp)
+      x = export(project(), path_dump = dir_temp)
+      zip::zipr(zipfile = file, files = list.files(x, full.names = TRUE))
+    },
+    contentType = "application/zip"
+  )
 
 
   ### PanelInference ###
@@ -317,12 +336,10 @@ server0 = function(input, output, session) {
         fluidRow(header_col("Predictions", "#a8f2fe", "8vh", 12)),
 
         fluidRow(
-          column(
-            width = 6,
+          column(6,
             plotly::plotlyOutput("pred_contrast")
           ),
-          column(
-            width = 6,
+          column(6,
             plotly::plotlyOutput("pred_posterior")
           )
         )
@@ -405,32 +422,31 @@ server0 = function(input, output, session) {
 
   observeEvent(project(), {
     output$Convergence.general_info_time = renderPrint({
-      table = rstan::get_elapsed_time(project()$fit) / 60
-      cat("Elapsed time (mins.)\n")
-      print(table |> round(2))
-      tot = table |> sum()
-      cat("Total: ", tot |> round(2), " mins.  = ", (tot / 60) |> round(2), " h.", sep = "")
+      cat("STAN elapsed time\n")
+      elapsed_time_table(project()$fit)
     })
 
     output$Convergence.general_info_args = renderPrint({
       project()$fit@stan_args[[1]] |>
         {\(.) cat(
           "STAN arguments",
-          "\nChains\t", length(project()$fit@stan_args), "\t\tIter\t"  , .$iter,
-          "\nThin\t", .$thin                           , "\t\tWarmup\t", .$warmup
+          "\nChains\t", length(project()$fit@stan_args),
+          "\nThin\t", .$thin,
+          "\nIter\t"  , .$iter,
+          "\nWarmup\t", .$warmup
         )}()
     })
 
     output$Convergence.general_rhat = renderPlot({
-      plot_all_diagnostic(project()$fit, "rhat")
+      plot_diagnostic(project()$fit, "Rhat")
     })
 
     output$Convergence.general_neff = renderPlot({
-      plot_all_diagnostic(project()$fit, "neff")
+      plot_diagnostic(project()$fit, "n_eff")
     })
 
     output$Convergence.general_geweke = renderPlot({
-      plot_all_diagnostic(project()$fit, "geweke")
+      plot_diagnostic(project()$fit, "geweke")
     })
   })
 
@@ -531,11 +547,11 @@ server0 = function(input, output, session) {
     })
 
     output$Convergence.rhat_neff = renderPrint({
-      diagnostic_statistics(project()$fit) |>
+      diagnostic(project()$fit) |>
         dplyr::filter(par == !!par,
                       row == !!row,
                       col == !!col) |>
-        dplyr::select(dplyr::all_of(c("neff", "rhat"))) |>
+        dplyr::select(dplyr::all_of(c("n_eff", "Rhat"))) |>
         unlist()
     })
 
