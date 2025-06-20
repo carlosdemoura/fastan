@@ -34,7 +34,7 @@ plot_contrast = function(smry, par = "alpha", stat = "mean") {
     labs(fill = ifelse(stat == "hpd_contains_0", "Factor is\nsignificative", stat),
          x = "Factor",
          y = "Row",
-         title = "Alpha posterior contrast")
+         title = ifelse(stat == "real", "Alpha real contrast", "Alpha posterior contrast"))
 }
 
 
@@ -222,7 +222,7 @@ plot_diagnostic = function(fit, stat, list = F) {
 
   plots = list()
 
-  for (par_ in c("all", setdiff(unique(df$par), "lp__"))) {
+  for ( par_ in c("all", setdiff(unique(df$par), "lp__")) ) {
     df_ =
       df |>
       {\(.) if (par_ == "all") .
@@ -306,33 +306,6 @@ plot_missing = function(data, grid = T) {
 }
 
 
-#' Export most common plots of a project
-#'
-#' @param proj fastan project
-#'
-#' @export
-#'
-#' @import ggplot2
-plot_everything = function(proj) {
-  real = ifelse(!is.null(proj$data$real), T, F)
-  pred = ifelse(!is.null(proj$summary$pred), T, F)
-
-  if (all(real, pred)) {
-    for (fac in 1:n.fac(proj)) {
-      plot_hpd(proj$summary, "alpha", col = fac, stat = c("mean"))
-    }
-    plot_contrast(proj$summary, par = "alpha")
-    plot_contrast(proj$summary, par = "lambda")
-    plot_lambda(proj$summary)
-    plot_trace(proj$fit, par = "alpha")
-
-    # for para
-    plot_diagnostic(proj$fit, "rhat", "pred")
-
-  }
-}
-
-
 #' Transform 3D matrix into elongated data frame
 #'
 #' @param m matrix 3d, the 3rd dim will be elongated.
@@ -374,5 +347,4 @@ matrix_to_df = function(m) {
 #' @param col .
 #' @param type .
 #' @param stat .
-#' @param warmup .
-plot_mock_doc = function(fit, smry, par, row, col, type, stat, warmup) {}
+plot_mock_doc = function(fit, smry, data, par, row, col, type, stat) {}

@@ -210,7 +210,8 @@ diagnostic = function(fit) {
     rbind(colnames(x), unname(x)) |>
       t() |>
       as.data.frame() |>
-      `colnames<-`(c("par", paste0("geweke:", 1:nrow(x))))
+      `colnames<-`(c("par", paste0("geweke:", 1:nrow(x)))) |>
+      dplyr::mutate(dplyr::across(-1, as.numeric))
   }
 
   df =

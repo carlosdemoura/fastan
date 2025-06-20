@@ -4,12 +4,12 @@
 \alias{summary_matrix}
 \title{Get summary from \code{rstan::stan()} fit object}
 \usage{
-summary_matrix(fit, model = NULL)
+summary_matrix(fit, data = NULL)
 }
 \arguments{
 \item{fit}{\code{rstan::stan()} fit object.}
 
-\item{model}{fastan model object}
+\item{data}{fastan data object}
 }
 \value{
 list of matrices.

@@ -4,10 +4,10 @@
 \alias{plot_missing}
 \title{Plot missing values pattern}
 \usage{
-plot_missing(mod, grid = T)
+plot_missing(data, grid = T)
 }
 \arguments{
-\item{mod}{.}
+\item{data}{.}
 
 \item{grid}{.}
 }

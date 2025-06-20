@@ -2,7 +2,7 @@
 % Please edit documentation in R/posterior.R
 \name{fiat_init}
 \alias{fiat_init}
-\title{FALTA PREDICTION}
+\title{Generate initial values for STAN MCMC}
 \usage{
 fiat_init(proj, chains)
 }

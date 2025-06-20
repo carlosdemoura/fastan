@@ -4,14 +4,14 @@
 \alias{plot_diagnostic}
 \title{Plot diagnostic stats}
 \usage{
-plot_diagnostic(fit, stat, par = "all")
+plot_diagnostic(fit, stat, list = F)
 }
 \arguments{
 \item{fit}{.}
 
 \item{stat}{.}
 
-\item{par}{.}
+\item{list}{.}
 }
 \description{
 Plot diagnostic stats
