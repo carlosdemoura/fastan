@@ -169,9 +169,11 @@ elapsed_time_table = function(fit, round = 4) {
 #'
 #' @import dplyr
 #' @import purrr
+#' @import stats
 loglik = function(data) {
   stopifnot(
-    "for now, can only calculate loglik with true value of parameters" = is.null(data$real),
+
+    "for now, can only calculate loglik with true value of parameters" = (!is.null(data$real)),
     "for now, can only calculate loglik without missings"              = is.null(data$pred)
     )
 
@@ -188,7 +190,7 @@ loglik = function(data) {
       purrr::pluck(1)
 
     loglik_ =
-      dnorm(x, alpha_lambda[row_,], sqrt(data$real$sigma2[row_,]) * diag(length(x))) |>
+      stats::dnorm(x, alpha_lambda[row_,], sqrt(data$real$sigma2[row_,]) * diag(length(x))) |>
       diag() |>
       prod() |>
       log()
