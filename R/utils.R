@@ -171,13 +171,12 @@ elapsed_time_table = function(fit, round = 4) {
 #' @import purrr
 #' @import stats
 loglik = function(data) {
-  stopifnot(
+  data = validate_proj_arg(data, "data")
 
+  stopifnot(
     "for now, can only calculate loglik with true value of parameters" = (!is.null(data$real)),
     "for now, can only calculate loglik without missings"              = is.null(data$pred)
     )
-
-  data = validate_proj_arg(data, "data")
 
   loglik = 0
   alpha_lambda = data$real$alpha %*% data$real$lambda
@@ -199,4 +198,19 @@ loglik = function(data) {
   }
 
   loglik
+}
+
+
+#' Title
+#'
+#' @param smry .
+#' @param stat .
+#'
+#' @export
+mse = function(smry, stat = "mean") {
+  mse = list()
+  for (par in names(smry)) {
+    mse[[par]] = sum((smry[[par]][,,"real"] - smry[[par]][,,stat])^2) / length(smry[[par]][,,stat])
+  }
+  mse
 }

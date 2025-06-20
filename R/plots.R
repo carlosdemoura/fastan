@@ -250,14 +250,13 @@ plot_diagnostic = function(fit, stat, list = F) {
 #' Plot missing values pattern
 #'
 #' @inheritParams plot_mock_doc
-#' @param grid .
 #'
 #' @export
 #'
 #' @import ggplot2
 #' @import dplyr
 #' @import tibble
-plot_missing = function(data, grid = T) {
+plot_missing = function(data) {
   data = validate_proj_arg(data, "data")
   df =
     data$pred |>
@@ -267,27 +266,27 @@ plot_missing = function(data, grid = T) {
     )
 
   # Add line with present value
-  for (i in 1:length(unique(df$row))) {
-    for (j in 1:length(unique(df$col))) {
-      stop = F
-      r = unique(df$row)[i]
-      c = unique(df$col)[j]
-      if (dplyr::filter(df, row == r, col == c) |> nrow() == 0) {
-        df =
-          df |>
-          dplyr::bind_rows(tibble::tibble(
-            value = NA,
-            group = 1,
-            col = c,
-            row = factor(r),
-            missing = factor(FALSE, levels = c(TRUE, FALSE))
-          ))
-        stop = T
-        break
-      }
-    }
-    if(stop){break}
-  }
+  # for (i in 1:length(unique(df$row))) {
+  #   for (j in 1:length(unique(df$col))) {
+  #     stop = F
+  #     r = unique(df$row)[i]
+  #     c = unique(df$col)[j]
+  #     if (dplyr::filter(df, row == r, col == c) |> nrow() == 0) {
+  #       df =
+  #         df |>
+  #         dplyr::bind_rows(tibble::tibble(
+  #           value = NA,
+  #           group = 1,
+  #           col = c,
+  #           row = factor(r),
+  #           missing = factor(FALSE, levels = c(TRUE, FALSE))
+  #         ))
+  #       stop = T
+  #       break
+  #     }
+  #   }
+  #   if(stop){break}
+  # }
 
   row_labels = levels(df$row)
   row_labels[seq_along(row_labels) %% 5 < 4] = ""
@@ -295,14 +294,15 @@ plot_missing = function(data, grid = T) {
   ggplot(df, aes(col, row, fill = missing)) +
     geom_tile() +
     scale_fill_manual(
-      values = c("FALSE" = "white",   "TRUE" = "black"),
-      labels = c("FALSE" = "Present", "TRUE" = "Missing"),
-      guide = guide_legend(override.aes = list(color = "black", size = 1))
+      values = c("TRUE" = "black", "FALSE" = "gray80"),
+      labels = c("Missing", "Present"),
+      drop = FALSE
     ) +
-    { if (grid){theme_minimal()} else {theme_classic() + theme(axis.ticks.y=element_blank())} } +
     scale_y_discrete(labels = row_labels) +
     labs(x = "Column", y = "Row", fill = "", title = "Missing pattern", subtitle = "Considering only rows with missings") +
-    theme(legend.position = "bottom", legend.direction = "horizontal")
+    theme_classic() +
+    theme(legend.position = "bottom", legend.direction = "horizontal", axis.ticks.y = element_blank()) +
+    geom_point(aes(text = paste("row:", row, "col:", col, "val:", value)), alpha = 0)  # invisible, just for shiny clicks
 }
 
 

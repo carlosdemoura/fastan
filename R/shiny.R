@@ -343,21 +343,65 @@ server0 = function(input, output, session) {
 
         fluidRow(
           column(6,
-            plotly::plotlyOutput("pred_contrast")
+            plotly::plotlyOutput("Inference.pred_contrast")
           ),
           column(6,
-            plotly::plotlyOutput("pred_posterior")
+            verbatimTextOutput("Inference.pred_posterior_summary"),
+            plotOutput("Inference.pred_posterior_plot")
           )
         )
       )
     })
 
-    output$pred_contrast = plotly::renderPlotly({
-      plot_missing(project()$data) |>
-        plotly::ggplotly(source = "pred_contrast_source")
+    output$Inference.pred_contrast = plotly::renderPlotly({
+      (plot_missing(project()$data) + theme(axis.text.y = element_blank())) |>
+        plotly::ggplotly(tooltip = "text", source = "Inference.pred_contrast_source")
     })
     }
   })
+
+  ### PanelInference - prediction ###
+
+  coor = reactive({
+    coor = event_data("plotly_click", source = "Inference.pred_contrast_source")
+    if (is.null(coor)) return(NULL)
+    row_clicked =
+      coor$y |>
+      {\(.) rev(1:length(unique(project()$data$pred$row)))[.]}() |>
+      {\(.) unique(project()$data$pred$row)[.]}()
+    col_clicked = coor$x
+    return(list(row = row_clicked, col = col_clicked))
+  })
+
+  output$Inference.pred_posterior_summary = renderPrint({
+    coor = coor()
+    if (is.null(coor)) return("Click on missing square.")
+
+    cat("Row: ", coor$row, "  Col.: ", coor$col, "\n")
+
+    project()$summary$pred |>
+      matrix_to_df() |>
+      {\(.) dplyr::filter(., .$row_ == coor$row, .$col_ == coor$col)}() |>
+      {\(.) if (real()) dplyr::select(., dplyr::all_of(c("real", "mean", "median", "sd", "hpd_min", "hpd_max", "hpd_amp")))
+        else dplyr::select(., dplyr::all_of(c("mean", "median", "sd", "hpd_min", "hpd_max", "hpd_amp")))}() |>
+      as.data.frame() |>
+      `rownames<-`("") |>
+      print()
+  })
+
+  output$Inference.pred_posterior_plot = renderPlot({
+    coor = coor()
+    if (is.null(coor)) return(ggplot()+annotate("text", x=0, y=0, label="posterior predictive plot")+theme_void())
+
+    row =
+      project()$summary$pred |>
+      matrix_to_df() |>
+      {\(.) dplyr::filter(., .$row_ == coor$row, .$col_ == coor$col)}() |>
+      dplyr::select(dplyr::all_of("row")) |>
+      purrr::pluck(1)
+    plot_posterior(project(), "pred", row = row)
+  })
+
   # # FALTA IMPLEMENTAR: CLICAR NO MISSING PATTERN E PLOTAR DENSIDADE
   # output$pred_posterior = plotly::renderPlotly({
   #   coord = pred_contrast_click()
