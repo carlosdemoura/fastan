@@ -4,6 +4,8 @@
 #' @param color .
 #' @param height .
 #' @param width .
+#'
+#' @import shiny
 header_col = function(title, color, height, width) {
   column(width,
          div(
@@ -26,6 +28,7 @@ header_col = function(title, color, height, width) {
 #' Shiny UI
 #'
 #' @import plotly
+#' @import shiny
 ui = function() {
 ####################
 ######  Model ######
@@ -247,6 +250,7 @@ navbarPage(
 #' @import zip
 #' @import purrr
 #' @import stats
+#' @import shiny
 server = function(proj = NULL, input, output, session) {
 
 server0 = function(input, output, session) {

@@ -197,6 +197,15 @@ process_data = function(data, value, group, row, col) {
 #' @param ... .
 #'
 #' @export
+#'
+#' @import dplyr
 generate_data_from_project = function(proj, ...) {
-  generate_data(rows.by.group = proj$data$dim$group.sizes, columns = proj$data$dim$col, ...)
+  data = generate_data(rows.by.group = proj$data$dim$group.sizes, columns = proj$data$dim$col, ...)
+  if (is.null(proj$data$pred)) {
+    return(data)
+  } else {
+    data$pred = dplyr::left_join(proj$data$pred[c("row", "col")], data$x, by = c("row", "col"))  |> dplyr::relocate(dplyr::all_of("value"))
+    data$x = dplyr::right_join(data$x, proj$data$x[c("row", "col")], by = c("row", "col"))
+    return(data)
+  }
 }
