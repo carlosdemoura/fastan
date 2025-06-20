@@ -7,9 +7,7 @@
 loglik(data)
 }
 \arguments{
-\item{proj}{.}
-
-\item{log}{.}
+\item{data}{.}
 }
 \description{
 Title

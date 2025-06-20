@@ -163,8 +163,7 @@ elapsed_time_table = function(fit, round = 4) {
 
 #' Title
 #'
-#' @param proj .
-#' @param log .
+#' @param data .
 #'
 #' @export
 #'
