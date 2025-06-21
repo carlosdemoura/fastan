@@ -302,7 +302,7 @@ plot_missing = function(data) {
     labs(x = "Column", y = "Row", fill = "", title = "Missing pattern", subtitle = "Considering only rows with missings") +
     theme_classic() +
     theme(legend.position = "bottom", legend.direction = "horizontal", axis.ticks.y = element_blank()) +
-    geom_point(aes(text = paste("row:", row, "col:", col, "val:", value)), alpha = 0)  # invisible, just for shiny clicks
+    geom_point(aes(text = paste("row", row, "  col", col)), alpha = 0)  # invisible, just for shiny clicks
 }
 
 

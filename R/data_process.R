@@ -5,6 +5,8 @@
 #' @param cicles integer; UNDER DEVELOPMENT.
 #' @param semi.conf boolean:
 #' @param real .
+#' @param pred .
+#'
 #' @return fastan model object
 #'
 #' @export
@@ -14,7 +16,7 @@
 #' @import stats
 #' @import utils
 #' @import purrr
-generate_data = function(rows.by.group, columns, cicles = 1, semi.conf = F, real = list(alpha = c(1,6), lambda = c(1,2), sigma2 = c(1,5))) {
+generate_data = function(rows.by.group, columns, cicles = 1, semi.conf = F, real = list(alpha = c(1,6), lambda = c(.5,1.5), sigma2 = c(1,5)), pred = 0) {
   normalize = function(x) {
     real$lambda[1] + (x - min(x)) / (max(x) - min(x)) * (real$lambda[2] - real$lambda[1])
   }
@@ -22,7 +24,8 @@ generate_data = function(rows.by.group, columns, cicles = 1, semi.conf = F, real
   #rows.by.group = rep(10, 3); columns = 8; cicles = 1; semi.conf = T
   stopifnot(
     "if the model is semi.conf there
-    must be at least three groups" = ifelse(semi.conf, length(rows.by.group) >= 3, T)
+    must be at least three groups" = ifelse(semi.conf, length(rows.by.group) >= 3, T),
+    "it's necessary 0 <= pred < 1 " = (0 <= pred) & (pred < 1)
   )
 
   n.fac = length(rows.by.group) - as.integer(semi.conf)
@@ -113,6 +116,11 @@ generate_data = function(rows.by.group, columns, cicles = 1, semi.conf = F, real
                    lambda = lambda,
                    sigma2 = as.matrix(sigma2)
                    )
+  if (pred) {
+    index = 1:nrow(data$x) |> sample(size = floor(pred * nrow(data$x) * 0.9), replace = F) |> sort()
+    data$pred = data$x[index, ]
+    data$x = data$x[-index, ]
+  }
   return(data)
 }
 
@@ -208,4 +216,15 @@ generate_data_from_project = function(proj, ...) {
     data$x = dplyr::right_join(data$x, proj$data$x[c("row", "col")], by = c("row", "col"))
     return(data)
   }
+}
+
+
+#' Title
+#'
+#' @param data .
+#'
+#' @export
+prop.missing = function(data) {
+  data = validate_proj_arg(data, "data")
+  ifelse(!is.null(data$pred), nrow(data$pred), 0) / nrow(data$x)
 }

@@ -9,7 +9,8 @@ generate_data(
   columns,
   cicles = 1,
   semi.conf = F,
-  real = list(alpha = c(1, 6), lambda = c(1, 2), sigma2 = c(1, 5))
+  real = list(alpha = c(1, 6), lambda = c(0.5, 1.5), sigma2 = c(1, 5)),
+  pred = 0
 )
 }
 \arguments{

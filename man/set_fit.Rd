@@ -4,10 +4,12 @@
 \alias{set_fit}
 \title{Title}
 \usage{
-set_fit(proj, ...)
+set_fit(proj, set_summary = T, ...)
 }
 \arguments{
 \item{proj}{.}
+
+\item{set_summary}{.}
 
 \item{...}{.}
 }

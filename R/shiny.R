@@ -53,11 +53,14 @@ PanelModel = tabPanel(
     )
   ),
 
-  fluidRow(header_col("Info", "#a8f2fe", "8vh", 12)),
+  fluidRow(header_col("Info", "#a8f2fe", "8vh", 6), header_col("Labels", "#a8f2fe", "8vh", 6)),
   fluidRow(
     column(6,
       uiOutput("Model.info")
-    )
+      ),
+    column(6,
+      uiOutput("Model.labels")
+      )
   )
 )
 
@@ -360,6 +363,7 @@ server0 = function(input, output, session) {
     }
   })
 
+
   ### PanelInference - prediction ###
 
   coor = reactive({
@@ -375,13 +379,16 @@ server0 = function(input, output, session) {
 
   output$Inference.pred_posterior_summary = renderPrint({
     coor = coor()
-    if (is.null(coor)) return("Click on missing square.")
+    if (is.null(coor)) return(cat("Click on the black squares."))
 
-    cat("Row: ", coor$row, "  Col.: ", coor$col, "\n")
-
-    project()$summary$pred |>
+    df =
+      project()$summary$pred |>
       matrix_to_df() |>
-      {\(.) dplyr::filter(., .$row_ == coor$row, .$col_ == coor$col)}() |>
+      {\(.) dplyr::filter(., .$row_ == coor$row, .$col_ == coor$col)}()
+
+    cat("Row:", coor$row, "  Col.:", coor$col, "\tRow param.:", df$row,"\n")
+
+    df |>
       {\(.) if (real()) dplyr::select(., dplyr::all_of(c("real", "mean", "median", "sd", "hpd_min", "hpd_max", "hpd_amp")))
         else dplyr::select(., dplyr::all_of(c("mean", "median", "sd", "hpd_min", "hpd_max", "hpd_amp")))}() |>
       as.data.frame() |>
@@ -401,31 +408,6 @@ server0 = function(input, output, session) {
       purrr::pluck(1)
     plot_posterior(project(), "pred", row = row)
   })
-
-  # # FALTA IMPLEMENTAR: CLICAR NO MISSING PATTERN E PLOTAR DENSIDADE
-  # output$pred_posterior = plotly::renderPlotly({
-  #   coord = pred_contrast_click()
-  #   print(coord)
-  #   if (!is.null(coord)){
-  #     # pred_arg =
-  #     #   project()$model$pred |>
-  #     #   dplyr::mutate(
-  #     #     x = 1:nrow(.)
-  #     #   ) |>
-  #     #   dplyr::filter(row == coord[1], col == coord[2]) |>
-  #     #   select(x) |>
-  #     #   purrr::pluck(1)
-  #     #
-  #     # plot_posterior(project()$fit, "pred", row = pred_arg) |>
-  #     #   plotly::ggplotly()
-  #     plot_posterior(project()$fit, "pred", row = coord$y) |>
-  #       plotly::ggplotly()
-  #   }
-  # })
-  #
-  # pred_contrast_click <- reactive({
-  #   event_data("plotly_click", source = "pred_contrast_source")
-  # })
 
 
   ### PanelModel ###
@@ -468,11 +450,12 @@ server0 = function(input, output, session) {
     })
   })
 
+
   ### PanelConvergence - General ###
 
   observeEvent(project(), {
     output$Convergence.general_info_time = renderPrint({
-      cat("STAN elapsed time\n")
+      cat("STAN elapsed time (h.)\n")
       elapsed_time_table(project()$fit)
     })
 
@@ -500,6 +483,7 @@ server0 = function(input, output, session) {
     })
   })
 
+
   ### PanelConvergence - Specific - Options ###
 
   observeEvent(project(), {
@@ -509,7 +493,9 @@ server0 = function(input, output, session) {
         choices = c("lp__", "alpha", "lambda", "sigma2", "pred")
       )
     }
+  })
 
+  observeEvent(input$Convergence.par, {
     if        (input$Convergence.par == "lp__")   {
       row = col = 1
     } else if (input$Convergence.par == "alpha")  {
@@ -535,7 +521,6 @@ server0 = function(input, output, session) {
       session, "Convergence.col",
       choices = 1:col
     )
-
   })
 
   Convergence.div_par_name = reactiveVal("Select Parameter")
@@ -543,10 +528,10 @@ server0 = function(input, output, session) {
     header_col(Convergence.div_par_name(), "#a8f2fe", "8vh", 12)
   })
 
-  Convergence.select.clicks = reactiveVal(0)
-
 
   ### PanelConvergence - Specific - plots ###
+
+  Convergence.select.clicks = reactiveVal(0)
 
   observeEvent(input$Convergence.select, {
     Convergence.select.clicks(Convergence.select.clicks() + 1)
@@ -583,7 +568,7 @@ server0 = function(input, output, session) {
       if (par == "lp__") {
         rstan::extract(project()$fit, par = "lp__") |>
           purrr::pluck(1) |>
-          {\(.) data.frame(mean = mean(.), median = stats::median(.), sd = stats::sd(.), real = loglik(project()))}() |>
+          {\(.) data.frame(mean = mean(.), median = stats::median(.), sd = stats::sd(.), real = loglik(project(), stat = "real"), est_by_mean = loglik(project(), stat = "mean"))}() |>
           `row.names<-`("") |>
           print()
       } else {

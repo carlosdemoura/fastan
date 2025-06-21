@@ -47,10 +47,14 @@ set_prior = function(proj, ...) {
 #' Title
 #'
 #' @inheritParams set_prior
+#' @param set_summary .
 #'
 #' @export
-set_fit = function(proj, ...) {
+set_fit = function(proj, set_summary = T, ...) {
   proj$fit = stan(proj, ...)
+  if (set_summary) {
+    proj$summary = summary_matrix(proj$fit, proj$data)
+  }
   return(proj)
 }
 

@@ -142,7 +142,7 @@ validate_proj_arg = function(obj, class) {
 }
 
 
-#' Title
+#' In hours
 #'
 #' @param fit stan fit
 #' @param round .
@@ -151,7 +151,7 @@ validate_proj_arg = function(obj, class) {
 #'
 #' @import rstan
 elapsed_time_table = function(fit, round = 4) {
-  (rstan::get_elapsed_time(fit) / 60) |>
+  (rstan::get_elapsed_time(fit) / 3600) |>
     round(round) |>
     as.data.frame() |>
     {\(.) rbind(., colSums(.))}() |>
@@ -163,33 +163,44 @@ elapsed_time_table = function(fit, round = 4) {
 
 #' Title
 #'
-#' @param data .
+#' @param proj .
+#' @param param .
+#' @param stat .
 #'
 #' @export
 #'
 #' @import dplyr
-#' @import purrr
 #' @import stats
-loglik = function(data) {
-  data = validate_proj_arg(data, "data")
-
+loglik = function(proj, param = NULL, stat = "mean") {
   stopifnot(
-    "for now, can only calculate loglik with true value of parameters" = (!is.null(data$real)),
-    "for now, can only calculate loglik without missings"              = is.null(data$pred)
+    "only one of param/stat can be not null" = (is.null(param) | is.null(stat)) & !(is.null(param) & is.null(stat))
     )
 
-  loglik = 0
-  alpha_lambda = data$real$alpha %*% data$real$lambda
+  if (!is.null(param)) {
+    alpha_lambda = param$alpha %*% param$lambda
+    sigma2 = param$sigma2
+  } else {  # if (!is.null(stat))
+    if (stat == "real") {
+      alpha_lambda = proj$data$real$alpha %*% proj$data$real$lambda
+      sigma2 = proj$data$real$sigma2
+    } else {
+      alpha_lambda = proj$summary$alpha[,,stat] %*% proj$summary$lambda[,,stat]
+      sigma2 = proj$summary$sigma2[,,stat] |> as.matrix()
+    }
+  }
 
-  for (row_ in unique(data$x$row)) {
-    x =
-      data$x |>
-      dplyr::filter(data$x$row == row_) |>
-      dplyr::select(dplyr::all_of("value")) |>
-      purrr::pluck(1)
+  loglik = 0
+
+  for (row_ in unique(proj$data$x$row)) {
+    df =
+      proj$data$x |>
+      dplyr::filter(proj$data$x$row == row_)
+
+    x = df$value
+    cols = df$col
 
     loglik_ =
-      stats::dnorm(x, alpha_lambda[row_,], sqrt(data$real$sigma2[row_,]) * diag(length(x))) |>
+      stats::dnorm(x, alpha_lambda[row_,cols], sqrt(sigma2[row_,1]) * diag(length(x))) |>
       diag() |>
       prod() |>
       log()
@@ -208,6 +219,7 @@ loglik = function(data) {
 #'
 #' @export
 mse = function(smry, stat = "mean") {
+  smry = validate_proj_arg(smry, "summary")
   mse = list()
   for (par in names(smry)) {
     mse[[par]] = sum((smry[[par]][,,"real"] - smry[[par]][,,stat])^2) / length(smry[[par]][,,stat])
