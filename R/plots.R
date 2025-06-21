@@ -194,7 +194,7 @@ plot_trace = function(fit, par, row = 1, col = 1) {
 #' @import dplyr
 #' @import ggplot2
 #' @import gridExtra
-plot_diagnostic = function(fit, stat, list = F) {
+plot_diagnostic = function(proj, stat, list = F) {
   stopifnot("stat must bet either 'Rhat', 'n_eff', or 'geweke'" = stat %in% c("Rhat", "n_eff", "geweke"))
 
   plot_diagnostic_local = function(df, par) {
@@ -214,10 +214,19 @@ plot_diagnostic = function(fit, stat, list = F) {
       theme_minimal()
   }
 
-  fit = validate_proj_arg(fit, "fit")
+  if (inherits(proj, "project")) {
+    if (!is.null(proj$diagnostic)) {
+      df = proj$diagnostic
+    } else {
+      df = diagnostic(proj)
+    }
+  } else if (inherits(proj, "stanfit")) {
+    df = diagnostic(proj)
+  }
+
 
   df =
-    diagnostic(fit)[,1:6] |>
+    df[,1:6] |>
     dplyr::rename(geweke = "geweke:1")
 
   plots = list()
@@ -339,6 +348,7 @@ matrix_to_df = function(m) {
 
 #' Mock function for the sole purpose of documentation
 #'
+#' @param proj .
 #' @param fit .
 #' @param smry .
 #' @param data .
@@ -347,4 +357,4 @@ matrix_to_df = function(m) {
 #' @param col .
 #' @param type .
 #' @param stat .
-plot_mock_doc = function(fit, smry, data, par, row, col, type, stat) {}
+plot_mock_doc = function(proj, fit, smry, data, par, row, col, type, stat) {}

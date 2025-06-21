@@ -48,13 +48,28 @@ set_prior = function(proj, ...) {
 #'
 #' @inheritParams set_prior
 #' @param set_summary .
+#' @param set_diagnostic .
 #'
 #' @export
-set_fit = function(proj, set_summary = T, ...) {
+set_fit = function(proj, set_summary = T, set_diagnostic = F, ...) {
   proj$fit = stan(proj, ...)
   if (set_summary) {
-    proj$summary = summary_matrix(proj$fit, proj$data)
+    proj = set_summary(proj)
   }
+  if (set_diagnostic) {
+    proj = set_diagnostic(proj)
+  }
+  return(proj)
+}
+
+
+#' Title
+#'
+#' @inheritParams set_prior
+#'
+#' @export
+set_diagnostic = function(proj, ...) {
+  proj$diagnostic = diagnostic(proj$fit)
   return(proj)
 }
 
