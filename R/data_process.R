@@ -140,8 +140,13 @@ generate_data = function(rows.by.group, columns, cicles = 1, semi.conf = F, real
 #' @import dplyr
 #' @import utils
 #' @import purrr
-process_data = function(data, value, group, row, col) {
+process_data = function(data, value, row, col, group = NULL) {
   #data = x; row = "row"; group = "group"; col = "col"; value = "value"
+  if (is.null(group)) {
+    data$xxx = 1
+    group = "xxx"
+  }
+
   labels = list(
     factor_level = unique(data[[col]])  ,
     group        = unique(data[[group]]),

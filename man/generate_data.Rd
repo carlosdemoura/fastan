@@ -23,6 +23,8 @@ generate_data(
 \item{semi.conf}{boolean:}
 
 \item{real}{.}
+
+\item{pred}{.}
 }
 \value{
 fastan model object

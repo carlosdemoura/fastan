@@ -2,7 +2,7 @@
 % Please edit documentation in R/utils.R
 \name{elapsed_time_table}
 \alias{elapsed_time_table}
-\title{Title}
+\title{In hours}
 \usage{
 elapsed_time_table(fit, round = 4)
 }
@@ -12,5 +12,5 @@ elapsed_time_table(fit, round = 4)
 \item{round}{.}
 }
 \description{
-Title
+In hours
 }

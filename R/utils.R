@@ -145,14 +145,13 @@ validate_proj_arg = function(obj, class) {
 #' In hours
 #'
 #' @param fit stan fit
-#' @param round .
 #'
 #' @export
 #'
 #' @import rstan
-elapsed_time_table = function(fit, round = 4) {
+elapsed_time_table = function(fit) {
+  fit = validate_proj_arg(fit, "fit")
   (rstan::get_elapsed_time(fit) / 3600) |>
-    round(round) |>
     as.data.frame() |>
     {\(.) rbind(., colSums(.))}() |>
     {\(.) cbind(., rowSums(.))}() |>

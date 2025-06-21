@@ -336,7 +336,7 @@ server0 = function(input, output, session) {
       )
     })
 
-    output$Inference.accuracy_table = renderPrint(fastan::percentage_hits(project()$summary))
+    output$Inference.accuracy_table = renderPrint(fastan::percentage_hits(project()$summary) |> round(4))
     }
 
     if (!is.null(project()$data$pred)) {
@@ -392,6 +392,7 @@ server0 = function(input, output, session) {
       {\(.) if (real()) dplyr::select(., dplyr::all_of(c("real", "mean", "median", "sd", "hpd_min", "hpd_max", "hpd_amp")))
         else dplyr::select(., dplyr::all_of(c("mean", "median", "sd", "hpd_min", "hpd_max", "hpd_amp")))}() |>
       as.data.frame() |>
+      round(2) |>
       `rownames<-`("") |>
       print()
   })
@@ -456,7 +457,7 @@ server0 = function(input, output, session) {
   observeEvent(project(), {
     output$Convergence.general_info_time = renderPrint({
       cat("STAN elapsed time (h.)\n")
-      elapsed_time_table(project()$fit)
+      elapsed_time_table(project()$fit) |> round(2)
     })
 
     output$Convergence.general_info_args = renderPrint({
@@ -569,6 +570,7 @@ server0 = function(input, output, session) {
         rstan::extract(project()$fit, par = "lp__") |>
           purrr::pluck(1) |>
           {\(.) data.frame(mean = mean(.), median = stats::median(.), sd = stats::sd(.), real = loglik(project(), stat = "real"), est_by_mean = loglik(project(), stat = "mean"))}() |>
+          round(2) |>
           `row.names<-`("") |>
           print()
       } else {
@@ -595,7 +597,8 @@ server0 = function(input, output, session) {
                       row == !!row,
                       col == !!col) |>
         dplyr::select(dplyr::all_of(c("n_eff", "Rhat"))) |>
-        unlist()
+        unlist() |>
+        round(2)
     })
 
   })
