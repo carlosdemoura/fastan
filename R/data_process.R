@@ -111,7 +111,7 @@ generate_data = function(rows.by.group, columns, cicles = 1, semi.conf = F, real
                     row   = factor(.$row,   levels = unique(.$row))
       )}()
 
-  data = process_data(x, "value", "group", "row", "col")
+  data = process_data(data = x, value = "value", row = "row", col = "col", group = "group")
   data$real = list(alpha = alpha,
                    lambda = lambda,
                    sigma2 = as.matrix(sigma2)

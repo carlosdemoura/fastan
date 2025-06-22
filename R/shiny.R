@@ -265,9 +265,18 @@ server0 = function(input, output, session) {
     project_rv(proj)
   }
   observeEvent(input$General.project_file, {
-    input$General.project_file$datapath |>
-      readRDS() |>
-      project_rv()
+    proj =
+      input$General.project_file$datapath |>
+      readRDS()
+
+    if (is.null(proj$diagnostic)) {
+      proj = set_diagnostic(proj)
+    }
+    if (is.null(proj$summary)) {
+      proj = set_summary(proj)
+    }
+
+    project_rv(proj)
   })
   project = reactive({
     req(project_rv())

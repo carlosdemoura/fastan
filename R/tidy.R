@@ -51,8 +51,9 @@ set_prior = function(proj, ...) {
 #' @param set_diagnostic .
 #'
 #' @export
-set_fit = function(proj, set_summary = T, set_diagnostic = F, ...) {
+set_fit = function(proj, set_summary = T, set_diagnostic = T, ...) {
   proj$fit = stan(proj, ...)
+
   if (set_summary) {
     proj = set_summary(proj)
   }
@@ -69,7 +70,9 @@ set_fit = function(proj, set_summary = T, set_diagnostic = F, ...) {
 #'
 #' @export
 set_diagnostic = function(proj, ...) {
-  proj$diagnostic = diagnostic(proj$fit)
+  try_set({
+    proj$diagnostic = diagnostic(proj$fit)
+  })
   return(proj)
 }
 
@@ -80,6 +83,20 @@ set_diagnostic = function(proj, ...) {
 #'
 #' @export
 set_summary = function(proj, ...) {
-  proj$summary = summary_matrix(proj$fit, proj$data)
+  try_set({
+    proj$summary = summary_matrix(proj$fit, proj$data)
+  })
   return(proj)
+}
+
+
+#' Title
+#'
+#' @param expr
+try_set = function(expr) {
+  tryCatch({
+    expr
+  }, error = function(e){
+    cat(paste("ERROR:", e))
+  })
 }
