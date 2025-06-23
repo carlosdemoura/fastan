@@ -5,9 +5,10 @@ data {
 
   real<lower=0> sigma2_shape;
   real<lower=0> sigma2_scale;
-  matrix[n_row, n_fac] alpha_var;
-  matrix[n_col, n_col] lambda_cov;
-  vector[n_col] lambda_mean;
+  vector[n_row] alpha_mean[n_fac];
+  matrix[n_row, n_row] alpha_cov[n_fac];
+  vector[n_col] lambda_mean[n_fac];
+  matrix[n_col, n_col] lambda_cov[n_fac];
 
   int<lower=1> n_obs;
   vector[n_obs] obs;
@@ -44,12 +45,9 @@ model {
   for(i in 1:n_row) {
     sigma2[i,1] ~ gamma(sigma2_shape, sigma2_scale);
   }
-
   for(k in 1:n_fac) {
-    for(i in 1:n_row) {
-      alpha[i,k] ~ normal(0, sqrt(alpha_var[i,k]));
-    }
-    lambda[k,] ~ multi_normal(lambda_mean, lambda_cov);;
+    alpha[,k] ~ multi_normal(alpha_mean[k], alpha_cov[k]);
+    lambda[k,] ~ multi_normal(lambda_mean[k], lambda_cov[k]);
   }
 
 }

@@ -69,6 +69,7 @@ fiat_init_from_last_value = function(fit) {
 #'
 #' @export
 #'
+#' @import abind
 #' @import purrr
 interface = function(proj) {
   data = list(
@@ -78,9 +79,10 @@ interface = function(proj) {
 
     sigma2_shape = proj$prior$sigma2$shape,
     sigma2_scale = proj$prior$sigma2$scale,
-    alpha_var    = proj$prior$alpha$var,
-    lambda_cov   = proj$prior$lambda$cov,
-    lambda_mean  = proj$prior$lambda$mean,
+    alpha_mean   = abind::abind(proj$prior$alpha$mean, along=2) |> aperm(c(2,1)),
+    alpha_cov    = abind::abind(proj$prior$alpha$cov, along=3)  |> aperm(c(3,1,2)),
+    lambda_mean  = abind::abind(proj$prior$lambda$mean, along=2) |> aperm(c(2,1)),
+    lambda_cov   = abind::abind(proj$prior$lambda$cov, along=3)  |> aperm(c(3,1,2)),
 
     obs          = proj$data$x[,1] |> as.vector() |> unname() |> purrr::pluck(1),
     obs_coor     = proj$data$x[,2:3] |> as.matrix() |> unname()
@@ -140,9 +142,9 @@ stan = function(proj, init = NULL, chains = 1, ...) {
 #'
 #' @import abind
 #' @import coda
+#' @import purrr
 #' @import rstan
 #' @import stats
-#' @import purrr
 summary_matrix = function(fit, data = NULL) {
   samp = rstan::extract(fit)
   matrices = list()
@@ -194,10 +196,10 @@ summary_matrix = function(fit, data = NULL) {
 #' @export
 #'
 #' @import dplyr
-#' @import tidyr
 #' @import coda
-#' @import rstan
 #' @import purrr
+#' @import rstan
+#' @import tidyr
 diagnostic = function(fit) {
   fit = validate_proj_arg(fit, "fit")
 
@@ -222,6 +224,7 @@ diagnostic = function(fit) {
     merge(get_geweke(fit), by = "par") |>
     tidyr::extract(par, into = c("par", "row", "col"), regex = "([a-zA-Z0-9_]+)\\[(\\d+),(\\d+)\\]", convert = TRUE)
   df[is.na(df$par),c("par", "row", "col")] = c("lp__", 1, 1)
+
   df
 }
 

@@ -54,11 +54,11 @@ set_prior = function(proj, ...) {
 set_fit = function(proj, set_summary = T, set_diagnostic = T, ...) {
   proj$fit = stan(proj, ...)
 
-  if (set_summary) {
-    proj = set_summary(proj)
-  }
   if (set_diagnostic) {
     proj = set_diagnostic(proj)
+  }
+  if (set_summary) {
+    proj = set_summary(proj)
   }
   return(proj)
 }

@@ -12,10 +12,10 @@
 #' @export
 #'
 #' @import dplyr
-#' @import tidyr
-#' @import stats
-#' @import utils
 #' @import purrr
+#' @import stats
+#' @import tidyr
+#' @import utils
 generate_data = function(rows.by.group, columns, cicles = 1, semi.conf = F, real = list(alpha = c(1,6), lambda = c(.5,1.5), sigma2 = c(1,5)), pred = 0) {
   normalize = function(x) {
     real$lambda[1] + (x - min(x)) / (max(x) - min(x)) * (real$lambda[2] - real$lambda[1])
@@ -121,7 +121,8 @@ generate_data = function(rows.by.group, columns, cicles = 1, semi.conf = F, real
     data$pred = data$x[index, ]
     data$x = data$x[-index, ]
   }
-  return(data)
+
+  data
 }
 
 
@@ -138,10 +139,9 @@ generate_data = function(rows.by.group, columns, cicles = 1, semi.conf = F, real
 #' @export
 #'
 #' @import dplyr
-#' @import utils
 #' @import purrr
+#' @import utils
 process_data = function(data, value, row, col, group = NULL) {
-  #data = x; row = "row"; group = "group"; col = "col"; value = "value"
   if (is.null(group)) {
     data$xxx = 1
     group = "xxx"
@@ -217,7 +217,7 @@ generate_data_from_project = function(proj, ...) {
   if (is.null(proj$data$pred)) {
     return(data)
   } else {
-    data$pred = dplyr::left_join(proj$data$pred[c("row", "col")], data$x, by = c("row", "col"))  |> dplyr::relocate(dplyr::all_of("value"))
+    data$pred = dplyr::left_join(proj$data$pred[c("row", "col")], data$x, by = c("row", "col")) |> dplyr::relocate(dplyr::all_of("value"))
     data$x = dplyr::right_join(data$x, proj$data$x[c("row", "col")], by = c("row", "col"))
     return(data)
   }
