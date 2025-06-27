@@ -58,11 +58,14 @@ export = function(proj, path_dump = getwd(), rds = T, plot.extension = "png") {
   }
 
   if (real) {
-    plot_lambda(proj, stat = "real")
+    lambda = plot_lambda(proj, stat = "real")
+    sigma2 = plot_hpd(proj, "sigma2", col = 1, stat = c("mean", "real"))
   } else {
-    plot_lambda(proj)
+    lambda = plot_lambda(proj)
+    sigma2 = plot_hpd(proj, "sigma2", col = 1, stat = "mean")
   }
-  ggsave(img("lambda_hpd"), width = 15, height = 5, dpi = 300, bg = "white")
+  ggsave(plot = lambda, file = img("lambda_hpd"), width = 15, height = 5, dpi = 300, bg = "white")
+  ggsave(plot = sigma2, file = img("sigma2_hpd"), width = 15, height = 5, dpi = 300, bg = "white")
 
   plot_contrast(proj, par = "alpha")
   ggsave(img("alpha_contrast_mean"), width = 8, height = 8, dpi = 300, bg = "white")
