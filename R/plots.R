@@ -199,7 +199,6 @@ plot_diagnostic = function(proj, stat, list = F) {
 
   plot_diagnostic_local = function(df, par) {
     title =
-      "Histogram of" |>
       paste(stat) |>
       {\(.) if(par == "all") paste(., "for all parameters")
         else paste(., "for", par) }()
@@ -260,38 +259,31 @@ plot_diagnostic = function(proj, stat, list = F) {
 #'
 #' @param smry .
 #' @param par .
-#' @param stat .
 #'
 #' @export
 #'
 #' @import ggplot2
-plot_bias = function(smry, par = "all", stat = "mean") {
+plot_bias = function(smry, par = "all") {
   smry = validate_proj_arg(smry, "summary")
 
-  bias_c = function(par) {
-    d = smry[[par]][,,"real"]
-    d[d == 0] = 1
-    rb = (smry[[par]][,,"real"] - smry[[par]][,,stat]) / d
-    c(rb)
-  }
-
   if (par == "all") {
-    rb = c()
-    for (par_ in names(smry)) {
-      rb = c(rb, bias_c(par_))
-    }
+    x =
+      smry |>
+      lapply(function(x) {x[,,"bias"]}) |>
+      unlist() |>
+      unname()
   } else {
-    rb = bias_c(par)
+    x = smry[[par]][,,"bias"] |> c()
   }
 
-  df = data.frame(rb = c(rb))
+  df = data.frame(bias = x)
 
-  ggplot(df, aes(x=rb)) +
-    geom_histogram() +
+  ggplot(df, aes(x=bias)) +
+    geom_histogram(fill = "grey", color = "black") +
     labs(
       title = paste0("Relative bias for ", ifelse(par == "all", "all parameters", par)),
       x = "relative bias",
-      y = "number of parameters"
+      y = "#parameters"
     ) +
     theme_minimal()
 }

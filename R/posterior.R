@@ -181,6 +181,12 @@ summary_matrix = function(fit, data = NULL) {
     if (!is.null(data) & !is.null(data$real) & (parameter != "pred")) {
       matrices[[parameter]][["real"]] = data[["real"]][[parameter]]
     }
+
+    if (!is.null(data) & !is.null(data$real)) {
+      denom = matrices[[parameter]][["real"]]
+      denom[denom == 0] = 1
+      matrices[[parameter]][["bias"]] = (matrices[[parameter]][["real"]] - matrices[[parameter]][["mean"]]) / denom
+    }
   }
 
   matrices = sapply(matrices, function(x) { abind::abind(x, along = 3) })

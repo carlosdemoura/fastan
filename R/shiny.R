@@ -246,14 +246,15 @@ navbarPage(
 #' @param output .
 #' @param session .
 #'
-#' @import plotly
 #' @import coda
-#' @import rstan
 #' @import dplyr
-#' @import zip
+#' @import gridExtra
+#' @import plotly
 #' @import purrr
-#' @import stats
+#' @import rstan
 #' @import shiny
+#' @import stats
+#' @import zip
 server = function(proj = NULL, input, output, session) {
 
 server0 = function(input, output, session) {
@@ -338,14 +339,25 @@ server0 = function(input, output, session) {
         fluidRow(header_col("Accuracy", "#a8f2fe", "8vh", 12)),
 
         fluidRow(
-          column(12,
+          column(6,
             verbatimTextOutput("Inference.accuracy_table")
+          ),
+          column(6,
+            plotOutput("Inference.bias")
           )
         )
       )
     })
 
     output$Inference.accuracy_table = renderPrint(accuracy(project()$summary) |> round(4))
+
+    bias = list()
+    for (param in c("all", names(project()$summary))) {
+      bias[[param]] = plot_bias(project(), param)
+    }
+    output$Inference.bias = renderPlot({
+      gridExtra::grid.arrange(grobs = bias, ncol=2)
+    })
     }
 
     if (!is.null(project()$data$pred)) {

@@ -35,7 +35,7 @@ fiat_groups_limits = function(x) {
 #' @import ggplot2
 #' @import gridExtra
 export = function(proj, path_dump = getwd(), rds = T, plot.extension = "png") {
-  real = ifelse(!is.null(proj$data$real), T, F)
+  real = !is.null(proj$data$real)
   path = paste0(path_dump, "/fastanExport_", format(Sys.time(), "%Y-%m-%d-%Hh%Mm%Ss"))
 
   if (dir.exists(path)) {
@@ -102,13 +102,8 @@ export = function(proj, path_dump = getwd(), rds = T, plot.extension = "png") {
     accuracy(proj) |> print()
     sink()
 
-    sink(file.path(path, "bias.txt"))
-    bias(proj) |> print()
-    sink()
-
     bias = list()
-    for (param in names(proj$summary)) {
-      # falta all
+    for (param in c("all", names(proj$summary))) {
       bias[[param]] = plot_bias(proj, param)
     }
     p_bias = gridExtra::grid.arrange(grobs = bias, ncol=2)
@@ -269,7 +264,7 @@ param.dim = function(proj) {
 }
 
 
-#' Get percentage of parameters that are in HPD from simdata
+#' Get percentage of parameters that are in HPD & mean relative bias from simdata
 #'
 #' @param smry fastan summary
 #'
@@ -280,9 +275,9 @@ accuracy = function(smry) {
   smry = validate_proj_arg(smry, "summary")
   stopifnot("data must be simdata" = "real" %in% dimnames(smry$alpha)[[3]])
   table =
-    matrix(0, nrow = 4, ncol = 2) |>
+    matrix(0, nrow = 4, ncol = 3) |>
     as.data.frame() |>
-    `colnames<-`(c("p", "total")) |>
+    `colnames<-`(c("p", "bias", "total")) |>
     `rownames<-`(c("alpha", "lambda", "sigma2", "pred"))
   for (par in names(smry)) {
     table[par, "p"] =
@@ -290,30 +285,16 @@ accuracy = function(smry) {
       {\(.) (. >= smry[[par]][,,"hpd_min"]) & (. <= smry[[par]][,,"hpd_max"])}() |>
       as.numeric() |>
       mean()
+
+    table[par, "bias"] = smry[[par]][,,"bias"] |> mean()
   }
   if (!("pred" %in% names(smry))) {
     table = table[-4,]
   }
   table$total = param.dim(list(summary = smry))$total
-  table["all",] = stats::weighted.mean(table$p, table$total) |> c(sum(table$total))
+  table["all",] =
+    stats::weighted.mean(table$p, table$total) |>
+    c(stats::weighted.mean(table$bias, table$total)) |>
+    c(sum(table$total))
   table
-}
-
-
-#' Title
-#'
-#' @param smry .
-#' @param stat .
-#'
-#' @export
-bias = function(smry, stat = "mean") {
-  smry = validate_proj_arg(smry, "summary")
-  bias = list()
-  for (par in names(smry)) {
-    d = smry[[par]][,,"real"]
-    d[d == 0] = 1
-    rb = (smry[[par]][,,"real"] - smry[[par]][,,stat]) / d
-    bias[[par]] = mean(rb)
-  }
-  bias
 }
