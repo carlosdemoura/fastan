@@ -156,7 +156,7 @@ generate_parameters_from_prior = function(prior) {
                   ncol = length(prior$lambda$mean[[1]]),
                   nrow = n.fac)
 
-  for (i in 1:nfac) {
+  for (i in 1:n.fac) {
     alpha[,i]  = MASS::mvrnorm(1, prior$alpha$mean[[i]],  prior$alpha$cov[[i]])
     lambda[i,] = MASS::mvrnorm(1, prior$lambda$mean[[i]], prior$lambda$cov[[i]])
   }
@@ -164,7 +164,7 @@ generate_parameters_from_prior = function(prior) {
   list(
     alpha  = alpha,
     lambda = lambda,
-    sigma2 = stats::rgamma(nrow, shape = prior$sigma2$shape, scale = prior$sigma2$scale)
+    sigma2 = stats::rgamma(nrow, shape = prior$sigma2$shape, scale = prior$sigma2$scale) |> as.matrix()
   )
 }
 

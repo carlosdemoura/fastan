@@ -9,7 +9,7 @@ prior = function(data, dependence = list(lambda = F, alpha = F), semi.conf) {
   nfac = data$dim$group.n - as.integer(semi.conf)
   prior = list(alpha  = list(mean = list_vec(data$dim$row, nfac)),
                lambda = list(mean = list_vec(data$dim$col, nfac)),
-               sigma2 = list(shape=0.1, scale = 0.1),
+               sigma2 = list(shape=0.1, scale = 10),
                semi.conf = semi.conf
                )
 
