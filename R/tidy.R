@@ -92,7 +92,7 @@ set_summary = function(proj, ...) {
 
 #' Title
 #'
-#' @param expr
+#' @param expr .
 try_set = function(expr) {
   tryCatch({
     expr

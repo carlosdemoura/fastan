@@ -13,6 +13,7 @@ Imports:
     coda,
     dplyr,
     gridExtra,
+    MASS,
     plotly,
     posterior,
     purrr,

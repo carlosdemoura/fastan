@@ -4,18 +4,18 @@
 \alias{process_data}
 \title{Process data in \code{fastan} model format (confirmatory or semi-confirmatory models)}
 \usage{
-process_data(data, value, group, row, col)
+process_data(data, value, row, col, group = NULL)
 }
 \arguments{
 \item{data}{data.frame in the longer format. ### obs já arranjado já com grupos como fatores, já com último fator como grupo semi.conf se for o caso}
 
 \item{value}{string; name of the column containing values.}
 
-\item{group}{string; name of the column containing groups.}
-
 \item{row}{string; name of the column containing rows/loadings.}
 
 \item{col}{string; name of the column containing columns/factor-levels.}
+
+\item{group}{string; name of the column containing groups.}
 }
 \value{
 \code{fastan} model object

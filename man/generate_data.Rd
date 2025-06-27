@@ -9,7 +9,7 @@ generate_data(
   columns,
   cicles = 1,
   semi.conf = F,
-  real = list(alpha = c(1, 6), lambda = c(0.5, 1.5), sigma2 = c(1, 5)),
+  param = list(alpha = c(1, 6), lambda = c(0.5, 1.5), sigma2 = c(1, 5)),
   pred = 0
 )
 }
@@ -22,7 +22,7 @@ generate_data(
 
 \item{semi.conf}{boolean:}
 
-\item{real}{.}
+\item{param}{.}
 
 \item{pred}{.}
 }

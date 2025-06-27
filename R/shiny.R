@@ -345,7 +345,7 @@ server0 = function(input, output, session) {
       )
     })
 
-    output$Inference.accuracy_table = renderPrint(fastan::percentage_hits(project()$summary) |> round(4))
+    output$Inference.accuracy_table = renderPrint(accuracy(project()$summary) |> round(4))
     }
 
     if (!is.null(project()$data$pred)) {

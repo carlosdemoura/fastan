@@ -33,6 +33,7 @@ fiat_groups_limits = function(x) {
 #' @export
 #'
 #' @import ggplot2
+#' @import gridExtra
 export = function(proj, path_dump = getwd(), rds = T, plot.extension = "png") {
   real = ifelse(!is.null(proj$data$real), T, F)
   path = paste0(path_dump, "/fastanExport_", format(Sys.time(), "%Y-%m-%d-%Hh%Mm%Ss"))
@@ -80,8 +81,8 @@ export = function(proj, path_dump = getwd(), rds = T, plot.extension = "png") {
   ggsave(img("traceplot_lp"), width = 15, height = 5, dpi = 300, bg = "white")
 
   for (stat in c("Rhat", "n_eff", "geweke")) {
-    p = plot_diagnostic(proj, stat)
-    ggsave(plot = p, file = img(paste0("diganostic", "_", stat)), width = 7, height = 5, dpi = 300, bg = "white")
+    p_diag = plot_diagnostic(proj, stat)
+    ggsave(plot = p_diag, file = img(paste0("diganostic", "_", stat)), width = 7, height = 5, dpi = 300, bg = "white")
   }
 
   if (!is.null(proj$summary$pred)) {
@@ -94,9 +95,21 @@ export = function(proj, path_dump = getwd(), rds = T, plot.extension = "png") {
   sink()
 
   if (real) {
-    sink(file.path(path, "percentage_hits.txt"))
-    percentage_hits(proj) |> print()
+    sink(file.path(path, "accuracy.txt"))
+    accuracy(proj) |> print()
     sink()
+
+    sink(file.path(path, "bias.txt"))
+    bias(proj) |> print()
+    sink()
+
+    bias = list()
+    for (param in names(proj$summary)) {
+      # falta all
+      bias[[param]] = plot_bias(proj, param)
+    }
+    p_bias = gridExtra::grid.arrange(grobs = bias, ncol=2)
+    ggsave(plot = p_bias, file = img("bias"), width = 7, height = 5, dpi = 300, bg = "white")
   }
 
   if (rds) {
@@ -213,15 +226,91 @@ loglik = function(proj, param = NULL, stat = "mean") {
 
 #' Title
 #'
+#' @param proj fastan project
+#'
+#' @export
+param.dim = function(proj) {
+  stopifnot("project must have prior or summary" = ("prior" %in% names(proj)) | ("summary" %in% names(proj)))
+
+  df =
+    matrix(0, nrow = 4, ncol = 3) |>
+    as.data.frame() |>
+    `colnames<-`(c("row", "col", "total")) |>
+    `rownames<-`(c("alpha", "lambda", "sigma2", "pred"))
+
+  if ("summary" %in% names(proj)) {
+    smry = proj$summary
+    for (par in c("alpha", "lambda", "sigma2", "pred")) {
+      df[par, ] =
+        smry[[par]] |>
+        {\(.) if (!is.null(.)) .[,,"mean"] |> as.matrix()
+          else .}() |>
+        {\(.) c(nrow(.), ncol(.), nrow(.) * ncol(.))}() |>
+        {\(.) if (length(.)) .
+          else rep(0, 3)}()
+    }
+  } else {
+    fac = length(proj$prior$alpha$mean)
+    row = length(proj$prior$alpha$mean[[1]])
+    col = length(proj$prior$lambda$mean[[1]])
+    df["alpha",]  = c(row, fac, row*fac)
+    df["lambda",] = c(fac, col, fac*col)
+    df["sigma2",] = c(row, 1, row)
+    df["pred",]   = c(nrow(proj$data$pred), 1, nrow(proj$data$pred))
+  }
+
+  if ( ! ("pred" %in% names(proj$data) | "pred" %in% names(proj$summary)) ) {
+    df = df[-4,]
+  }
+  df
+}
+
+
+#' Get percentage of parameters that are in HPD from simdata
+#'
+#' @param smry fastan summary
+#'
+#' @export
+#'
+#' @import stats
+accuracy = function(smry) {
+  smry = validate_proj_arg(smry, "summary")
+  stopifnot("data must be simdata" = "real" %in% dimnames(smry$alpha)[[3]])
+  table =
+    matrix(0, nrow = 4, ncol = 2) |>
+    as.data.frame() |>
+    `colnames<-`(c("p", "total")) |>
+    `rownames<-`(c("alpha", "lambda", "sigma2", "pred"))
+  for (par in names(smry)) {
+    table[par, "p"] =
+      smry[[par]][,,"real"] |>
+      {\(.) (. >= smry[[par]][,,"hpd_min"]) & (. <= smry[[par]][,,"hpd_max"])}() |>
+      as.numeric() |>
+      mean()
+  }
+  if (!("pred" %in% names(smry))) {
+    table = table[-4,]
+  }
+  table$total = param.dim(list(summary = smry))$total
+  table["all",] = stats::weighted.mean(table$p, table$total) |> c(sum(table$total))
+  table
+}
+
+
+#' Title
+#'
 #' @param smry .
 #' @param stat .
 #'
 #' @export
-mse = function(smry, stat = "mean") {
+bias = function(smry, stat = "mean") {
   smry = validate_proj_arg(smry, "summary")
-  mse = list()
+  bias = list()
   for (par in names(smry)) {
-    mse[[par]] = sum((smry[[par]][,,"real"] - smry[[par]][,,stat])^2) / length(smry[[par]][,,stat])
+    d = smry[[par]][,,"real"]
+    d[d == 0] = 1
+    rb = (smry[[par]][,,"real"] - smry[[par]][,,stat]) / d
+    bias[[par]] = mean(rb)
   }
-  mse
+  bias
 }

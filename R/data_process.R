@@ -4,7 +4,7 @@
 #' @param columns integer; number of columns in the wider format.
 #' @param cicles integer; UNDER DEVELOPMENT.
 #' @param semi.conf boolean:
-#' @param real .
+#' @param param .
 #' @param pred .
 #'
 #' @return fastan model object
@@ -16,12 +16,7 @@
 #' @import stats
 #' @import tidyr
 #' @import utils
-generate_data = function(rows.by.group, columns, cicles = 1, semi.conf = F, real = list(alpha = c(1,6), lambda = c(.5,1.5), sigma2 = c(1,5)), pred = 0) {
-  normalize = function(x) {
-    real$lambda[1] + (x - min(x)) / (max(x) - min(x)) * (real$lambda[2] - real$lambda[1])
-  }
-
-  #rows.by.group = rep(10, 3); columns = 8; cicles = 1; semi.conf = T
+generate_data = function(rows.by.group, columns, cicles = 1, semi.conf = F, param = list(alpha = c(1,6), lambda = c(.5,1.5), sigma2 = c(1,5)), pred = 0) {
   stopifnot(
     "if the model is semi.conf there
     must be at least three groups" = ifelse(semi.conf, length(rows.by.group) >= 3, T),
@@ -29,60 +24,20 @@ generate_data = function(rows.by.group, columns, cicles = 1, semi.conf = F, real
   )
 
   n.fac = length(rows.by.group) - as.integer(semi.conf)
+  real = generate_parameters_from_uniform(rows.by.group, columns, semi.conf, param)
 
-  groups_limits = fiat_groups_limits(rows.by.group)
-
-  alpha = matrix(0,
-                 nrow = sum(rows.by.group),
-                 ncol = n.fac)
-
-  lambda = matrix(0,
-                  ncol = columns,
-                  nrow = n.fac)
-
-  for (i in 1:n.fac) {
-    alpha[groups_limits[[1]][i] : groups_limits[[2]][i], i] = stats::runif(rows.by.group[i], real$alpha[1], real$alpha[2])
-    for (j in 2:columns) {
-      lambda[i,j] = rnorm(1, lambda[i,j-1])
-    }
-  }
-
-  lambda =
-    lambda |>
-    #apply(1, function(x){ x |> scale() |>  {\(.) if(min(.) <= 0) . + abs(min(.)) + .1 else . + .1}()}) |>
-    apply(1, normalize) |>
-    t()
-
-  if (semi.conf) {
-    i = i + 1
-    mat1 =
-      matrix(
-        rep(stats::runif(rows.by.group[i], real$alpha[1], real$alpha[2]), n.fac),
-        nrow = rows.by.group[i],
-        ncol = n.fac
-    )
-    mat2 =
-      replicate(
-        rows.by.group[i],
-        stats::rbeta(n.fac, 0.1, 0.2) |> {\(.) ./sum(.)}()
-      ) |> t()
-    alpha[groups_limits[[1]][i] : groups_limits[[2]][i], ] = mat1 * mat2 |> {\(.) ifelse(. < 1e-2, 0, .)}()
-  }
-
-  sigma2 = stats::runif(sum(rows.by.group), real$sigma2[1], real$sigma2[2])
-
-  epsilon = matrix(
-    stats::rnorm(sum(rows.by.group)*columns*cicles, 0, sqrt(sigma2)) ,
-    ncol = columns*cicles,
-    byrow = F
-  )
-
-  alpha_lambda = alpha %*% lambda |>
+  alpha_lambda = real$alpha %*% real$lambda |>
     {\(.)
       do.call(cbind, lapply(1:ncol(.), function(i) {
         matrix(rep(.[, i], cicles), nrow = nrow(.))
       }))
     }()
+
+  epsilon = matrix(
+    stats::rnorm(sum(rows.by.group)*columns*cicles, 0, sqrt(real$sigma2)) ,
+    ncol = columns*cicles,
+    byrow = F
+  )
 
   x = (alpha_lambda + epsilon) |>
     as.data.frame() |>
@@ -112,10 +67,8 @@ generate_data = function(rows.by.group, columns, cicles = 1, semi.conf = F, real
       )}()
 
   data = process_data(data = x, value = "value", row = "row", col = "col", group = "group")
-  data$real = list(alpha = alpha,
-                   lambda = lambda,
-                   sigma2 = as.matrix(sigma2)
-                   )
+  data$real = real
+
   if (pred) {
     index = 1:nrow(data$x) |> sample(size = floor(pred * nrow(data$x) * 0.9), replace = F) |> sort()
     data$pred = data$x[index, ]
@@ -123,6 +76,96 @@ generate_data = function(rows.by.group, columns, cicles = 1, semi.conf = F, real
   }
 
   data
+}
+
+
+#' Title
+#'
+#' @inheritParams generate_data
+#'
+#' @export
+#'
+#' @import stats
+generate_parameters_from_uniform = function(rows.by.group, columns, semi.conf, param) {
+  normalize = function(x) {
+    param$lambda[1] + (x - min(x)) / (max(x) - min(x)) * (param$lambda[2] - param$lambda[1])
+  }
+
+  n.fac = length(rows.by.group) - as.integer(semi.conf)
+  groups_limits = fiat_groups_limits(rows.by.group)
+
+  alpha = matrix(0,
+                 nrow = sum(rows.by.group),
+                 ncol = n.fac)
+
+  lambda = matrix(0,
+                  ncol = columns,
+                  nrow = n.fac)
+
+  for (i in 1:n.fac) {
+    alpha[groups_limits[[1]][i] : groups_limits[[2]][i], i] = stats::runif(rows.by.group[i], param$alpha[1], param$alpha[2])
+    for (j in 2:columns) {
+      lambda[i,j] = rnorm(1, lambda[i,j-1])
+    }
+  }
+
+  lambda =
+    lambda |>
+    #apply(1, function(x){ x |> scale() |>  {\(.) if(min(.) <= 0) . + abs(min(.)) + .1 else . + .1}()}) |>
+    apply(1, normalize) |>
+    t()
+
+  if (semi.conf) {
+    i = i + 1
+    mat1 =
+      matrix(
+        rep(stats::runif(rows.by.group[i], param$alpha[1], param$alpha[2]), n.fac),
+        nrow = rows.by.group[i],
+        ncol = n.fac
+      )
+    mat2 =
+      replicate(
+        rows.by.group[i],
+        stats::rbeta(n.fac, 0.1, 0.2) |> {\(.) ./sum(.)}()
+      ) |> t()
+    alpha[groups_limits[[1]][i] : groups_limits[[2]][i], ] = mat1 * mat2 |> {\(.) ifelse(. < 1e-2, 0, .)}()
+  }
+
+  sigma2 = stats::runif(sum(rows.by.group), param$sigma2[1], param$sigma2[2])
+
+  list(alpha = alpha, lambda = lambda, sigma2 = as.matrix(sigma2))
+}
+
+
+#' Title
+#'
+#' @param prior .
+#'
+#' @export
+#'
+#' @import MASS
+#' @import stats
+generate_parameters_from_prior = function(prior) {
+  n.fac = length(prior$alpha$mean)
+  nrow = length(prior$alpha$mean[[1]])
+
+  alpha = matrix(0,
+                 nrow = nrow,
+                 ncol = n.fac)
+  lambda = matrix(0,
+                  ncol = length(prior$lambda$mean[[1]]),
+                  nrow = n.fac)
+
+  for (i in 1:nfac) {
+    alpha[,i]  = MASS::mvrnorm(1, prior$alpha$mean[[i]],  prior$alpha$cov[[i]])
+    lambda[i,] = MASS::mvrnorm(1, prior$lambda$mean[[i]], prior$lambda$cov[[i]])
+  }
+
+  list(
+    alpha  = alpha,
+    lambda = lambda,
+    sigma2 = stats::rgamma(nrow, shape = prior$sigma2$shape, scale = prior$sigma2$scale)
+  )
 }
 
 

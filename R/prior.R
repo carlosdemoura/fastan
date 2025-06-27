@@ -1,8 +1,8 @@
 #' Title
 #'
-#' @param data
-#' @param dependence
-#' @param semi.conf
+#' @param data .
+#' @param dependence .
+#' @param semi.conf .
 #'
 #' @export
 prior = function(data, dependence = list(lambda = F, alpha = F), semi.conf) {

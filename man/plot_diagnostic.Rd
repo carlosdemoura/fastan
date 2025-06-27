@@ -4,10 +4,10 @@
 \alias{plot_diagnostic}
 \title{Plot diagnostic stats}
 \usage{
-plot_diagnostic(fit, stat, list = F)
+plot_diagnostic(proj, stat, list = F)
 }
 \arguments{
-\item{fit}{.}
+\item{proj}{.}
 
 \item{stat}{.}
 

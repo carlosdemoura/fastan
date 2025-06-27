@@ -256,6 +256,47 @@ plot_diagnostic = function(proj, stat, list = F) {
 }
 
 
+#' Title
+#'
+#' @param smry .
+#' @param par .
+#' @param stat .
+#'
+#' @export
+#'
+#' @import ggplot2
+plot_bias = function(smry, par = "all", stat = "mean") {
+  smry = validate_proj_arg(smry, "summary")
+
+  bias_c = function(par) {
+    d = smry[[par]][,,"real"]
+    d[d == 0] = 1
+    rb = (smry[[par]][,,"real"] - smry[[par]][,,stat]) / d
+    c(rb)
+  }
+
+  if (par == "all") {
+    rb = c()
+    for (par_ in names(smry)) {
+      rb = c(rb, bias_c(par_))
+    }
+  } else {
+    rb = bias_c(par)
+  }
+
+  df = data.frame(rb = c(rb))
+
+  ggplot(df, aes(x=rb)) +
+    geom_histogram() +
+    labs(
+      title = paste0("Relative bias for ", ifelse(par == "all", "all parameters", par)),
+      x = "relative bias",
+      y = "number of parameters"
+    ) +
+    theme_minimal()
+}
+
+
 #' Plot missing values pattern
 #'
 #' @inheritParams plot_mock_doc

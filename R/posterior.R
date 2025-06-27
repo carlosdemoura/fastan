@@ -229,35 +229,6 @@ diagnostic = function(fit) {
 }
 
 
-#' Get percentage of parameters that are in HPD from simdata
-#'
-#' @param smry fastan summary
-#'
-#' @export
-#'
-#' @import stats
-percentage_hits = function(smry) {
-  smry = validate_proj_arg(smry, "summary")
-  table =
-    matrix(0, nrow = 5, ncol = 2) |>
-    as.data.frame() |>
-    `colnames<-`(c("p", "total")) |>
-    `rownames<-`(c("alpha", "lambda", "sigma2", "pred", "all"))
-  for (par in c("alpha", "lambda", "sigma2", "pred")) {
-    x =
-      smry[[par]][,,"real"] |>
-      {\(.) (. >= smry[[par]][,,"hpd_min"]) & (. <= smry[[par]][,,"hpd_max"])}() |>
-      as.numeric()
-    table[par, ] = c(mean(x), length(x))
-  }
-  if (!("pred" %in% names(smry))) {
-    table = table[-4,]
-  }
-  table["all",] = stats::weighted.mean(table$p, table$total) |> c(sum(table$total))
-  table
-}
-
-
 #' Transform `rstan` fit into `coda::mcmc.list()`
 #'
 #' @param fit `rstan::stan()` object.
