@@ -4,25 +4,12 @@
 \alias{generate_data}
 \title{Generate data (confirmatory or semi-confirmatory models)}
 \usage{
-generate_data(
-  rows.by.group,
-  columns,
-  cicles = 1,
-  semi.conf = F,
-  param = list(alpha = c(1, 6), lambda = c(0.5, 1.5), sigma2 = c(1, 5)),
-  pred = 0
-)
+generate_data(real, cicles = 1)
 }
 \arguments{
-\item{rows.by.group}{integer vector; size (number of loadings - or rows in the wider format) of each group.}
+\item{real}{.}
 
-\item{columns}{integer; number of columns in the wider format.}
-
-\item{cicles}{integer; UNDER DEVELOPMENT.}
-
-\item{semi.conf}{boolean:}
-
-\item{param}{.}
+\item{cicles}{.}
 
 \item{pred}{.}
 }

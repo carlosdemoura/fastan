@@ -4,12 +4,16 @@
 \alias{set_data}
 \title{Title}
 \usage{
-set_data(proj, simdata = F, ...)
+set_data(proj, simdata = "", pred = NULL, cicles = 1, ...)
 }
 \arguments{
 \item{proj}{.}
 
 \item{simdata}{.}
+
+\item{pred}{.}
+
+\item{cicles}{.}
 
 \item{...}{.}
 }

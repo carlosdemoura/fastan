@@ -4,14 +4,12 @@
 \alias{plot_bias}
 \title{Title}
 \usage{
-plot_bias(smry, par, stat = "mean")
+plot_bias(smry, par = "all")
 }
 \arguments{
 \item{smry}{.}
 
 \item{par}{.}
-
-\item{stat}{.}
 }
 \description{
 Title

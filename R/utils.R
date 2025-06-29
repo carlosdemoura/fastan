@@ -13,13 +13,23 @@ n.fac = function(proj){
 #' Title
 #'
 #' @param x .
-#'
-#' @export
 fiat_groups_limits = function(x) {
   y = list(c(1, (cumsum(x) + 1)[1:(length(x)-1)]),
            cumsum(x)
   )
   return(y)
+}
+
+
+#' Title
+#'
+#' @param data .
+#'
+#' @export
+prop.missing = function(data) {
+  data = validate_proj_arg(data, "data")
+  mis = ifelse(!is.null(data$pred), nrow(data$pred), 0)
+  mis / (nrow(data$x) + mis)
 }
 
 

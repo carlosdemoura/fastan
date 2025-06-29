@@ -14,20 +14,47 @@ set_info = function(proj, info) {
 #'
 #' @param proj .
 #' @param simdata .
+#' @param pred .
+#' @param cicles .
 #' @param ... .
 #'
 #' @export
-set_data = function(proj, simdata = F, ...) {
-  if (simdata) {
-    if (is.null(proj$data)) {
-      proj$data = generate_data(...)
-    } else {
-      #semi.conf = ifelse(!is.null(proj$prior), proj$prior$semi.conf, F)
-      proj$data = generate_data_from_project(proj, ...)
+#'
+#' @import dplyr
+set_data = function(proj, simdata = "", pred = NULL, cicles = 1, ...) {
+  dots = match.call(expand.dots = FALSE)$...
+
+  if (nchar(simdata)) {
+
+    if ((simdata == "uniform") | identical(simdata, T)) {
+      if (!is.null(proj$data)) {
+        semi.conf = ifelse(is.null(dots$semi.conf), proj$prior$semi.conf, dots$semi.conf)
+        real = real_from_uniform(group.sizes = proj$data$dim$group.sizes, columns = proj$data$dim$col, semi.conf = semi.conf, ...)
+      } else {
+        real = real_from_uniform(...)
+      }
+    } else if (simdata == "prior") {
+      real = real_from_prior(proj)
+    } else if (simdata == "posterior") {
+      real = real_from_posterior(proj, ...)
     }
+    data = generate_data(real = real, cicles = cicles)
+
+    if (!is.null(proj$data$pred) & is.null(pred)) {
+      data$pred = dplyr::left_join(proj$data$pred[c("row", "col")], data$x, by = c("row", "col")) |> dplyr::relocate(dplyr::all_of("value"))
+      data$x = dplyr::right_join(data$x, proj$data$x[c("row", "col")], by = c("row", "col"))
+    } else if (is.null(proj$data$pred) & !is.null(pred) & pred > 0) {
+      stopifnot("it's necessary 0 <= pred < 1 " = (0 <= pred) & (pred < 1))
+      index = 1:nrow(data$x) |> sample(size = floor(pred * nrow(data$x)), replace = F) |> sort()
+      data$pred = data$x[index, ]
+      data$x = data$x[-index, ]
+    }
+
   } else {
-    proj$data = process_data(...)
+    data = process_data(...)
   }
+
+  proj$data = data
   return(proj)
 }
 
@@ -35,11 +62,16 @@ set_data = function(proj, simdata = F, ...) {
 #' Title
 #'
 #' @param proj .
+#' @param type .
 #' @param ... .
 #'
 #' @export
-set_prior = function(proj, ...) {
-  proj$prior = prior(proj$data, ...)
+set_prior = function(proj, type, ...) {
+  if (type == "normal") {
+    proj$prior = prior(proj$data, ...)
+  } else {
+    stop("prior type not accepted")
+  }
   return(proj)
 }
 
@@ -79,13 +111,14 @@ set_diagnostic = function(proj, ...) {
 
 #' Title
 #'
-#' @inheritParams set_prior
+#' @param proj .
+#' @param attr .
 #'
 #' @export
-set_summary = function(proj, ...) {
-  try_set({
-    proj$summary = summary_matrix(proj$fit, proj$data)
-  })
+remove = function(proj, attr) {
+  for (x in attr) {
+    proj[[x]] = NULL
+  }
   return(proj)
 }
 

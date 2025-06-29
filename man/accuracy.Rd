@@ -2,7 +2,7 @@
 % Please edit documentation in R/utils.R
 \name{accuracy}
 \alias{accuracy}
-\title{Get percentage of parameters that are in HPD from simdata}
+\title{Get percentage of parameters that are in HPD & mean relative bias from simdata}
 \usage{
 accuracy(smry)
 }
@@ -10,5 +10,5 @@ accuracy(smry)
 \item{smry}{fastan summary}
 }
 \description{
-Get percentage of parameters that are in HPD from simdata
+Get percentage of parameters that are in HPD & mean relative bias from simdata
 }
