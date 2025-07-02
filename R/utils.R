@@ -14,10 +14,10 @@ n.fac = function(proj){
 #'
 #' @param x .
 fiat_groups_limits = function(x) {
-  y = list(c(1, (cumsum(x) + 1)[1:(length(x)-1)]),
-           cumsum(x)
+  list(
+    c(1, (cumsum(x) + 1)[1:(length(x)-1)]),
+    cumsum(x)
   )
-  return(y)
 }
 
 

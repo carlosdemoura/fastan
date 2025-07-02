@@ -7,6 +7,8 @@
 remove(proj, attr)
 }
 \arguments{
+\item{proj}{.}
+
 \item{attr}{.}
 }
 \description{

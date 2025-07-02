@@ -4,7 +4,7 @@
 \alias{set_data}
 \title{Title}
 \usage{
-set_data(proj, simdata = "", pred = NULL, cicles = 1, ...)
+set_data(proj, simdata = "", pred = NULL, cicles = 1, seed = NULL, ...)
 }
 \arguments{
 \item{proj}{.}
@@ -14,6 +14,8 @@ set_data(proj, simdata = "", pred = NULL, cicles = 1, ...)
 \item{pred}{.}
 
 \item{cicles}{.}
+
+\item{seed}{.}
 
 \item{...}{.}
 }

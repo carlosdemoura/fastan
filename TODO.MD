@@ -1,10 +1,6 @@
 # fastan to do list
 
-- shiny: prediction density (click on contrast)
-- model: priors
-- general: latex tables
-- general: select rds button elsewhere
-- R/data_process: simulate data with same dimension
-- R/oop: implement classes, model, prior (?), summary (?), project
-- R/prediction:
-- R/tidy: all
+- R/data_process: generate data using withr::with_seed instead of set.seed
+- R/data_process: generate data w semi.conf = T and prior w semi.conf = F rises error
+- R/oop: better classes, data, prior, summary, project
+- R/prediction: maintain?

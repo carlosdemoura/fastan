@@ -10,8 +10,6 @@ generate_data(real, cicles = 1)
 \item{real}{.}
 
 \item{cicles}{.}
-
-\item{pred}{.}
 }
 \value{
 fastan model object

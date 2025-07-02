@@ -5,12 +5,13 @@
 #' @param semi.conf .
 #'
 #' @export
-prior = function(data, dependence = list(lambda = F, alpha = F), semi.conf) {
+prior_normal = function(data, dependence = list(lambda = F, alpha = F), semi.conf) {
   nfac = data$dim$group.n - as.integer(semi.conf)
   prior = list(alpha  = list(mean = list_vec(data$dim$row, nfac)),
                lambda = list(mean = list_vec(data$dim$col, nfac)),
-               sigma2 = list(shape=0.1, scale = 10),
-               semi.conf = semi.conf
+               sigma2 = list(shape=0.1, scale = 1),
+               semi.conf = semi.conf,
+               type = "normal"
                )
 
   if (dependence$lambda) {
@@ -27,6 +28,23 @@ prior = function(data, dependence = list(lambda = F, alpha = F), semi.conf) {
 
   class(prior) = "prior"
   prior
+}
+
+
+#' Adjust the data argument on `rstan::stan()`
+#'
+#' @param proj fastan proj object.
+#'
+#' @import abind
+interface_normal = function(proj) {
+  list(
+    sigma2_shape = proj$prior$sigma2$shape,
+    sigma2_scale = proj$prior$sigma2$scale,
+    alpha_mean   = abind::abind(proj$prior$alpha$mean,  along=2) |> aperm(c(2,1)),
+    alpha_cov    = abind::abind(proj$prior$alpha$cov,   along=3) |> aperm(c(3,1,2)),
+    lambda_mean  = abind::abind(proj$prior$lambda$mean, along=2) |> aperm(c(2,1)),
+    lambda_cov   = abind::abind(proj$prior$lambda$cov,  along=3) |> aperm(c(3,1,2))
+  )
 }
 
 
@@ -92,4 +110,13 @@ alpha_var = function(group.sizes, semi.conf) {
   }
 
   alpha_v
+}
+
+
+#' Title
+#'
+#' @param prior
+alpha_cov_to_var = function(prior) {
+  lapply(prior$alpha$cov, {\(.) diag(.) |> as.matrix()}) |>
+    {\(.) do.call(cbind, .)}()
 }

@@ -6,7 +6,7 @@
 #' @return list; for each
 #'
 #' @export
-fiat_init = function(proj, chains) {
+init = function(proj, chains) {
   n.fac = n.fac(proj)
   init = list()
 
@@ -32,7 +32,7 @@ fiat_init = function(proj, chains) {
 #' @return list; for each
 #'
 #' @export
-fiat_init_from_last_value = function(fit) {
+init_from_fit = function(fit) {
   draws = my_extract(fit)
   correct_dimensions = function(x, par) {
     if(is.null(dim(x))) {
@@ -76,14 +76,6 @@ interface = function(proj) {
     n_row        = proj$data$dim$row,
     n_col        = proj$data$dim$col,
     n_fac        = n.fac(proj),
-
-    sigma2_shape = proj$prior$sigma2$shape,
-    sigma2_scale = proj$prior$sigma2$scale,
-    alpha_mean   = abind::abind(proj$prior$alpha$mean, along=2) |> aperm(c(2,1)),
-    alpha_cov    = abind::abind(proj$prior$alpha$cov, along=3)  |> aperm(c(3,1,2)),
-    lambda_mean  = abind::abind(proj$prior$lambda$mean, along=2) |> aperm(c(2,1)),
-    lambda_cov   = abind::abind(proj$prior$lambda$cov, along=3)  |> aperm(c(3,1,2)),
-
     obs          = proj$data$x[,1] |> as.vector() |> unname() |> purrr::pluck(1),
     obs_coor     = proj$data$x[,2:3] |> as.matrix() |> unname()
   ) |>
@@ -101,7 +93,14 @@ interface = function(proj) {
       {\(.) c(., list(n_pred = nrow(.$pred_coor)))}()
   }
 
-  c(data, data_pred)
+  type = proj$prior$type
+  if (type == "normal") {
+    x = interface_normal(proj)
+  } else {
+    stop("prior type not accepted")
+  }
+
+  c(data, data_pred, x)
 }
 
 
@@ -119,9 +118,17 @@ interface = function(proj) {
 #' @import rstan
 stan = function(proj, init = NULL, chains = 1, ...) {
   if (is.null(init)) {
-    init = fiat_init(proj, chains)
+    init = init(proj, chains)
   }
-  rstan::stan(file   = system.file("stan", "interface_fa_normal.stan", package = "fastan"),
+
+  type = proj$prior$type
+  if (type == "normal") {
+    file = system.file("stan", "interface_fa_normal.stan", package = "fastan")
+  } else {
+    stop("prior type not accepted")
+  }
+
+  rstan::stan(file   = file,
               data   = interface(proj),
               pars   = c("alpha", "lambda", "sigma2") |> {\(.) if (!is.null(proj$data$pred)) append(., "pred") else .}(),
               init   = init,

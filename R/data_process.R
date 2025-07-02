@@ -74,16 +74,24 @@ generate_data = function(real, cicles = 1) {
 #' @param columns .
 #' @param semi.conf .
 #' @param param .
+#' @param norm .
 #'
 #' @import stats
-real_from_uniform = function(group.sizes, columns, semi.conf, param = list(alpha = c(1,6), lambda = c(.5,1.5), sigma2 = c(1,3))) {
+#' @import MASS
+real_from_uniform = function(group.sizes, columns, semi.conf, norm = list(alpha = F, lambda = F), param = list(alpha = c(-6,6), lambda = c(-1,1), sigma2 = c(.1,2))) {
   stopifnot(
     "if the model is semi.conf there
     must be at least three groups" = ifelse(semi.conf, length(group.sizes) >= 3, T)
   )
 
-  normalize = function(x) {
-    param$lambda[1] + (x - min(x)) / (max(x) - min(x)) * (param$lambda[2] - param$lambda[1])
+  param_ = list(alpha = c(-6,6), lambda = c(-1,1), sigma2 = c(.1,2))
+  for (par in c("alpha", "lambda", "sigma2")) {
+    if (is.null(norm[[par]]) & (par != "sigma2")) {
+      norm[[par]] = F
+    }
+    if (is.null(param[[par]])) {
+      param[[par]] = param_[[par]]
+    }
   }
 
   n.fac = length(group.sizes) - as.integer(semi.conf)
@@ -98,25 +106,29 @@ real_from_uniform = function(group.sizes, columns, semi.conf, param = list(alpha
                   nrow = n.fac)
 
   for (i in 1:n.fac) {
-    alpha[groups_limits[[1]][i] : groups_limits[[2]][i], i] = stats::runif(group.sizes[i], param$alpha[1], param$alpha[2])
-    for (j in 2:columns) {
-      lambda[i,j] = rnorm(1, lambda[i,j-1])
+    if (norm$alpha) {
+      alpha[groups_limits[[1]][i] : groups_limits[[2]][i], i] = stats::rnorm(group.sizes[i], 0, 10)
+    } else {
+      alpha[groups_limits[[1]][i] : groups_limits[[2]][i], i] = stats::runif(group.sizes[i], param$alpha[1], param$alpha[2])
+    }
+
+    if (norm$lambda) {
+      lambda[i,] = MASS::mvrnorm(1, rep(0, columns), lambda_cov_dep(columns)) |> abs()
+    } else {
+      lambda[i,] = stats::runif(columns, param$lambda[1], param$lambda[2])
     }
   }
-
-  lambda =
-    lambda |>
-    apply(1, normalize) |>
-    t()
 
   if (semi.conf) {
     i = i + 1
     mat1 =
+      {\(.) if (norm$alpha) rep(stats::rnorm(group.sizes[i], 0, 10), n.fac)
+        else rep(stats::runif(group.sizes[i], param$alpha[1], param$alpha[2]), n.fac) }() |>
       matrix(
-        rep(stats::runif(group.sizes[i], param$alpha[1], param$alpha[2]), n.fac),
         nrow = group.sizes[i],
         ncol = n.fac
       )
+
     mat2 =
       replicate(
         group.sizes[i],
@@ -138,7 +150,7 @@ real_from_uniform = function(group.sizes, columns, semi.conf, param = list(alpha
 real_from_posterior = function(proj, stat = "mean") {
   stopifnot("project must have summary" = !is.null(proj$summary))
   smry = proj$summary
-  list(
+  real = list(
     alpha  = smry$alpha[,,stat, drop=F],
     lambda = smry$lambda[,,stat, drop=F],
     sigma2 = smry$sigma2[,,stat, drop=F],
@@ -171,12 +183,17 @@ real_from_prior = function(proj) {
     lambda[i,] = MASS::mvrnorm(1, prior$lambda$mean[[i]], prior$lambda$cov[[i]])
   }
 
-  list(
+  real = list(
     alpha  = alpha,
     lambda = lambda,
     sigma2 = stats::rgamma(nrow, shape = prior$sigma2$shape, scale = prior$sigma2$scale) |> as.matrix(),
     group.sizes = proj$data$dim$group.sizes
   )
+
+  alpha_var = alpha_cov_to_var(proj$prior)
+  real$alpha[alpha_var == min(alpha_var)] = 0
+
+  real
 }
 
 

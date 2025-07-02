@@ -16,13 +16,18 @@ set_info = function(proj, info) {
 #' @param simdata .
 #' @param pred .
 #' @param cicles .
+#' @param seed .
 #' @param ... .
 #'
 #' @export
 #'
 #' @import dplyr
-set_data = function(proj, simdata = "", pred = NULL, cicles = 1, ...) {
+set_data = function(proj, simdata = "", pred = NULL, cicles = 1, seed = NULL, ...) {
   dots = match.call(expand.dots = FALSE)$...
+
+  if (!is.null(seed)) {
+    set.seed(seed)
+  }
 
   if (nchar(simdata)) {
 
@@ -37,17 +42,23 @@ set_data = function(proj, simdata = "", pred = NULL, cicles = 1, ...) {
       real = real_from_prior(proj)
     } else if (simdata == "posterior") {
       real = real_from_posterior(proj, ...)
+    } else if (simdata == "real") {
+      real = dots$real
+    } else {
+      stop("simdata type not accepted")
     }
     data = generate_data(real = real, cicles = cicles)
 
-    if (!is.null(proj$data$pred) & is.null(pred)) {
+    if (!is.null(proj$data$pred)) {
       data$pred = dplyr::left_join(proj$data$pred[c("row", "col")], data$x, by = c("row", "col")) |> dplyr::relocate(dplyr::all_of("value"))
       data$x = dplyr::right_join(data$x, proj$data$x[c("row", "col")], by = c("row", "col"))
-    } else if (is.null(proj$data$pred) & !is.null(pred) & pred > 0) {
+    } else if (is.null(proj$data$pred) & !is.null(pred)) {
       stopifnot("it's necessary 0 <= pred < 1 " = (0 <= pred) & (pred < 1))
-      index = 1:nrow(data$x) |> sample(size = floor(pred * nrow(data$x)), replace = F) |> sort()
-      data$pred = data$x[index, ]
-      data$x = data$x[-index, ]
+      if (pred > 0) {
+        index = 1:nrow(data$x) |> sample(size = floor(pred * nrow(data$x)), replace = F) |> sort()
+        data$pred = data$x[index, ]
+        data$x = data$x[-index, ]
+      }
     }
 
   } else {
@@ -68,7 +79,7 @@ set_data = function(proj, simdata = "", pred = NULL, cicles = 1, ...) {
 #' @export
 set_prior = function(proj, type, ...) {
   if (type == "normal") {
-    proj$prior = prior(proj$data, ...)
+    proj$prior = prior_normal(proj$data, ...)
   } else {
     stop("prior type not accepted")
   }
@@ -104,6 +115,19 @@ set_fit = function(proj, set_summary = T, set_diagnostic = T, ...) {
 set_diagnostic = function(proj, ...) {
   try_set({
     proj$diagnostic = diagnostic(proj$fit)
+  })
+  return(proj)
+}
+
+
+#' Title
+#'
+#' @inheritParams set_prior
+#'
+#' @export
+set_summary = function(proj, ...) {
+  try_set({
+    proj$summary = summary_matrix(proj$fit, proj$data)
   })
   return(proj)
 }
