@@ -348,6 +348,56 @@ plot_missing = function(data) {
 }
 
 
+#' Title
+#'
+#' @inheritParams plot_mock_doc
+#'
+#' @import dplyr
+#' @import ggplot2
+#' @import tidyr
+plot_normal_prior = function(proj, par, stat, row = NULL, col = NULL) {
+  stopifnot("stat must be either mean or cov" = stat %in% c("mean", "cov"))
+  loc = c(row, col)
+  if (loc == "all") {
+    mat =
+      {\(.)
+        if (stat == "mean") proj$prior[[par]]$mean
+        else {proj$prior[[par]]$cov |> lapply(diag) }
+      }() |>
+      {\(.) do.call(cbind, .)}()
+  } else {
+    mat = proj$prior[[par]][[stat]][[loc]] |> as.matrix()
+  }
+
+  df =
+    as.data.frame(mat) |>
+    dplyr::mutate(
+      row = 1:nrow(mat)
+    ) |>
+    tidyr::pivot_longer(-dplyr::all_of("row"), names_to = "col", values_to = "value") |>
+    dplyr::mutate(
+      row = as.integer(row),
+      col = as.integer(gsub("V", "", col))
+    )
+
+  if (length(unique(df$value)) <= 5) {
+    df = df |> mutate(value = factor(value))
+
+    ggplot(df, aes(x = col, y = row, fill = value)) +
+      geom_tile(color = "white") +
+      scale_y_reverse() +
+      theme_minimal() +
+      scale_fill_manual(values = RColorBrewer::brewer.pal(length(unique(df$value)), "Set2"))
+  } else {
+    ggplot(df, aes(x = col, y = row, fill = value)) +
+      geom_tile(color = "white") +
+      scale_y_reverse() +
+      theme_minimal() +
+      scale_fill_viridis_c()
+  }
+}
+
+
 #' Transform 3D matrix into elongated data frame
 #'
 #' @param m matrix 3d, the 3rd dim will be elongated.

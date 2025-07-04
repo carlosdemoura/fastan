@@ -8,7 +8,8 @@ real_from_uniform(
   group.sizes,
   columns,
   semi.conf,
-  param = list(alpha = c(1, 6), lambda = c(0.5, 1.5), sigma2 = c(1, 3))
+  norm = list(alpha = F, lambda = F),
+  param = list(alpha = c(-6, 6), lambda = c(-1, 1), sigma2 = c(0.1, 2))
 )
 }
 \arguments{
@@ -17,6 +18,8 @@ real_from_uniform(
 \item{columns}{.}
 
 \item{semi.conf}{.}
+
+\item{norm}{.}
 
 \item{param}{.}
 }

@@ -115,7 +115,7 @@ alpha_var = function(group.sizes, semi.conf) {
 
 #' Title
 #'
-#' @param prior
+#' @param prior .
 alpha_cov_to_var = function(prior) {
   lapply(prior$alpha$cov, {\(.) diag(.) |> as.matrix()}) |>
     {\(.) do.call(cbind, .)}()

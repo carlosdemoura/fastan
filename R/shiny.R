@@ -453,12 +453,16 @@ server0 = function(input, output, session) {
     })
 
     output$Model.prior = renderUI({
-      paste0(
-        "<p>\\[ \\lambda_{i, \\bullet} = N_m(0_{", dim$col, "\\times 1}, I_{", dim$col, "}); \\]</p>",
-        "<p>\\[ \\sigma^2 \\sim Gama_n(0.1, 0.1). \\]</p>"
-      ) |>
-        HTML() |>
-        withMathJax()
+      tagList(
+        paste0(
+          "<p>\\[ \\alpha_{\\bullet, j} \\sim N_{", dim$row, "}(m_{\\alpha_j}, cov_{\\alpha_j}); \\]</p>",
+          "<p>\\[ \\lambda_{i, \\bullet} \\sim N_{", dim$col, "}(m_{\\lambda_i}, cov_{\\lambda_i}); \\]</p>",
+          "<p>\\[ \\sigma^2 \\sim Gama_{", dim$row, "}( shape = ", project()$prior$sigma2$shape, ",\\ scale = ", project()$prior$sigma2$scale, "). \\]</p>"
+        ) |>
+          HTML() |>
+          withMathJax(),
+        actionButton("Model.prior_hyp", "See prior parameters")
+      )
     })
 
     output$Model.info = renderUI({
@@ -638,6 +642,55 @@ server0 = function(input, output, session) {
         plot_posterior(project()$fit, par, row, col, type)
       })
     }
+  })
+
+
+  ###  PanelModel - prior  ###
+
+  output$Model.par_mean = renderPlot({
+    req(input$Model.prior_loc)
+    req(input$Model.prior_par)
+    col = ifelse(input$Model.prior_loc == "all", "all", as.integer(input$Model.prior_loc))
+    plot_normal_prior(project(), input$Model.prior_par, "mean", col)
+  })
+  output$Model.par_cov = renderPlot({
+    req(input$Model.prior_loc)
+    req(input$Model.prior_par)
+    col = ifelse(input$Model.prior_loc == "all", "all", as.integer(input$Model.prior_loc))
+    plot_normal_prior(project(), input$Model.prior_par, "cov", col)
+  })
+
+  observeEvent(input$Model.prior_hyp, {
+    showModal(modalDialog(
+      title = "Prior parameters",
+      size = "l",
+      easyClose = TRUE,
+      footer = modalButton("Close"),
+
+      div(style = "height:80vh;",
+          fluidPage(
+            fluidRow(
+              column(4,
+                     selectInput("Model.prior_par", "Choose parameter:",
+                                 choices = c("alpha", "lambda"),
+                                 selected = "alpha")
+              ),
+              column(4,
+                     selectInput("Model.prior_loc", "Choose alpha column:",
+                                 choices = c("all", 1:length(project()$prior$alpha$mean)),
+                                 selected = "all")
+              )),
+            fluidRow(
+              column(4,
+                     plotOutput("Model.par_mean", height = "80vh")
+              ),
+              column(8,
+                     plotOutput("Model.par_cov", height = "80vh")
+              )
+            )
+
+          ))
+    ))
   })
 
 }
