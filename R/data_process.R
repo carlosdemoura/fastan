@@ -218,7 +218,7 @@ process_data = function(data, value, row, col, group = NULL) {
     group = "xxx"
   }
 
-  labels = list(
+  label = list(
     factor_level = unique(data[[col]])  ,
     group        = unique(data[[group]]),
     loading      = unique(data[[row]])
@@ -234,9 +234,9 @@ process_data = function(data, value, row, col, group = NULL) {
     {\(.) .[c("value", "row", "col", "group")]}() |>
     {\(.)
     dplyr::mutate(.,
-      row    = .$row   |> factor(labels$loading)      |> as.numeric(),
-      col    = .$col   |> factor(labels$factor_level) |> as.numeric(),
-      group  = .$group |> factor(labels$group)        |> as.numeric()
+      row    = .$row   |> factor(label$loading)      |> as.numeric(),
+      col    = .$col   |> factor(label$factor_level) |> as.numeric(),
+      group  = .$group |> factor(label$group)        |> as.numeric()
     )}()
 
   group.sizes =
@@ -258,7 +258,7 @@ process_data = function(data, value, row, col, group = NULL) {
                  col = max(data_fa$col),
                  group.n = max(data_fa$group),
                  group.sizes = group.sizes),
-      labels = labels
+      label = label
   )
 
   if(any(is.na(data$x$value))) {

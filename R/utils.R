@@ -46,7 +46,7 @@ prop.missing = function(data) {
 #' @import gridExtra
 export = function(proj, path_dump = getwd(), rds = T, plot.extension = "png") {
   real = !is.null(proj$data$real)
-  path = paste0(path_dump, "/fastanExport_", format(Sys.time(), "%Y-%m-%d-%Hh%Mm%Ss"))
+  path = paste0(path_dump, "/fastanExport-", format(Sys.time(), "%Y_%m_%d-%Hh%Mm%Ss"))
 
   if (dir.exists(path)) {
     stop("failed to create folder on specified directory")

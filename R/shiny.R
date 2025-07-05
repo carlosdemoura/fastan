@@ -43,7 +43,7 @@ PanelModel = tabPanel(
       downloadButton("Model.export", "Export project")
     )),
   fluidRow(header_col("Model", "#87C2CC", "12vh", 12)),
-  fluidRow(header_col("Likelihood", "#a8f2fe", "8vh", 6), header_col("Priors", "#a8f2fe", "8vh", 6)),
+  fluidRow(header_col("Likelihood", "#a8f2fe", "8vh", 6), header_col("Prior", "#a8f2fe", "8vh", 6)),
   fluidRow(
     column(6,
       uiOutput("Model.like")
@@ -56,10 +56,11 @@ PanelModel = tabPanel(
   fluidRow(header_col("Info", "#a8f2fe", "8vh", 6), header_col("Labels", "#a8f2fe", "8vh", 6)),
   fluidRow(
     column(6,
-      uiOutput("Model.info")
+      uiOutput("Model.info"),
+      tableOutput("Model.info_groups")
       ),
     column(6,
-      uiOutput("Model.labels")
+      uiOutput("Model.label")
       )
   )
 )
@@ -437,6 +438,22 @@ server0 = function(input, output, session) {
   observeEvent(project(), {
     dim = c(project()$data$dim, list(fac = n.fac(project())))
 
+    df.groups =
+      data.frame(
+        group = project()$data$label$group |> as.character(),
+        size = project()$data$dim$group.sizes
+      ) |>
+      {\(.)
+        dplyr::mutate(.,
+                      starts = fiat_groups_limits(.$size)[[1]],
+                      ends   = fiat_groups_limits(.$size)[[2]]
+        )
+      }()
+
+    if (project()$prior$semi.conf) {
+      df.groups[nrow(df.groups),1] = paste(df.groups[nrow(df.groups),1], "(group extra)")
+    }
+
     output$Model.like = renderUI({
       paste0(
         "<p>\\[ X = \\alpha \\lambda + \\epsilon \\]</p>",
@@ -455,13 +472,18 @@ server0 = function(input, output, session) {
     output$Model.prior = renderUI({
       tagList(
         paste0(
-          "<p>\\[ \\alpha_{\\bullet, j} \\sim N_{", dim$row, "}(m_{\\alpha_j}, cov_{\\alpha_j}); \\]</p>",
-          "<p>\\[ \\lambda_{i, \\bullet} \\sim N_{", dim$col, "}(m_{\\lambda_i}, cov_{\\lambda_i}); \\]</p>",
-          "<p>\\[ \\sigma^2 \\sim Gama_{", dim$row, "}( shape = ", project()$prior$sigma2$shape, ",\\ scale = ", project()$prior$sigma2$scale, "). \\]</p>"
+          "<p>\\[ \\alpha_{\\bullet, j} \\sim N_{", dim$row, "}(mean\\ \\alpha_j, cov\\ \\alpha_j); \\]</p>",
+          "<p>\\[ \\lambda_{i, \\bullet} \\sim N_{", dim$col, "}(mean\\ \\lambda_i, cov\\ \\lambda_i); \\]</p>",
+          "<p>\\[ \\sigma^2 \\sim Gama_{", dim$row, "}( shape = ", project()$prior$sigma2$shape, ",\\ scale = ", project()$prior$sigma2$scale, "); \\]</p>",
+          "<p>\\[ var\\ \\alpha = \\bigr( var(\\alpha_{i,j}) \\bigr)_{i,j} \\]</p>",
+          "<p>\\[ var\\ \\lambda = \\bigr( var(\\lambda_{i,j}) \\bigr)_{i,j} \\]</p>"
         ) |>
           HTML() |>
           withMathJax(),
-        actionButton("Model.prior_hyp", "See prior parameters")
+        div(
+          style = "text-align: center; margin-top: 1em;",
+          actionButton("Model.prior_hyp", "See prior hyperparameters")
+        )
       )
     })
 
@@ -469,10 +491,44 @@ server0 = function(input, output, session) {
       paste0(
         "<p>Info: ", project()$info, "</p>",
         "<p>Number of groups:\t" , project()$data$dim$group.n, "</p>",
-        "<p>Number of factors:\t", n.fac(project()), "</p>"
+        "<p>Number of factors:\t", n.fac(project()), "</p>",
+        "<p><br></p>",
+        "<p>Group sizes</p>"
       ) |>
         HTML() |>
         withMathJax()
+    })
+
+    output$Model.info_groups <- renderTable({
+      df.groups
+    }, rownames = FALSE)
+
+    output$Model.label = renderUI({
+      tagList(
+        fluidRow(column(6, "Loading"), column(6, "Factor level")),
+        # fluidRow(
+        #   column(6,
+        #          div(style = "text-align: center; margin-top: 1em;", "Loading")
+        #   ),
+        #   column(6,
+        #          div(style = "text-align: center; margin-top: 1em;", "Factor level")
+        #   )
+        # ),
+        fluidRow(
+          column(2,
+                 selectInput("Model.loading_index", "X Row", choices = seq_along(project()$data$label$loading), selected = 1)
+          ),
+          column(4,
+                 selectInput("Model.loading_value", "label", choices = project()$data$label$loading, selected = project()$data$label$loading[1])
+          ),
+          column(2,
+                 selectInput("Model.factor_index", "X Col", choices = seq_along(project()$data$label$factor_level), selected = 1)
+          ),
+          column(4,
+                 selectInput("Model.factor_value", "label", choices = project()$data$label$factor_level, selected = project()$data$label$loading[1])
+          )
+        )
+      )
     })
   })
 
@@ -645,7 +701,7 @@ server0 = function(input, output, session) {
   })
 
 
-  ###  PanelModel - prior  ###
+  ###  PanelModel - prior hyperparameter  ###
 
   output$Model.par_mean = renderPlot({
     req(input$Model.prior_loc)
@@ -662,7 +718,7 @@ server0 = function(input, output, session) {
 
   observeEvent(input$Model.prior_hyp, {
     showModal(modalDialog(
-      title = "Prior parameters",
+      title = "Prior hyperparameters",
       size = "l",
       easyClose = TRUE,
       footer = modalButton("Close"),
@@ -671,26 +727,57 @@ server0 = function(input, output, session) {
           fluidPage(
             fluidRow(
               column(4,
-                     selectInput("Model.prior_par", "Choose parameter:",
-                                 choices = c("alpha", "lambda"),
-                                 selected = "alpha")
+                selectInput("Model.prior_par", "Parameter",
+                            choices = c("alpha", "lambda"),
+                            selected = "alpha")
               ),
               column(4,
-                     selectInput("Model.prior_loc", "Choose alpha column:",
-                                 choices = c("all", 1:length(project()$prior$alpha$mean)),
-                                 selected = "all")
+                selectInput("Model.prior_loc", "Column",
+                            choices = c("all", 1:length(project()$prior$alpha$mean)),
+                            selected = "all")
               )),
             fluidRow(
               column(4,
-                     plotOutput("Model.par_mean", height = "80vh")
+                plotOutput("Model.par_mean", height = "80vh")
               ),
               column(8,
-                     plotOutput("Model.par_cov", height = "80vh")
+                plotOutput("Model.par_cov", height = "80vh")
               )
             )
 
           ))
     ))
+  })
+
+
+  ###  PanelModel - prior hyperparameter  ###
+
+  observeEvent(input$Model.prior_par, {
+    label = if (input$Model.prior_par == "alpha") "Column" else "Row"
+
+    updateSelectInput(
+      inputId = "Model.prior_loc",
+      label = label,
+      choices = c("all", 1:length(project()$prior[[input$Model.prior_par]]$mean)),
+      selected = input$Model.prior_loc
+    )
+  })
+
+
+  ###  PanelModel - label  ###
+
+  observeEvent(input$Model.loading_index, {
+    updateSelectInput(session, "Model.loading_value", selected = proj$data$label$loading[as.integer(input$Model.loading_index)])
+  })
+  observeEvent(input$Model.loading_value, {
+    updateSelectInput(session, "Model.loading_index", selected = which(proj$data$label$loading == input$Model.loading_value)[1])
+  })
+
+  observeEvent(input$Model.factor_index, {
+    updateSelectInput(session, "Model.factor_value", selected = proj$data$label$factor_level[as.integer(input$Model.factor_index)])
+  })
+  observeEvent(input$Model.factor_value, {
+    updateSelectInput(session, "Model.factor_index", selected = which(proj$data$label$factor_level == input$Model.factor_value)[1])
   })
 
 }

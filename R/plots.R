@@ -208,7 +208,7 @@ plot_diagnostic = function(proj, stat, list = F) {
       labs(
         title = title,
         x = stat,
-        y = "Frequency"
+        y = "#parameters"
       ) +
       theme_minimal()
   }
@@ -225,8 +225,9 @@ plot_diagnostic = function(proj, stat, list = F) {
 
 
   df =
-    df[,1:6] |>
-    dplyr::rename(geweke = "geweke:1")
+    df |>
+    {\(.) dplyr::mutate(., geweke = apply(select(., starts_with("geweke")), 1, function(x) x[which.max(abs(x))])) }() |>
+    dplyr::select(dplyr::all_of(c("par", "row", "col", "n_eff", "Rhat", "geweke")))
 
   plots = list()
 
@@ -355,9 +356,8 @@ plot_missing = function(data) {
 #' @import dplyr
 #' @import ggplot2
 #' @import tidyr
-plot_normal_prior = function(proj, par, stat, row = NULL, col = NULL) {
+plot_normal_prior = function(proj, par, stat, loc = "all") {
   stopifnot("stat must be either mean or cov" = stat %in% c("mean", "cov"))
-  loc = c(row, col)
   if (loc == "all") {
     mat =
       {\(.)
@@ -380,21 +380,59 @@ plot_normal_prior = function(proj, par, stat, row = NULL, col = NULL) {
       col = as.integer(gsub("V", "", col))
     )
 
-  if (length(unique(df$value)) <= 5) {
-    df = df |> mutate(value = factor(value))
-
-    ggplot(df, aes(x = col, y = row, fill = value)) +
-      geom_tile(color = "white") +
-      scale_y_reverse() +
-      theme_minimal() +
-      scale_fill_manual(values = RColorBrewer::brewer.pal(length(unique(df$value)), "Set2"))
-  } else {
-    ggplot(df, aes(x = col, y = row, fill = value)) +
-      geom_tile(color = "white") +
-      scale_y_reverse() +
-      theme_minimal() +
-      scale_fill_viridis_c()
+  vals = sort(unique(df$value))
+  if (length(vals) <= 5) {
+    palette = colorRampPalette(c("white", "black"))(length(vals))
+    df$value = factor(df$value, levels = vals)
   }
+
+  ## ticks
+  if (par == "alpha") {
+    breaks.y =
+      proj$data$dim$group.sizes |>
+      {\(.) fiat_groups_limits(.)[[1]] |> c(sum(.))}()
+  } else {
+    breaks.y = c(1, proj$data$dim$col)
+  }
+  if (stat == "cov") {
+    if (loc == "all") {
+      breaks.x = 1:ncol(mat)
+    } else {
+      breaks.x = breaks.y
+    }
+  } else {
+    breaks.x = 1:ncol(mat)
+  }
+
+  ## title
+  if (loc == "all") {
+    x = ifelse(stat == "cov", "var ", "mean ")
+    title = bquote(.(x) * .(as.name(par)))
+  } else {
+    title = bquote(.(paste0(stat, " ")) * .(as.name(par))[.(loc)])
+  }
+
+
+  ggplot(df, aes(x = col, y = row, fill = value)) +
+    {
+      if ((stat == "mean") & (length(vals) ==1)) geom_tile(color = "black")
+      else geom_tile(color = "white")
+    } +
+    theme_void() +
+    theme(
+      axis.text.y  = element_text(color = "black"),
+      axis.ticks.y = element_line(color = "black"),
+      axis.text.x  = element_text(color = "black"),
+      axis.ticks.x = element_line(color = "black"),
+      plot.title   = element_text(hjust = 0.5)
+    ) +
+    labs(title = title) +
+    scale_y_continuous(breaks = breaks.y, trans = "reverse") +
+    scale_x_continuous(breaks = breaks.x) +
+    {
+      if (length(vals) <= 5) scale_fill_manual(values = setNames(palette, vals), name = "Value")
+      else scale_fill_gradient(low = "white", high = "black")
+    }
 }
 
 
@@ -438,6 +476,7 @@ matrix_to_df = function(m) {
 #' @param par .
 #' @param row .
 #' @param col .
+#' @param loc .
 #' @param type .
 #' @param stat .
-plot_mock_doc = function(proj, fit, smry, data, par, row, col, type, stat) {}
+plot_mock_doc = function(proj, fit, smry, data, par, row, col, loc, type, stat) {}

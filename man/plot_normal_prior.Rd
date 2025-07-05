@@ -4,7 +4,7 @@
 \alias{plot_normal_prior}
 \title{Title}
 \usage{
-plot_normal_prior(proj, par, stat, row = NULL, col = NULL)
+plot_normal_prior(proj, par, stat, loc = "all")
 }
 \arguments{
 \item{proj}{.}
@@ -13,9 +13,7 @@ plot_normal_prior(proj, par, stat, row = NULL, col = NULL)
 
 \item{stat}{.}
 
-\item{row}{.}
-
-\item{col}{.}
+\item{loc}{.}
 }
 \description{
 Title

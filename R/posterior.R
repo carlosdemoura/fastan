@@ -142,6 +142,7 @@ stan = function(proj, init = NULL, chains = 1, ...) {
 #'
 #' @param fit `rstan::stan()` fit object.
 #' @param data fastan data object
+#' @param bias.stat .
 #'
 #' @return list of matrices.
 #'
@@ -152,7 +153,7 @@ stan = function(proj, init = NULL, chains = 1, ...) {
 #' @import purrr
 #' @import rstan
 #' @import stats
-summary_matrix = function(fit, data = NULL) {
+summary_matrix = function(fit, data = NULL, bias.stat = "mean") {
   samp = rstan::extract(fit)
   matrices = list()
 
@@ -192,7 +193,7 @@ summary_matrix = function(fit, data = NULL) {
     if (!is.null(data) & !is.null(data$real)) {
       denom = matrices[[parameter]][["real"]]
       denom[denom == 0] = 1
-      matrices[[parameter]][["bias"]] = (matrices[[parameter]][["real"]] - matrices[[parameter]][["mean"]]) / denom
+      matrices[[parameter]][["bias"]] = (matrices[[parameter]][[bias.stat]] - matrices[[parameter]][["real"]]) / abs(denom)
     }
   }
 
