@@ -127,7 +127,7 @@ set_diagnostic = function(proj, ...) {
 #' @export
 set_summary = function(proj, ...) {
   try_set({
-    proj$summary = summary_matrix(proj$fit, proj$data)
+    proj$summary = summary_matrix(proj, ...)
   })
   return(proj)
 }

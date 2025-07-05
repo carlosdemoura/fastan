@@ -277,11 +277,12 @@ param.dim = function(proj) {
 #' Get percentage of parameters that are in HPD & mean relative bias from simdata
 #'
 #' @param smry fastan summary
+#' @param correct .
 #'
 #' @export
 #'
 #' @import stats
-accuracy = function(smry) {
+accuracy = function(smry, correct = F) {
   smry = validate_proj_arg(smry, "summary")
   stopifnot("data must be simdata" = "real" %in% dimnames(smry$alpha)[[3]])
   table =
@@ -290,13 +291,20 @@ accuracy = function(smry) {
     `colnames<-`(c("p", "bias", "total")) |>
     `rownames<-`(c("alpha", "lambda", "sigma2", "pred"))
   for (par in names(smry)) {
-    table[par, "p"] =
+    p =
       smry[[par]][,,"real"] |>
       {\(.) (. >= smry[[par]][,,"hpd_min"]) & (. <= smry[[par]][,,"hpd_max"])}() |>
       as.numeric() |>
-      mean()
+      c()
+    b = smry[[par]][,,"bias"] |> c()
 
-    table[par, "bias"] = smry[[par]][,,"bias"] |> mean()
+    if ((par == "alpha") & correct) {
+      p = p[as.logical(smry$alpha[,,"in_group"])]
+      b = b[as.logical(smry$alpha[,,"in_group"])]
+    }
+
+    table[par, "p"] = mean(p)
+    table[par, "bias"] = mean(b)
   }
   if (!("pred" %in% names(smry))) {
     table = table[-4,]

@@ -341,16 +341,18 @@ server0 = function(input, output, session) {
 
         fluidRow(
           column(6,
-            verbatimTextOutput("Inference.accuracy_table")
+            div(style = "margin-top: 1em; display: table; margin-left: auto; margin-right: auto;",
+                tableOutput("Inference.accuracy_table")
+            )
           ),
           column(6,
-            plotOutput("Inference.bias")
+            plotOutput("Inference.bias", height = "50vh")
           )
         )
       )
     })
 
-    output$Inference.accuracy_table = renderPrint(accuracy(project()$summary) |> round(4))
+    output$Inference.accuracy_table = renderTable(accuracy(project()$summary) |> round(4), rownames = T)
 
     bias = list()
     for (param in c("all", names(project()$summary))) {
@@ -499,7 +501,7 @@ server0 = function(input, output, session) {
         withMathJax()
     })
 
-    output$Model.info_groups <- renderTable({
+    output$Model.info_groups = renderTable({
       df.groups
     }, rownames = FALSE)
 

@@ -140,8 +140,7 @@ stan = function(proj, init = NULL, chains = 1, ...) {
 
 #' Get summary from `rstan::stan()` fit object
 #'
-#' @param fit `rstan::stan()` fit object.
-#' @param data fastan data object
+#' @param proj .
 #' @param bias.stat .
 #'
 #' @return list of matrices.
@@ -153,7 +152,9 @@ stan = function(proj, init = NULL, chains = 1, ...) {
 #' @import purrr
 #' @import rstan
 #' @import stats
-summary_matrix = function(fit, data = NULL, bias.stat = "mean") {
+summary_matrix = function(proj, bias.stat = "mean") {
+  fit = proj$fit
+  data = proj$data
   samp = rstan::extract(fit)
   matrices = list()
 
@@ -176,6 +177,14 @@ summary_matrix = function(fit, data = NULL, bias.stat = "mean") {
 
     if (parameter == "alpha") {
       matrices[[parameter]][["hpd_contains_0"]] = ifelse((matrices[[parameter]][["hpd_max"]] >= 0) & (matrices[[parameter]][["hpd_min"]] <= 0), T, F)
+
+      in_group = real_from_uniform(group.sizes = data$dim$group.sizes, columns = data$dim$col, semi.conf = proj$prior$semi.conf)$alpha
+      in_group[in_group!=0] = T
+      if (proj$prior$semi.conf) {
+        x = fiat_groups_limits(data$dim$group.sizes)
+        in_group[rev(x[[1]])[1]:rev(x[[2]])[1], ] = 1
+      }
+      matrices[[parameter]][["in_group"]] = in_group
     }
 
     if ((parameter == "pred") & !is.null(data)) {

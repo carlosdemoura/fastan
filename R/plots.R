@@ -34,13 +34,15 @@ plot_contrast = function(smry, par = "alpha", stat = "mean") {
     labs(fill = ifelse(stat == "hpd_contains_0", "Factor is\nsignificative", stat),
          x = "Factor",
          y = "Row",
-         title = ifelse(stat == "real", "Alpha real contrast", "Alpha posterior contrast"))
+         title = ifelse(stat == "real", "Alpha real contrast", "Alpha posterior contrast")) +
+    theme_minimal()
 }
 
 
 #' Plot HPD interval & other stats
 #'
 #' @inheritParams plot_mock_doc
+#' @param loc .
 #'
 #' @return ggplot2 plot
 #'
@@ -112,6 +114,7 @@ plot_lambda = function(smry, stat = "mean") {
 #' Plot posterior sample histogram and/or density
 #'
 #' @inheritParams plot_mock_doc
+#' @param type .
 #'
 #' @return ggplot2 plot
 #'
@@ -258,23 +261,31 @@ plot_diagnostic = function(proj, stat, list = F) {
 
 #' Title
 #'
-#' @param smry .
-#' @param par .
+#' @inheritParams plot_mock_doc
+#' @param corret .
 #'
 #' @export
 #'
 #' @import ggplot2
-plot_bias = function(smry, par = "all") {
+plot_bias = function(smry, par = "all", correct = T) {
   smry = validate_proj_arg(smry, "summary")
 
+  get_bias = function(par_) {
+    x = smry[[par_]]
+    if ((par_ == "alpha") & correct) {
+      c(x[,,"bias"])[as.logical(x[,,"in_group"])]
+    } else {
+      c(x[,,"bias"])
+    }
+  }
+
   if (par == "all") {
-    x =
-      smry |>
-      lapply(function(x) {x[,,"bias"]}) |>
-      unlist() |>
-      unname()
+    x = c()
+    for (p in names(smry)) {
+      x = c(x, get_bias(p))
+    }
   } else {
-    x = smry[[par]][,,"bias"] |> c()
+    x = get_bias(par)
   }
 
   df = data.frame(bias = x)
@@ -476,7 +487,5 @@ matrix_to_df = function(m) {
 #' @param par .
 #' @param row .
 #' @param col .
-#' @param loc .
-#' @param type .
 #' @param stat .
-plot_mock_doc = function(proj, fit, smry, data, par, row, col, loc, type, stat) {}
+plot_mock_doc = function(proj, fit, smry, data, par, row, col, stat) {}
