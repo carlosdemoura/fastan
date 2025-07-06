@@ -31,12 +31,12 @@ set_data = function(proj, simdata = "", pred = NULL, cicles = 1, seed = NULL, ..
 
   if (nchar(simdata)) {
 
-    if ((simdata == "uniform") | identical(simdata, T)) {
+    if ((simdata == "dist") | identical(simdata, T)) {
       if (!is.null(proj$data)) {
         semi.conf = ifelse(is.null(dots$semi.conf), proj$prior$semi.conf, dots$semi.conf)
-        real = real_from_uniform(group.sizes = proj$data$dim$group.sizes, columns = proj$data$dim$col, semi.conf = semi.conf, ...)
+        real = real_from_dist(group.sizes = proj$data$dim$group.sizes, columns = proj$data$dim$col, semi.conf = semi.conf, ...)
       } else {
-        real = real_from_uniform(...)
+        real = real_from_dist(...)
       }
     } else if (simdata == "prior") {
       real = real_from_prior(proj)

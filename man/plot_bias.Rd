@@ -4,12 +4,14 @@
 \alias{plot_bias}
 \title{Title}
 \usage{
-plot_bias(smry, par = "all")
+plot_bias(smry, par = "all", correct = T)
 }
 \arguments{
 \item{smry}{.}
 
 \item{par}{.}
+
+\item{correct}{.}
 }
 \description{
 Title

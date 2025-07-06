@@ -178,7 +178,7 @@ summary_matrix = function(proj, bias.stat = "mean") {
     if (parameter == "alpha") {
       matrices[[parameter]][["hpd_contains_0"]] = ifelse((matrices[[parameter]][["hpd_max"]] >= 0) & (matrices[[parameter]][["hpd_min"]] <= 0), T, F)
 
-      in_group = real_from_uniform(group.sizes = data$dim$group.sizes, columns = data$dim$col, semi.conf = proj$prior$semi.conf)$alpha
+      in_group = real_from_dist(group.sizes = data$dim$group.sizes, columns = data$dim$col, semi.conf = proj$prior$semi.conf)$alpha
       in_group[in_group!=0] = T
       if (proj$prior$semi.conf) {
         x = fiat_groups_limits(data$dim$group.sizes)

@@ -35,14 +35,19 @@ plot_contrast = function(smry, par = "alpha", stat = "mean") {
          x = "Factor",
          y = "Row",
          title = ifelse(stat == "real", "Alpha real contrast", "Alpha posterior contrast")) +
-    theme_minimal()
+    theme_minimal() +
+    theme(
+      panel.grid.major = element_blank(),
+      panel.grid.minor = element_blank(),
+      panel.background = element_blank(),
+      axis.line = element_line(colour = "black")
+      )
 }
 
 
 #' Plot HPD interval & other stats
 #'
 #' @inheritParams plot_mock_doc
-#' @param loc .
 #'
 #' @return ggplot2 plot
 #'
@@ -262,7 +267,7 @@ plot_diagnostic = function(proj, stat, list = F) {
 #' Title
 #'
 #' @inheritParams plot_mock_doc
-#' @param corret .
+#' @param correct .
 #'
 #' @export
 #'
@@ -363,6 +368,7 @@ plot_missing = function(data) {
 #' Title
 #'
 #' @inheritParams plot_mock_doc
+#' @param loc .
 #'
 #' @import dplyr
 #' @import ggplot2

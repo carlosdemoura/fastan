@@ -4,10 +4,12 @@
 \alias{accuracy}
 \title{Get percentage of parameters that are in HPD & mean relative bias from simdata}
 \usage{
-accuracy(smry)
+accuracy(smry, correct = F)
 }
 \arguments{
 \item{smry}{fastan summary}
+
+\item{correct}{.}
 }
 \description{
 Get percentage of parameters that are in HPD & mean relative bias from simdata

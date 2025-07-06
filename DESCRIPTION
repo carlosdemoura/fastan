@@ -27,6 +27,7 @@ Suggests:
     testthat (>= 3.0.0)
 Depends:
     R (>= 4.1.0),
+    distributional,
     ggplot2,
     shiny
 Config/testthat/edition: 3

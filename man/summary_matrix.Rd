@@ -4,12 +4,10 @@
 \alias{summary_matrix}
 \title{Get summary from \code{rstan::stan()} fit object}
 \usage{
-summary_matrix(fit, data = NULL, bias.stat = "mean")
+summary_matrix(proj, bias.stat = "mean")
 }
 \arguments{
-\item{fit}{\code{rstan::stan()} fit object.}
-
-\item{data}{fastan data object}
+\item{proj}{.}
 
 \item{bias.stat}{.}
 }

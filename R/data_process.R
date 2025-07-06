@@ -73,24 +73,21 @@ generate_data = function(real, cicles = 1) {
 #' @param group.sizes .
 #' @param columns .
 #' @param semi.conf .
-#' @param param .
-#' @param norm .
+#' @param dist .
 #'
+#' @import distributional
 #' @import stats
 #' @import MASS
-real_from_uniform = function(group.sizes, columns, semi.conf, norm = list(alpha = F, lambda = F), param = list(alpha = c(-6,6), lambda = c(-1,1), sigma2 = c(.1,2))) {
+real_from_dist = function(group.sizes, columns, semi.conf, dist = list( alpha = dist_uniform(-6,6), lambda = dist_normal(0,1), sigma2 = dist_uniform(.1,2) )) {
   stopifnot(
     "if the model is semi.conf there
     must be at least three groups" = ifelse(semi.conf, length(group.sizes) >= 3, T)
   )
 
-  param_ = list(alpha = c(-6,6), lambda = c(-1,1), sigma2 = c(.1,2))
+  dist_ = list( alpha = dist_uniform(-6,6), lambda = dist_normal(0,1), sigma2 = dist_uniform(.1,2) )
   for (par in c("alpha", "lambda", "sigma2")) {
-    if (is.null(norm[[par]]) & (par != "sigma2")) {
-      norm[[par]] = F
-    }
-    if (is.null(param[[par]])) {
-      param[[par]] = param_[[par]]
+    if (is.null(dist[[par]])) {
+      dist[[par]] = dist_[[par]]
     }
   }
 
@@ -106,38 +103,35 @@ real_from_uniform = function(group.sizes, columns, semi.conf, norm = list(alpha 
                   nrow = n.fac)
 
   for (i in 1:n.fac) {
-    if (norm$alpha) {
-      alpha[groups_limits[[1]][i] : groups_limits[[2]][i], i] = stats::rnorm(group.sizes[i], 0, 10)
-    } else {
-      alpha[groups_limits[[1]][i] : groups_limits[[2]][i], i] = stats::runif(group.sizes[i], param$alpha[1], param$alpha[2])
-    }
-
-    if (norm$lambda) {
-      lambda[i,] = MASS::mvrnorm(1, rep(0, columns), lambda_cov_dep(columns)) |> abs()
-    } else {
-      lambda[i,] = stats::runif(columns, param$lambda[1], param$lambda[2])
-    }
+    alpha[groups_limits[[1]][i] : groups_limits[[2]][i], i] = rep(1, group.sizes[i])
+    lambda[i,] = generate(dist$lambda, columns)[[1]] |> matrix(ncol = columns) |> {\(.) .[1,]}()
   }
 
   if (semi.conf) {
     i = i + 1
-    mat1 =
-      {\(.) if (norm$alpha) rep(stats::rnorm(group.sizes[i], 0, 10), n.fac)
-        else rep(stats::runif(group.sizes[i], param$alpha[1], param$alpha[2]), n.fac) }() |>
-      matrix(
-        nrow = group.sizes[i],
-        ncol = n.fac
-      )
-
-    mat2 =
+    alpha[groups_limits[[1]][i] : groups_limits[[2]][i], ] =
       replicate(
         group.sizes[i],
         stats::rbeta(n.fac, 0.1, 0.2) |> {\(.) ./sum(.)}()
-      ) |> t()
-    alpha[groups_limits[[1]][i] : groups_limits[[2]][i], ] = mat1 * mat2 |> {\(.) ifelse(. < 1e-2, 0, .)}()
+      ) |>
+      t() |>
+      {\(.) ifelse(. < 5e-2, 0, .)}()
   }
 
-  sigma2 = stats::runif(sum(group.sizes), param$sigma2[1], param$sigma2[2]) |> as.matrix()
+  alpha_ = do.call(rbind,
+                   rep(generate(dist$alpha, 1), n.fac)) |> t()
+  if (any(dim(alpha) != dim(alpha_))) {
+    alpha_ = do.call(cbind,
+                     rep(generate(dist$alpha, sum(group.sizes)), n.fac))
+  }
+
+  alpha = alpha * alpha_
+
+  sigma2 =
+    generate(dist$sigma2, sum(group.sizes))[[1]] |>
+    matrix(ncol = sum(group.sizes)) |>
+    {\(.) .[1,]}() |>
+    as.matrix()
 
   list(alpha = alpha, lambda = lambda, sigma2 = sigma2, group.sizes = group.sizes)
 }
