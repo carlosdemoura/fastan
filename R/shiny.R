@@ -233,9 +233,38 @@ PanelInference = tabPanel(
 
 )
 
+
+###################
+######  Maps ######
+###################
+PanelMaps = tabPanel(
+  title = "Maps",
+
+  fluidRow(header_col("Maps", "#87C2CC", "12vh", 12)),
+
+  fluidRow(header_col("Data maps", "#a8f2fe", "8vh", 12)),
+
+  fluidRow(
+    column(10,
+      selectInput("Maps.data_type", label = "Column", choices = 1),
+      plotly::plotlyOutput("Maps.data_map")
+    )
+  ),
+
+  fluidRow(header_col("Posterior maps", "#a8f2fe", "8vh", 12)),
+
+  fluidRow(
+    column(10,
+      selectInput("Maps.post_type", label = "Column", choices = 1),
+      plotly::plotlyOutput("Maps.post_map")
+    )
+  )
+
+)
+
 navbarPage(
   title = "fastan app",
-  PanelModel, PanelConvergence, PanelInference
+  PanelModel, PanelConvergence, PanelInference, PanelMaps
 )
 }
 
@@ -289,7 +318,7 @@ server0 = function(input, output, session) {
 
   output$Model.export = downloadHandler(
     filename = function() {
-      paste0("fastanExport_", format(Sys.time(), "%Y-%m-%d-%Hh%Mm%Ss"), ".zip")
+      paste0("fastanExport-", format(Sys.time(), "%Y_%m_%d-%Hh%Mm%Ss"), ".zip")
     },
     content = function(file) {
       dir_temp = tempfile("fastanExport")

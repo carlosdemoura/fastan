@@ -4,7 +4,7 @@ data {
   int<lower=1> n_fac;
 
   real<lower=0> sigma2_shape;
-  real<lower=0> sigma2_scale;
+  real<lower=0> sigma2_rate;
   vector[n_row] alpha_mean[n_fac];
   matrix[n_row, n_row] alpha_cov[n_fac];
   vector[n_col] lambda_mean[n_fac];
@@ -43,7 +43,7 @@ model {
 
   // Priors
   for(i in 1:n_row) {
-    sigma2[i,1] ~ gamma(sigma2_shape, sigma2_scale);
+    sigma2[i,1] ~ gamma(sigma2_shape, sigma2_rate);
   }
   for(k in 1:n_fac) {
     alpha[,k] ~ multi_normal(alpha_mean[k], alpha_cov[k]);

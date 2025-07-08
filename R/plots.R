@@ -34,7 +34,7 @@ plot_contrast = function(smry, par = "alpha", stat = "mean") {
     labs(fill = ifelse(stat == "hpd_contains_0", "Factor is\nsignificative", stat),
          x = "Factor",
          y = "Row",
-         title = ifelse(stat == "real", "Alpha real contrast", "Alpha posterior contrast")) +
+         title = paste(par, ifelse(stat == "real", "real contrast", "posterior contrast"))) +
     theme_minimal() +
     theme(
       panel.grid.major = element_blank(),
