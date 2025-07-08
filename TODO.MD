@@ -9,3 +9,4 @@
 - R/posterior: add mode to matrix summary
 - R/tidy: turn try_set into decorator/wrapper
 - R/maps: what to do?
+https://rdrr.io/github/barryrowlingson/caramellar/man/voronoi_adjacency.html

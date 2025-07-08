@@ -133,7 +133,7 @@ real_from_dist = function(group.sizes, columns, semi.conf, dist = list( alpha = 
     {\(.) .[1,]}() |>
     as.matrix()
 
-  list(alpha = alpha, lambda = lambda, sigma2 = sigma2, group.sizes = group.sizes)
+  list(alpha = alpha, lambda = lambda, sigma2 = sigma2, group.sizes = group.sizes, dist = dist)
 }
 
 

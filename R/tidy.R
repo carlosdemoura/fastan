@@ -73,8 +73,20 @@ set_data = function(proj, simdata = "", pred = NULL, cicles = 1, seed = NULL, ..
 #' Title
 #'
 #' @param proj .
-#' @param type .
 #' @param ... .
+#'
+#' @export
+set_space = function(proj, ...) {
+  proj$space = space_process(proj$data, ...)
+
+  return(proj)
+}
+
+
+#' Title
+#'
+#' @inheritParams set_space
+#' @param type .
 #'
 #' @export
 set_prior = function(proj, type, ...) {
@@ -89,7 +101,7 @@ set_prior = function(proj, type, ...) {
 
 #' Title
 #'
-#' @inheritParams set_prior
+#' @inheritParams set_space
 #' @param set_summary .
 #' @param set_diagnostic .
 #'
@@ -109,7 +121,7 @@ set_fit = function(proj, set_summary = T, set_diagnostic = T, ...) {
 
 #' Title
 #'
-#' @inheritParams set_prior
+#' @inheritParams set_space
 #'
 #' @export
 set_diagnostic = function(proj, ...) {
@@ -122,7 +134,7 @@ set_diagnostic = function(proj, ...) {
 
 #' Title
 #'
-#' @inheritParams set_prior
+#' @inheritParams set_space
 #'
 #' @export
 set_summary = function(proj, ...) {
@@ -135,13 +147,34 @@ set_summary = function(proj, ...) {
 
 #' Title
 #'
+#' @inheritParams set_space
+#'
+#' @export
+#'
+#' @import dplyr
+missing_validation = function(proj, ...) {
+  proj$data = missing_validation_selection(proj)
+  proj$data$label$loading
+  proj$space =
+    proj$space |>
+    dplyr::filter(proj$space$id %in% proj$data$label$loading)
+  # FALTA COISA AQUI, REORDENAR OS ID !!!! <=======================================
+  proj = proj |> remove( setdiff(names(proj), c("info", "data", "space")) )
+  return(proj)
+}
+
+
+#' Title
+#'
 #' @param proj .
 #' @param attr .
 #'
 #' @export
 remove = function(proj, attr) {
-  for (x in attr) {
-    proj[[x]] = NULL
+  if (length(attr)) {
+    for (x in attr) {
+      proj[[x]] = NULL
+    }
   }
   return(proj)
 }

@@ -1,11 +1,10 @@
 #' Title
 #'
 #' @param data .
-#' @param dependence .
 #' @param semi.conf .
 #'
 #' @export
-prior_normal = function(data, dependence = list(lambda = F, alpha = F), semi.conf) {
+prior_normal = function(data, semi.conf) {
   nfac = data$dim$group.n - as.integer(semi.conf)
   prior = list(alpha  = list(mean = list_vec(data$dim$row, nfac)),
                lambda = list(mean = list_vec(data$dim$col, nfac)),
@@ -14,12 +13,7 @@ prior_normal = function(data, dependence = list(lambda = F, alpha = F), semi.con
                type = "normal"
                )
 
-  if (dependence$lambda) {
-    lambda_cov = lambda_cov_dep(data$dim$col)
-  } else {
-    lambda_cov = lambda_cov_indep(data$dim$col)
-  }
-
+  lambda_cov = diag(rep(1, data$dim$col))
   alpha_var = alpha_var(data$dim$group.sizes, semi.conf)
   for (i in 1:nfac) {
     prior[["lambda"]][["cov"]][[i]] = lambda_cov
@@ -45,35 +39,6 @@ interface_normal = function(proj) {
     lambda_mean  = abind::abind(proj$prior$lambda$mean, along=2) |> aperm(c(2,1)),
     lambda_cov   = abind::abind(proj$prior$lambda$cov,  along=3) |> aperm(c(3,1,2))
   )
-}
-
-
-#' Title
-#'
-#' @param col .
-#' @param rho .
-lambda_cov_dep = function(col, rho = .95) {
-  D =
-    rep(2, col-2) |>
-    {\(.) c(1, ., 1)}() |>
-    diag()
-
-  W = matrix(0, nrow = col, ncol = col)
-  W[1,2] = 1
-  W[col,col-1] = 1
-  for (i in 2:(col-1)) {
-    W[i, c(i-1, i+1)] = 1
-  }
-
-  solve(D - rho * W)
-}
-
-
-#' Title
-#'
-#' @param col .
-lambda_cov_indep = function(col) {
-  diag(rep(1, col))
 }
 
 
