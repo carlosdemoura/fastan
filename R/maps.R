@@ -46,7 +46,7 @@ plot_map_post = function(proj, par, col = 1, stat) {
   plot_map(proj) +
     geom_point(data = df, aes(x = lon, y = lat, color = x), size = 1.5) +
     scale_color_viridis_c(option = "turbo") +
-    labs(title = paste0(par, "[",col,"]", " posterior ", stat))
+    labs(title = paste0(par, "[,",col,"]", " posterior ", stat))
 }
 
 

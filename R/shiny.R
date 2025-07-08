@@ -151,7 +151,9 @@ PanelConvergence = tabPanel(
   fluidRow(
     column(6),
     column(6,
-      verbatimTextOutput("Convergence.stats")
+      div(style = "margin-top: 1em; display: table; margin-left: auto; margin-right: auto;",
+          tableOutput("Convergence.stats")
+      )
     )
   ),
 
@@ -242,21 +244,9 @@ PanelMaps = tabPanel(
 
   fluidRow(header_col("Maps", "#87C2CC", "12vh", 12)),
 
-  fluidRow(header_col("Data maps", "#a8f2fe", "8vh", 12)),
-
   fluidRow(
-    column(10,
-      selectInput("Maps.data_type", label = "Column", choices = 1),
-      plotly::plotlyOutput("Maps.data_map")
-    )
-  ),
-
-  fluidRow(header_col("Posterior maps", "#a8f2fe", "8vh", 12)),
-
-  fluidRow(
-    column(10,
-      selectInput("Maps.post_type", label = "Column", choices = 1),
-      plotly::plotlyOutput("Maps.post_map")
+    column(12,
+           uiOutput("Maps.general")
     )
   )
 
@@ -476,8 +466,8 @@ server0 = function(input, output, session) {
       ) |>
       {\(.)
         dplyr::mutate(.,
-                      starts = fiat_groups_limits(.$size)[[1]],
-                      ends   = fiat_groups_limits(.$size)[[2]]
+                      starts = fiat_groups_limits(.$size)[[1]] |> as.integer(),
+                      ends   = fiat_groups_limits(.$size)[[2]] |> as.integer()
         )
       }()
 
@@ -505,9 +495,9 @@ server0 = function(input, output, session) {
         paste0(
           "<p>\\[ \\alpha_{\\bullet, j} \\sim N_{", dim$row, "}(mean\\ \\alpha_j, cov\\ \\alpha_j); \\]</p>",
           "<p>\\[ \\lambda_{i, \\bullet} \\sim N_{", dim$col, "}(mean\\ \\lambda_i, cov\\ \\lambda_i); \\]</p>",
-          "<p>\\[ \\sigma^2 \\sim Gama_{", dim$row, "}( shape = ", project()$prior$sigma2$shape, ",\\ scale = ", project()$prior$sigma2$scale, "); \\]</p>",
-          "<p>\\[ var\\ \\alpha = \\bigr( var(\\alpha_{i,j}) \\bigr)_{i,j} \\]</p>",
-          "<p>\\[ var\\ \\lambda = \\bigr( var(\\lambda_{i,j}) \\bigr)_{i,j} \\]</p>"
+          "<p>\\[ \\sigma^2 \\sim Gama_{", dim$row, "}( shape = ", project()$prior$sigma2$shape, ",\\ rate = ", project()$prior$sigma2$scale, "); \\]</p>",
+          "<p>\\[ var\\ Y = \\bigr( var(Y_{i,j}) \\bigr)_{i,j}\\ , \\ Y = \\alpha, \\lambda; \\]</p>",
+          "<p>\\[ mean\\ Y = \\bigr( mean(Y_{i,j}) \\bigr)_{i,j}\\ , \\ Y = \\alpha, \\lambda. \\]</p>"
         ) |>
           HTML() |>
           withMathJax(),
@@ -547,16 +537,16 @@ server0 = function(input, output, session) {
         # ),
         fluidRow(
           column(2,
-                 selectInput("Model.loading_index", "X Row", choices = seq_along(project()$data$label$loading), selected = 1)
+            selectInput("Model.loading_index", "X Row", choices = seq_along(project()$data$label$loading), selected = 1)
           ),
           column(4,
-                 selectInput("Model.loading_value", "label", choices = project()$data$label$loading, selected = project()$data$label$loading[1])
+            selectInput("Model.loading_value", "label", choices = project()$data$label$loading, selected = project()$data$label$loading[1])
           ),
           column(2,
-                 selectInput("Model.factor_index", "X Col", choices = seq_along(project()$data$label$factor_level), selected = 1)
+            selectInput("Model.factor_index", "X Col", choices = seq_along(project()$data$label$factor_level), selected = 1)
           ),
           column(4,
-                 selectInput("Model.factor_value", "label", choices = project()$data$label$factor_level, selected = project()$data$label$loading[1])
+            selectInput("Model.factor_value", "label", choices = project()$data$label$factor_level, selected = project()$data$label$loading[1])
           )
         )
       )
@@ -677,7 +667,7 @@ server0 = function(input, output, session) {
       coda::geweke.diag(combinedchains)
     })
 
-    output$Convergence.stats = renderPrint({
+    output$Convergence.stats = renderTable({
       if (par == "lp__") {
         rstan::extract(project()$fit, par = "lp__") |>
           purrr::pluck(1) |>
@@ -810,6 +800,103 @@ server0 = function(input, output, session) {
   observeEvent(input$Model.factor_value, {
     updateSelectInput(session, "Model.factor_index", selected = which(proj$data$label$factor_level == input$Model.factor_value)[1])
   })
+
+
+  ###  PanelMaps - UI  ###
+
+  observeEvent(project(), {
+    if (is.null(project()$space)) {
+      output$Maps.general = renderUI({
+        tagList(
+          "No spatial data in project"
+        )
+      })
+    } else {
+      output$Maps.general = renderUI({
+        tagList(
+          fluidRow(header_col("Data map", "#a8f2fe", "8vh", 12)),
+
+          fluidRow(
+            column(10,
+              selectInput("Maps.data_type", label = "Column",
+                          choices = c("group", "mean", "var"),
+                          selected = "mean"),
+              plotly::plotlyOutput("Maps.map_data", height = "80vh")
+            )
+          ),
+
+          fluidRow(header_col("Posterior map", "#a8f2fe", "8vh", 12)),
+
+          fluidRow(
+            column(3,
+              selectInput("Maps.post_par", label = "Parameter",
+                          choices = c("alpha", "sigma2"),
+                          selected = "alpha"),
+            ),
+            column(3,
+              selectInput("Maps.post_col", label = "Column",
+                          choices = 1:dim(proj$summary$alpha)[2],
+                          selected = 1),
+            ),
+            column(3,
+              selectInput("Maps.post_stat", label = "Satistic",
+                          choices = dimnames(proj$summary$alpha)[[3]],
+                          selected = dimnames(proj$summary$alpha)[[3]][1]),
+            )
+          ),
+          fluidRow(
+            column(10,
+              plotly::plotlyOutput("Maps.map_post", height = "80vh")
+            )
+          )
+        )
+      })
+    }
+  })
+
+
+  observeEvent(input$Maps.post_par, {
+    if (input$Maps.post_par == "alpha") {
+      updateSelectInput(
+        session, "Maps.post_stat",
+        choices = dimnames(proj$summary$alpha)[[3]],
+        selected = dimnames(proj$summary$alpha)[[3]][1]
+      )
+
+      updateSelectInput(
+        session, "Maps.post_col",
+        choices = 1:dim(proj$summary$alpha)[2],
+        selected = 1
+      )
+
+    } else {
+      updateSelectInput(
+        session, "Maps.post_stat",
+        choices = dimnames(proj$summary$sigma2)[[3]],
+        selected = dimnames(proj$summary$sigma2)[[3]][1]
+      )
+      updateSelectInput(
+        session, "Maps.post_col",
+        choices = 1,
+        selected = 1
+      )
+
+    }
+  })
+
+
+  ###  PanelMaps - maps  ###
+
+  output$Maps.map_data = renderPlotly({
+    plot_map_data(project(), input$Maps.data_type) |>
+      plotly::ggplotly()
+  })
+
+  output$Maps.map_post = renderPlotly({
+    plot_map_post(project(), input$Maps.post_par, as.numeric(input$Maps.post_col), input$Maps.post_stat) |>
+      plotly::ggplotly()
+  })
+
 
 }
 
