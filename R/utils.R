@@ -43,7 +43,7 @@ prop.missing = function(data) {
 #' @export
 #'
 #' @import ggplot2
-#' @import gridExtra
+#' @importFrom gridExtra grid.arrange
 export = function(proj, path_dump = getwd(), rds = T, plot.extension = "png") {
   real = !is.null(proj$data$real)
   path = paste0(path_dump, "/fastanExport-", format(Sys.time(), "%Y_%m_%d-%Hh%Mm%Ss"))
@@ -169,7 +169,7 @@ validate_proj_arg = function(obj, class) {
 #'
 #' @export
 #'
-#' @import rstan
+#' @importFrom rstan get_elapsed_time
 elapsed_time_table = function(fit) {
   fit = validate_proj_arg(fit, "fit")
   (rstan::get_elapsed_time(fit) / 3600) |>
@@ -190,7 +190,7 @@ elapsed_time_table = function(fit) {
 #' @export
 #'
 #' @import dplyr
-#' @import stats
+#' @importFrom stats dnorm
 loglik = function(proj, param = NULL, stat = "mean") {
   stopifnot(
     "only one of param/stat can be not null" = (is.null(param) | is.null(stat)) & !(is.null(param) & is.null(stat))
@@ -281,7 +281,7 @@ param.dim = function(proj) {
 #'
 #' @export
 #'
-#' @import stats
+#' @importFrom stats weighted.mean
 accuracy = function(smry, correct = F) {
   smry = validate_proj_arg(smry, "summary")
   stopifnot("data must be simdata" = "real" %in% dimnames(smry$alpha)[[3]])

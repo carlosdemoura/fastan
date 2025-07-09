@@ -27,7 +27,7 @@ header_col = function(title, color, height, width) {
 
 #' Shiny UI
 #'
-#' @import plotly
+#' @importFrom plotly ggplotly plotlyOutput renderPlotly
 #' @import shiny
 ui = function() {
 ####################
@@ -266,15 +266,15 @@ navbarPage(
 #' @param output .
 #' @param session .
 #'
-#' @import coda
+#' @importFrom coda gelman.plot gelman.diag geweke.diag
 #' @import dplyr
-#' @import gridExtra
-#' @import plotly
+#' @importFrom gridExtra grid.arrange
+#' @importFrom plotly event_data ggplotly plotlyOutput renderPlotly
 #' @import purrr
-#' @import rstan
+#' @importFrom rstan extract
 #' @import shiny
-#' @import stats
-#' @import zip
+#' @importFrom stats median sd
+#' @importFrom zip zipr
 server = function(proj = NULL, input, output, session) {
 
 server0 = function(input, output, session) {
@@ -410,7 +410,7 @@ server0 = function(input, output, session) {
   ### PanelInference - prediction ###
 
   coor = reactive({
-    coor = event_data("plotly_click", source = "Inference.pred_contrast_source")
+    coor = plotly::event_data("plotly_click", source = "Inference.pred_contrast_source")
     if (is.null(coor)) return(NULL)
     row_clicked =
       coor$y |>

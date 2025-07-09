@@ -16,7 +16,6 @@ Imports:
     dplyr,
     geosphere,
     gridExtra,
-    MASS,
     plotly,
     posterior,
     purrr,

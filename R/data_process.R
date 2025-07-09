@@ -9,7 +9,7 @@
 #'
 #' @import dplyr
 #' @import purrr
-#' @import stats
+#' @importFrom stats rbeta rgamma rnorm
 #' @import tidyr
 #' @import utils
 generate_data = function(real, cicles = 1) {
@@ -77,7 +77,6 @@ generate_data = function(real, cicles = 1) {
 #'
 #' @import distributional
 #' @import stats
-#' @import MASS
 real_from_dist = function(group.sizes, columns, semi.conf, dist = list( alpha = dist_uniform(-6,6), lambda = dist_normal(0,1), sigma2 = dist_uniform(.1,2) )) {
   stopifnot(
     "if the model is semi.conf there
@@ -157,7 +156,7 @@ real_from_posterior = function(proj, stat = "mean") {
 #'
 #' @param proj .
 #'
-#' @import MASS
+#' @import distributional
 #' @import stats
 real_from_prior = function(proj) {
   stopifnot("project must have prior" = !is.null(proj$prior))
@@ -172,10 +171,15 @@ real_from_prior = function(proj) {
                   ncol = length(prior$lambda$mean[[1]]),
                   nrow = n.fac)
 
-  for (i in 1:n.fac) {
-    alpha[,i]  = MASS::mvrnorm(1, prior$alpha$mean[[i]],  prior$alpha$cov[[i]])
-    lambda[i,] = MASS::mvrnorm(1, prior$lambda$mean[[i]], prior$lambda$cov[[i]])
-  }
+  alpha =
+    dist_multivariate_normal(prior$alpha$mean, prior$alpha$cov) |>
+    generate(1) |>
+    {\(.) do.call(rbind, .)}() |>
+    t()
+  lambda =
+    dist_multivariate_normal(prior$lambda$mean, prior$lambda$cov) |>
+    generate(1) |>
+    {\(.) do.call(rbind, .)}()
 
   real = list(
     alpha  = alpha,

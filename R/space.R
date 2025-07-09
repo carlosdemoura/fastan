@@ -87,7 +87,7 @@ plot_map = function(proj, x = 1) {
 #'
 #' @export
 #'
-#' @import geosphere
+#' @importFrom geosphere distm
 distances = function(coor, lon = "lon", lat = "lat") {
   as.matrix(coor[, c(lon, lat)]) |>
     geosphere::distm() |>

@@ -9,7 +9,7 @@
 #' @export
 #'
 #' @import dplyr
-#' @import geosphere
+#' @importFrom geosphere distm
 #' @import clue
 get_nearest_row = function(small, big, id, lon = "lon", lat = "lat") {
   dist_mat =

@@ -79,7 +79,7 @@ interface = function(proj) {
 #'
 #' @export
 #'
-#' @import rstan
+#' @importFrom rstan stan
 stan = function(proj, init = NULL, chains = 1, ...) {
   if (is.null(init)) {
     init = init(proj, chains)
@@ -112,10 +112,10 @@ stan = function(proj, init = NULL, chains = 1, ...) {
 #' @export
 #'
 #' @import abind
-#' @import coda
+#' @importFrom coda as.mcmc HPDinterval
 #' @import purrr
-#' @import rstan
-#' @import stats
+#' @importFrom rstan extract
+#' @importFrom stats median sd
 summary_matrix = function(proj, bias.stat = "mean") {
   fit = proj$fit
   data = proj$data
@@ -183,9 +183,9 @@ summary_matrix = function(proj, bias.stat = "mean") {
 #' @export
 #'
 #' @import dplyr
-#' @import coda
+#' @importFrom coda geweke.diag
 #' @import purrr
-#' @import rstan
+#' @importFrom rstan extract
 #' @import tidyr
 diagnostic = function(fit) {
   fit = validate_proj_arg(fit, "fit")
@@ -225,8 +225,8 @@ diagnostic = function(fit) {
 #'
 #' @export
 #'
-#' @import coda
-#' @import posterior
+#' @importFrom coda as.mcmc.list
+#' @importFrom posterior as_draws subset_draws
 get_chains_mcmc = function(fit, param) {
   #get_chains_mcmc = function(project_folder, param) {
   draws = posterior::as_draws(fit)

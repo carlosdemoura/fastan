@@ -124,7 +124,7 @@ plot_lambda = function(smry, stat = "mean") {
 #' @export
 #'
 #' @import ggplot2
-#' @import rstan
+#' @importFrom rstan extract
 plot_posterior = function(fit, par, row = 1, col = 1, type = c("hist", "dens")) {
   fit = validate_proj_arg(fit, "fit")
   df = rstan::extract(fit)[[par]] |>
@@ -199,7 +199,7 @@ plot_trace = function(fit, par, row = 1, col = 1) {
 #'
 #' @import dplyr
 #' @import ggplot2
-#' @import gridExtra
+#' @importFrom gridExtra grid.arrange
 plot_diagnostic = function(proj, stat, list = F) {
   stopifnot("stat must bet either 'Rhat', 'n_eff', or 'geweke'" = stat %in% c("Rhat", "n_eff", "geweke"))
 
