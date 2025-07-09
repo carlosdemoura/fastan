@@ -74,8 +74,8 @@ export = function(proj, path_dump = getwd(), rds = T, plot.extension = "png") {
     lambda = plot_lambda(proj)
     sigma2 = plot_hpd(proj, "sigma2", col = 1, stat = "mean")
   }
-  ggsave(plot = lambda, file = img("lambda_hpd"), width = 15, height = 5, dpi = 300, bg = "white")
-  ggsave(plot = sigma2, file = img("sigma2_hpd"), width = 15, height = 5, dpi = 300, bg = "white")
+  ggsave(plot = lambda, filename = img("lambda_hpd"), width = 15, height = 5, dpi = 300, bg = "white")
+  ggsave(plot = sigma2, filename = img("sigma2_hpd"), width = 15, height = 5, dpi = 300, bg = "white")
 
   plot_contrast(proj, par = "alpha")
   ggsave(img("alpha_contrast_mean"), width = 8, height = 8, dpi = 300, bg = "white")
@@ -95,7 +95,7 @@ export = function(proj, path_dump = getwd(), rds = T, plot.extension = "png") {
 
   for (stat in c("Rhat", "n_eff", "geweke")) {
     p_diag = plot_diagnostic(proj, stat)
-    ggsave(plot = p_diag, file = img(paste0("diganostic", "_", stat)), width = 7, height = 5, dpi = 300, bg = "white")
+    ggsave(plot = p_diag, filename = img(paste0("diganostic", "_", stat)), width = 7, height = 5, dpi = 300, bg = "white")
   }
 
   if (!is.null(proj$summary$pred)) {
@@ -117,7 +117,7 @@ export = function(proj, path_dump = getwd(), rds = T, plot.extension = "png") {
       bias[[param]] = plot_bias(proj, param)
     }
     p_bias = gridExtra::grid.arrange(grobs = bias, ncol=2)
-    ggsave(plot = p_bias, file = img("bias"), width = 7, height = 5, dpi = 300, bg = "white")
+    ggsave(plot = p_bias, filename = img("bias"), width = 7, height = 5, dpi = 300, bg = "white")
   }
 
   if (rds) {

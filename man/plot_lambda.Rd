@@ -11,9 +11,6 @@ plot_lambda(smry, stat = "mean")
 
 \item{stat}{.}
 }
-\value{
-ggplot2 plot
-}
 \description{
 Plot lambdas
 }

@@ -4,12 +4,10 @@
 \alias{prior_normal}
 \title{Title}
 \usage{
-prior_normal(data, dependence = list(lambda = F, alpha = F), semi.conf)
+prior_normal(data, semi.conf)
 }
 \arguments{
 \item{data}{.}
-
-\item{dependence}{.}
 
 \item{semi.conf}{.}
 }

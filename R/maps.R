@@ -14,9 +14,9 @@ plot_map = function(proj) {
 
   ggplot() +
     geom_polygon(data = map_data("world"),
-                 aes(x = long, y = lat, group = group),
+                 aes(x = .data$long, y = .data$lat, group = .data$group),
                  fill = "lightblue", color = "black") +
-    geom_point(data = df, aes(x = lon, y = lat), size = 1.5) +
+    geom_point(data = df, aes(x = .data$lon, y = .data$lat), size = 1.5) +
     coord_fixed(xlim = xrange, ylim = yrange) +
     theme(
       axis.text.x      = element_blank(),
@@ -44,7 +44,7 @@ plot_map_post = function(proj, par, col = 1, stat) {
   df = proj$space
   df$x = proj$summary[[par]][,col,stat]
   plot_map(proj) +
-    geom_point(data = df, aes(x = lon, y = lat, color = x), size = 1.5) +
+    geom_point(data = df, aes(x = .data$lon, y = .data$lat, color = .data$x), size = 1.5) +
     scale_color_viridis_c(option = "turbo") +
     labs(title = paste0(par, "[,",col,"]", " posterior ", stat))
 }
@@ -57,7 +57,6 @@ plot_map_post = function(proj, par, col = 1, stat) {
 #'
 #' @import dplyr
 #' @import ggplot2
-#' @import rlang
 #' @import purrr
 plot_map_data = function(proj, stat) {
   stopifnot("stat must be group, mean or var" = stat %in% c("group", "mean", "var"))
@@ -75,7 +74,7 @@ plot_map_data = function(proj, stat) {
 
 
   plot_map(proj) +
-    geom_point(data = df, aes(x = lon, y = lat, color = !!rlang::sym(stat)), size = 1.5) +
+    geom_point(data = df, aes(x = .data$lon, y = .data$lat, color = .data[[stat]]), size = 1.5) +
     {
       if (stat == "group") scale_color_viridis_d(option = "B") else scale_color_viridis_c(option = "turbo")
     } +

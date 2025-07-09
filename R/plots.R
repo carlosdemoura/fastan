@@ -21,7 +21,7 @@ plot_contrast = function(smry, par = "alpha", stat = "mean") {
     df$value = ifelse(df$value, "No", "Yes")
   }
 
-  ggplot(df, aes(factor, row, fill = value)) +
+  ggplot(df, aes(.data$factor, .data$row, fill = .data$value)) +
     geom_tile() +
     {if (stat == "hpd_contains_0") {
       scale_fill_manual(values = c("Yes" = "black", "No" = "white"),
@@ -65,12 +65,12 @@ plot_hpd = function(smry, par, row = NULL, col = NULL, stat = c("mean", "median"
   y_max = max(smry[[par]][,,"hpd_max"])
 
   ggplot(df) +
-    {if (loc.name == "row") { aes(x = col) }
-      else { aes(x = row) } } +
-    geom_errorbar(aes(ymin = hpd_min, ymax = hpd_max, color = "HPD"), width = .6, linewidth = .6) +
-    {if ("median" %in% stat) geom_point(aes(y = median, color = "Median"), size = 2, shape = 17)} +
-    {if ("mean"   %in% stat) geom_point(aes(y = mean  , color = "Mean")  , size = 2, shape = 16)} +
-    {if ("real"   %in% stat) geom_point(aes(y = real  , color = "Real")  , size = 2, shape = 15)} +
+    {if (loc.name == "row") { aes(x = .data$col) }
+      else { aes(x = .data$row) } } +
+    geom_errorbar(aes(ymin = .data$hpd_min, ymax = .data$hpd_max, color = "HPD"), width = .6, linewidth = .6) +
+    {if ("median" %in% stat) geom_point(aes(y = .data$median, color = "Median"), size = 2, shape = 17)} +
+    {if ("mean"   %in% stat) geom_point(aes(y = .data$mean  , color = "Mean")  , size = 2, shape = 16)} +
+    {if ("real"   %in% stat) geom_point(aes(y = .data$real  , color = "Real")  , size = 2, shape = 15)} +
     labs(
       x = ifelse(loc.name == "row", "col", "row"),
       y = "Values",
@@ -90,8 +90,6 @@ plot_hpd = function(smry, par, row = NULL, col = NULL, stat = c("mean", "median"
 #'
 #' @inheritParams plot_mock_doc
 #'
-#' @return ggplot2 plot
-#'
 #' @export
 #'
 #' @import ggplot2
@@ -99,11 +97,11 @@ plot_lambda = function(smry, stat = "mean") {
   smry = validate_proj_arg(smry, "summary")
   df = matrix_to_df(smry$lambda)
 
-  ggplot(df, aes(x = col, group = factor(row), color = factor(row), fill = factor(row))) +
-    geom_ribbon(aes(ymin = hpd_min, ymax = hpd_max), alpha = 0.2, color = NA) +
-    {if ("mean" %in% stat)   geom_line(aes(y = mean)  , size = 1)} +
-    {if ("median" %in% stat) geom_line(aes(y = median), size = 1)} +
-    {if ("real" %in% stat)   geom_line(aes(y = real)  , size = 1)} +
+  ggplot(df, aes(x = .data$col, group = factor(.data$row), color = factor(.data$row), fill = factor(.data$row))) +
+    geom_ribbon(aes(ymin = .data$hpd_min, ymax = .data$hpd_max), alpha = 0.2, color = NA) +
+    {if ("mean" %in% stat)   geom_line(aes(y = .data$mean)  , size = 1)} +
+    {if ("median" %in% stat) geom_line(aes(y = .data$median), size = 1)} +
+    {if ("real" %in% stat)   geom_line(aes(y = .data$real)  , size = 1)} +
     scale_color_brewer(name = "Factor", palette = "Set1") +
     scale_fill_brewer(name = "Factor", palette = "Set1") +
     labs(
@@ -136,14 +134,14 @@ plot_posterior = function(fit, par, row = 1, col = 1, type = c("hist", "dens")) 
     `colnames<-`("x")
 
   y_max = list(
-    {ggplot(df, aes(x = x)) + geom_histogram(aes(y = ..density..), binwidth = 1)},
-    {ggplot(df, aes(x = x)) + geom_density()}
+    {ggplot(df, aes(x = .data$x)) + geom_histogram(aes(y = after_stat(density)), binwidth = 1)},
+    {ggplot(df, aes(x = .data$x)) + geom_density()}
     ) |>
     sapply( function(x){ x |> {\(.) ggplot_build(.)$data}() |> {\(.) max(.[[1]]$ymax)}() } ) |>
     max()
 
-  ggplot(df, aes(x = x)) +
-    {if ("hist" %in% type) geom_histogram(aes(y = ..density..), fill = "grey")} +
+  ggplot(df, aes(x = .data$x)) +
+    {if ("hist" %in% type) geom_histogram(aes(y = after_stat(density)), fill = "grey")} +
     {if ("dens" %in% type) geom_density(lwd = 1.5, col = "red")} +
     #{if ("real" %in% type) geom_density(lwd = 1.5, col = "red")} +
     {if (par != "lp__") ylim(0, y_max)} +
@@ -180,7 +178,7 @@ plot_trace = function(fit, par, row = 1, col = 1) {
     )}() |>
     tidyr::pivot_longer(names_to = "chain", values_to = "value", cols = tidyr::starts_with("chain"))
 
-  ggplot(df, aes(x = iteration, y = value, color = chain)) +
+  ggplot(df, aes(x = .data$iteration, y = .data$value, color = .data$chain)) +
     geom_line() +
     theme_minimal() +
     labs(
@@ -211,7 +209,7 @@ plot_diagnostic = function(proj, stat, list = F) {
       {\(.) if(par == "all") paste(., "for all parameters")
         else paste(., "for", par) }()
 
-    ggplot(df, aes(x = x)) +
+    ggplot(df, aes(x = .data$x)) +
       geom_histogram(fill = "grey", color = "black") +
       labs(
         title = title,
@@ -295,7 +293,7 @@ plot_bias = function(smry, par = "all", correct = T) {
 
   df = data.frame(bias = x)
 
-  ggplot(df, aes(x=bias)) +
+  ggplot(df, aes(x=.data$bias)) +
     geom_histogram(fill = "grey", color = "black") +
     labs(
       title = paste0("Relative bias for ", ifelse(par == "all", "all parameters", par)),
@@ -350,7 +348,7 @@ plot_missing = function(data) {
   row_labels = levels(df$row)
   row_labels[seq_along(row_labels) %% 5 < 4] = ""
 
-  ggplot(df, aes(col, row, fill = missing)) +
+  ggplot(df, aes(.data$col, .data$row, fill = .data$missing)) +
     geom_tile() +
     scale_fill_manual(
       values = c("TRUE" = "black", "FALSE" = "gray80"),
@@ -373,6 +371,7 @@ plot_missing = function(data) {
 #' @import dplyr
 #' @import ggplot2
 #' @import tidyr
+#' @importFrom grDevices colorRampPalette
 plot_normal_prior = function(proj, par, stat, loc = "all") {
   stopifnot("stat must be either mean or cov" = stat %in% c("mean", "cov"))
   if (loc == "all") {
@@ -399,7 +398,7 @@ plot_normal_prior = function(proj, par, stat, loc = "all") {
 
   vals = sort(unique(df$value))
   if (length(vals) <= 5) {
-    palette = colorRampPalette(c("white", "black"))(length(vals))
+    palette = grDevices::colorRampPalette(c("white", "black"))(length(vals))
     df$value = factor(df$value, levels = vals)
   }
 
@@ -430,7 +429,7 @@ plot_normal_prior = function(proj, par, stat, loc = "all") {
   }
 
 
-  ggplot(df, aes(x = col, y = row, fill = value)) +
+  ggplot(df, aes(x = .data$col, y = .data$row, fill = .data$value)) +
     {
       if ((stat == "mean") & (length(vals) ==1)) geom_tile(color = "black")
       else geom_tile(color = "white")

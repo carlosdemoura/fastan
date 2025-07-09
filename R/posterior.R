@@ -25,42 +25,6 @@ init = function(proj, chains) {
 }
 
 
-#' Generate initial values for STAN MCMC from another fit
-#'
-#' @param fit stanfit object.
-#'
-#' @return list; for each
-#'
-#' @export
-init_from_fit = function(fit) {
-  draws = my_extract(fit)
-  correct_dimensions = function(x, par) {
-    if(is.null(dim(x))) {
-      if (par == "lambda"){
-        answer = matrix(x, nrow = 1)
-      } else {
-        answer = matrix(x, ncol = 1)
-      }
-    } else {
-      answer = x
-    }
-    return(answer)
-  }
-
-  init = list()
-  for (chain in 1:dim(draws$alpha)[2]) {
-    init[[chain]] = list()
-    for (par in c("alpha", "lambda", "sigma2")) {
-      init[[chain]][[par]] =
-        draws[[par]] |>
-        {\(.) .[dim(.)[1],chain,,] }() |>
-        correct_dimensions(par)
-    }
-  }
-  init
-}
-
-
 #' Adjust the data argument on `rstan::stan()`
 #'
 #' @param proj fastan proj object.
@@ -245,7 +209,7 @@ diagnostic = function(fit) {
     {\(.) dplyr::mutate(., par = row.names(.))}() |>
     dplyr::select(dplyr::all_of(c("n_eff", "Rhat", "par"))) |>
     merge(get_geweke(fit), by = "par") |>
-    tidyr::extract(par, into = c("par", "row", "col"), regex = "([a-zA-Z0-9_]+)\\[(\\d+),(\\d+)\\]", convert = TRUE)
+    tidyr::extract("par", into = c("par", "row", "col"), regex = "([a-zA-Z0-9_]+)\\[(\\d+),(\\d+)\\]", convert = TRUE)
   df[is.na(df$par),c("par", "row", "col")] = c("lp__", 1, 1)
 
   df

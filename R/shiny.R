@@ -679,7 +679,7 @@ server0 = function(input, output, session) {
         project()$summary[[par]][row, col, ] |>
           as.matrix() |>
           as.data.frame() |>
-          mutate(V1 = V1 |> round(2)) |>
+          {\(.) dplyr::mutate(., V1 = .$V1 |> round(2))}() |>
           as.matrix() |>
           t() |>
           `row.names<-`("") |>

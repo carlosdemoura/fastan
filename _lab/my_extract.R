@@ -89,3 +89,40 @@ my_extract = function(object) {
 #   }
 #   do.call(c, lst)
 # }
+
+
+
+#' Generate initial values for STAN MCMC from another fit
+#'
+#' @param fit stanfit object.
+#'
+#' @return list; for each
+#'
+#' @export
+init_from_fit = function(fit) {
+  draws = my_extract(fit)
+  correct_dimensions = function(x, par) {
+    if(is.null(dim(x))) {
+      if (par == "lambda"){
+        answer = matrix(x, nrow = 1)
+      } else {
+        answer = matrix(x, ncol = 1)
+      }
+    } else {
+      answer = x
+    }
+    return(answer)
+  }
+
+  init = list()
+  for (chain in 1:dim(draws$alpha)[2]) {
+    init[[chain]] = list()
+    for (par in c("alpha", "lambda", "sigma2")) {
+      init[[chain]][[par]] =
+        draws[[par]] |>
+        {\(.) .[dim(.)[1],chain,,] }() |>
+        correct_dimensions(par)
+    }
+  }
+  init
+}
