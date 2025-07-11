@@ -304,6 +304,7 @@ server0 = function(input, output, session) {
   })
 
   real = reactive(!is.null(project()$data$real))
+  real_pred = reactive("real" %in% dimnames(project()$summary$pred)[[3]])
   stat = reactive(c("mean") |> {\(.) if (real()) c(., "real") else .}())
 
   output$Model.export = downloadHandler(
@@ -353,7 +354,7 @@ server0 = function(input, output, session) {
       choices =  c("mean", "hpd_contains_0") |> {\(.) if (real()) c("mean", "real", "hpd_contains_0") else .}()
     )
 
-    if (real()) {
+    if (real() | real_pred()) {
     output$Inference.accuracy = renderUI({
       tagList(
         fluidRow(header_col("Accuracy", "#a8f2fe", "8vh", 12)),
@@ -365,7 +366,7 @@ server0 = function(input, output, session) {
             )
           ),
           column(6,
-            plotOutput("Inference.bias", height = "50vh")
+            plotOutput("Inference.bias", height = ifelse(real(), "50vh", "30vh"))
           )
         )
       )
@@ -373,12 +374,16 @@ server0 = function(input, output, session) {
 
     output$Inference.accuracy_table = renderTable(accuracy(project()$summary) |> round(4), rownames = T)
 
-    bias = list()
-    for (param in c("all", names(project()$summary))) {
-      bias[[param]] = plot_bias(project(), param)
-    }
     output$Inference.bias = renderPlot({
-      gridExtra::grid.arrange(grobs = bias, ncol=2)
+      if (real()) {
+        bias = list()
+        for (param in c("all", names(project()$summary))) {
+          bias[[param]] = plot_bias(project(), param)
+        }
+        gridExtra::grid.arrange(grobs = bias, ncol=2)
+      } else if (real_pred()) {
+        plot_bias(project(), "pred")
+      }
     })
     }
 
@@ -432,7 +437,7 @@ server0 = function(input, output, session) {
     cat("Row:", coor$row, "  Col.:", coor$col, "\tRow param.:", df$row,"\n")
 
     df |>
-      {\(.) if (real()) dplyr::select(., dplyr::all_of(c("real", "mean", "median", "sd", "hpd_min", "hpd_max", "hpd_amp")))
+      {\(.) if (real() | real_pred()) dplyr::select(., dplyr::all_of(c("real", "mean", "median", "sd", "hpd_min", "hpd_max", "hpd_amp", "bias")))
         else dplyr::select(., dplyr::all_of(c("mean", "median", "sd", "hpd_min", "hpd_max", "hpd_amp")))}() |>
       as.data.frame() |>
       round(2) |>
@@ -479,7 +484,7 @@ server0 = function(input, output, session) {
       paste0(
         "<p>\\[ X = \\alpha \\lambda + \\epsilon \\]</p>",
         "<p><b>Where:</b></p>",
-        "<p>(i) \\( X \\in \\mathbb{R}^{",          dim$row ,"\\times", dim$col, "} \\) is the matrix of observed values;</p>",
+        "<p>(i) \\( X \\in \\mathbb{R}^{",          dim$row ,"\\times", dim$col, "} \\) is the matrix of observed values (mutually independent, given the parameters);</p>",
         "<p>(ii) \\( \\alpha \\in \\mathbb{R}^{",   dim$row, "\\times", dim$fac, "} \\) is the loadings matrix;</p>",
         "<p>(iii) \\( \\lambda \\in \\mathbb{R}^{", dim$fac, "\\times", dim$col, "} \\) is the factor(s) matrix;</p>",
         "<p>(iv) \\( \\epsilon \\in \\mathbb{R}^{", dim$row ,"\\times", dim$col, "} \\) is the stochastic component such that
@@ -495,7 +500,7 @@ server0 = function(input, output, session) {
         paste0(
           "<p>\\[ \\alpha_{\\bullet, j} \\sim N_{", dim$row, "}(mean\\ \\alpha_j, cov\\ \\alpha_j); \\]</p>",
           "<p>\\[ \\lambda_{i, \\bullet} \\sim N_{", dim$col, "}(mean\\ \\lambda_i, cov\\ \\lambda_i); \\]</p>",
-          "<p>\\[ \\sigma^2 \\sim Gama_{", dim$row, "}( shape = ", project()$prior$sigma2$shape, ",\\ rate = ", project()$prior$sigma2$scale, "); \\]</p>",
+          "<p>\\[ \\sigma^2 \\sim Gama_{", dim$row, "}( shape = ", project()$prior$sigma2$shape, ",\\ rate = ", project()$prior$sigma2$rate, "); \\]</p>",
           "<p>\\[ var\\ Y = \\bigr( var(Y_{i,j}) \\bigr)_{i,j}\\ , \\ Y = \\alpha, \\lambda; \\]</p>",
           "<p>\\[ mean\\ Y = \\bigr( mean(Y_{i,j}) \\bigr)_{i,j}\\ , \\ Y = \\alpha, \\lambda. \\]</p>"
         ) |>
@@ -513,6 +518,7 @@ server0 = function(input, output, session) {
         "<p>Info: ", project()$info, "</p>",
         "<p>Number of groups:\t" , project()$data$dim$group.n, "</p>",
         "<p>Number of factors:\t", n.fac(project()), "</p>",
+        "<p>Missing proportion:\t", prop.missing(project()), "</p>",
         "<p><br></p>",
         "<p>Group sizes</p>"
       ) |>
@@ -656,11 +662,17 @@ server0 = function(input, output, session) {
     })
 
     output$Convergence.gr_plot = renderPlot({
-      coda::gelman.plot(combinedchains)
+      if (length(project()$fit@stan_args) > 1) {
+        coda::gelman.plot(combinedchains)
+      }
     })
 
     output$Convergence.gr_print = renderPrint({
-      coda::gelman.diag(combinedchains)
+      if (length(project()$fit@stan_args) > 1) {
+        coda::gelman.diag(combinedchains)
+      } else {
+        cat("At least two chains are necessary for this diagnose.")
+      }
     })
 
     output$Convergence.geweke = renderPrint({
@@ -673,8 +685,7 @@ server0 = function(input, output, session) {
           purrr::pluck(1) |>
           {\(.) data.frame(mean = mean(.), median = stats::median(.), sd = stats::sd(.), real = loglik(project(), stat = "real"), est_by_mean = loglik(project(), stat = "mean"))}() |>
           round(2) |>
-          `row.names<-`("") |>
-          print()
+          `row.names<-`("")
       } else {
         project()$summary[[par]][row, col, ] |>
           as.matrix() |>
@@ -682,8 +693,7 @@ server0 = function(input, output, session) {
           {\(.) dplyr::mutate(., V1 = .$V1 |> round(2))}() |>
           as.matrix() |>
           t() |>
-          `row.names<-`("") |>
-          print()
+          `row.names<-`("")
       }
     })
 
@@ -808,7 +818,7 @@ server0 = function(input, output, session) {
     if (is.null(project()$space)) {
       output$Maps.general = renderUI({
         tagList(
-          "No spatial data in project"
+          "No spatial data in project."
         )
       })
     } else {

@@ -11,8 +11,8 @@ init = function(proj, chains) {
   init = list()
 
   for (i in 1:chains) {
-    init[[i]] = list(alpha  = matrix(1, nrow = proj$data$dim$row,  ncol = n.fac),
-                     lambda = matrix(0, nrow = n.fac            ,  ncol = proj$data$dim$col),
+    init[[i]] = list(alpha  = matrix(0, nrow = proj$data$dim$row,  ncol = n.fac),
+                     lambda = matrix(1, nrow = n.fac            ,  ncol = proj$data$dim$col),
                      sigma2 = matrix(1, nrow = proj$data$dim$row,  ncol = 1)
                      )
 
@@ -163,7 +163,7 @@ summary_matrix = function(proj, bias.stat = "mean") {
       matrices[[parameter]][["real"]] = data[["real"]][[parameter]]
     }
 
-    if (!is.null(data) & !is.null(data$real)) {
+    if (!is.null(matrices[[parameter]][["real"]])) {
       denom = matrices[[parameter]][["real"]]
       denom[denom == 0] = 1
       matrices[[parameter]][["bias"]] = (matrices[[parameter]][[bias.stat]] - matrices[[parameter]][["real"]]) / abs(denom)
@@ -186,7 +186,7 @@ summary_matrix = function(proj, bias.stat = "mean") {
 #' @importFrom coda geweke.diag
 #' @import purrr
 #' @importFrom rstan extract
-#' @import tidyr
+#' @importFrom tidyr extract
 diagnostic = function(fit) {
   fit = validate_proj_arg(fit, "fit")
 

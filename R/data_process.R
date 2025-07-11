@@ -9,8 +9,7 @@
 #'
 #' @import dplyr
 #' @import purrr
-#' @importFrom stats rbeta rgamma rnorm
-#' @import tidyr
+#' @importFrom tidyr pivot_longer
 #' @import utils
 generate_data = function(real, cicles = 1) {
   group.sizes = real$group.sizes
@@ -27,11 +26,19 @@ generate_data = function(real, cicles = 1) {
       }))
     }()
 
-  epsilon = matrix(
-    stats::rnorm(sum(group.sizes)*columns*cicles, 0, sqrt(real$sigma2)) ,
-    ncol = columns*cicles,
-    byrow = F
-  )
+  epsilon =
+    real$sigma2 |>
+    {\(.) matrix(rep(., cicles*columns), nrow = nrow(.)) }() |>
+    {\(.) lapply(seq_len(nrow(.)), function(i) (.[i,] |> diag()))}() |>
+    {\(.) dist_multivariate_normal(lapply(., function(x) rep(0, nrow(x))) , .)}() |>
+    generate(1) |>
+    {\(.) do.call(rbind, .)}()
+
+  # epsilon = matrix(
+  #   stats::rnorm(sum(group.sizes)*columns*cicles, 0, sqrt(real$sigma2)) ,
+  #   ncol = columns*cicles,
+  #   byrow = F
+  # )
 
   x =
     (alpha_lambda + epsilon) |>
@@ -76,7 +83,7 @@ generate_data = function(real, cicles = 1) {
 #' @param dist .
 #'
 #' @import distributional
-#' @import stats
+#' @importFrom stats rbeta
 real_from_dist = function(group.sizes, columns, semi.conf, dist = list( alpha = dist_uniform(-6,6), lambda = dist_normal(0,1), sigma2 = dist_uniform(.1,2) )) {
   stopifnot(
     "if the model is semi.conf there
@@ -157,19 +164,19 @@ real_from_posterior = function(proj, stat = "mean") {
 #' @param proj .
 #'
 #' @import distributional
-#' @import stats
+#' @import purrr
 real_from_prior = function(proj) {
   stopifnot("project must have prior" = !is.null(proj$prior))
   prior = proj$prior
   n.fac = length(prior$alpha$mean)
   nrow = length(prior$alpha$mean[[1]])
 
-  alpha = matrix(0,
-                 nrow = nrow,
-                 ncol = n.fac)
-  lambda = matrix(0,
-                  ncol = length(prior$lambda$mean[[1]]),
-                  nrow = n.fac)
+  # alpha = matrix(0,
+  #                nrow = nrow,
+  #                ncol = n.fac)
+  # lambda = matrix(0,
+  #                 ncol = length(prior$lambda$mean[[1]]),
+  #                 nrow = n.fac)
 
   alpha =
     dist_multivariate_normal(prior$alpha$mean, prior$alpha$cov) |>
@@ -180,11 +187,16 @@ real_from_prior = function(proj) {
     dist_multivariate_normal(prior$lambda$mean, prior$lambda$cov) |>
     generate(1) |>
     {\(.) do.call(rbind, .)}()
+  sigma2 =
+    dist_gamma(shape = prior$sigma2$shape, rate = prior$sigma2$rate) |>
+    generate(nrow) |>
+    purrr::pluck(1) |>
+    as.matrix()
 
   real = list(
     alpha  = alpha,
     lambda = lambda,
-    sigma2 = stats::rgamma(nrow, shape = prior$sigma2$shape, scale = prior$sigma2$scale) |> as.matrix(),
+    sigma2 = sigma2,
     group.sizes = proj$data$dim$group.sizes
   )
 
@@ -271,3 +283,15 @@ process_data = function(data, value, row, col, group = NULL) {
 
   data
 }
+
+
+#' Title
+#'
+#' @param group.sizes .
+#' @param semi.conf .
+#'
+#' @export
+alpha_in_group = function(group.sizes, semi.conf) {
+
+}
+

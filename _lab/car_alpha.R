@@ -20,8 +20,29 @@ car_alpha = function(neib, cov, type=1) {
     diag(car) = .01
     cov + car
 
+  } else if (type == 4){
+    car = car*20
+
+    diag_ = diag(cov)
+    diag_[diag_==10]=0
+    car + diag(diag_)
+
   }
 }
+
+
+car_alpha2 = function(neib, cov, type=1) {  # desconsiderando entradas de fora do grupo para calcular car
+  car = car(neib)
+  vals = cov |> c() |> unique() |> sort()
+  min = vals[1]; med = vals[2]; max = vals[3]
+  d_cov_med = which(diag(cov) == med, diag(cov))
+  car[d_cov_med,] = 0
+  car[,d_cov_med] = 0
+  car = max * car
+
+
+}
+
 
 neib = neib_voronoi(proj$space)
 cov = proj$prior$alpha$cov[[1]]

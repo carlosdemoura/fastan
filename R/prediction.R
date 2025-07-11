@@ -69,8 +69,8 @@ missing_validation_selection = function (proj) {
       dplyr::select(dplyr::all_of(c("value", "nearest_row", "col", "group"))) |>
       `colnames<-`(c("value", "row", "col", "group")) |>
       dplyr::mutate(
-        row = proj$data$label$loading[row],
-        col = proj$data$label$factor_level[col],
+        row   = proj$data$label$loading[row],
+        col   = proj$data$label$factor_level[col],
         group = proj$data$label$group[group]
       )
 
@@ -91,17 +91,18 @@ missing_validation_selection = function (proj) {
     ) |>
     process_data("value", "row", "col", "group")
 
-  data$pred =
+  data_new$pred =
     pred_new |>
     {\(.)
       dplyr::mutate(.,
-                    row   = lapply(.$row, function(x){which(data_new$label$loading == x,      data_new$label$loading)})      |> unlist(),
-                    col   = lapply(.$col, function(x){which(data_new$label$factor_level == x, data_new$label$factor_level)}) |> unlist(),
-                    group = lapply(.$group, function(x){which(data_new$label$group == x,      data_new$label$group)})        |> unlist()
+                    row   = lapply(.$row,   function(x){which(data_new$label$loading == x,      data_new$label$loading)})      |> unlist(),
+                    col   = lapply(.$col,   function(x){which(data_new$label$factor_level == x, data_new$label$factor_level)}) |> unlist(),
+                    group = lapply(.$group, function(x){which(data_new$label$group == x,        data_new$label$group)})        |> unlist()
       )
-    }()
+    }() |>
+    dplyr::arrange(dplyr::all_of("row"), dplyr::all_of("col"))
 
-  data$x = dplyr::anti_join(data$x, data$pred, by=c("row", "col"))
+  data_new$x = dplyr::anti_join(data_new$x, data_new$pred, by=c("row", "col"))
 
-  data
+  data_new
 }

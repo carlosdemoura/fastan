@@ -154,11 +154,11 @@ set_summary = function(proj, ...) {
 #' @import dplyr
 missing_validation = function(proj, ...) {
   proj$data = missing_validation_selection(proj)
-  proj$data$label$loading
-  proj$space =
-    proj$space |>
-    dplyr::filter(proj$space$id %in% proj$data$label$loading)
-  # FALTA COISA AQUI, REORDENAR OS ID !!!! <=======================================
+  space_rows =
+    proj$data$label$loading |>
+    lapply(function(x) which(x == proj$space$id, proj$space$id)) |>
+    unlist()
+  proj$space = proj$space[space_rows,]
   proj = proj |> remove( setdiff(names(proj), c("info", "data", "space")) )
   return(proj)
 }

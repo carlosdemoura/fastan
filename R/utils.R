@@ -120,6 +120,14 @@ export = function(proj, path_dump = getwd(), rds = T, plot.extension = "png") {
     ggsave(plot = p_bias, filename = img("bias"), width = 7, height = 5, dpi = 300, bg = "white")
   }
 
+  if (!real & ("real" %in% dimnames(proj$summary$pred)[[3]])) {
+    sink(file.path(path, "accuracy.txt"))
+    accuracy(proj) |> print()
+    sink()
+    plot_bias(proj, "pred")
+    ggsave(img("bias"), width = 7, height = 5, dpi = 300, bg = "white")
+  }
+
   if (rds) {
     saveRDS(proj, file.path(path, "proj.rds"))
   }
@@ -284,7 +292,22 @@ param.dim = function(proj) {
 #' @importFrom stats weighted.mean
 accuracy = function(smry, correct = F) {
   smry = validate_proj_arg(smry, "summary")
-  stopifnot("data must be simdata" = "real" %in% dimnames(smry$alpha)[[3]])
+  stopifnot("data must be simdata" = "real" %in% ( lapply(smry, function(x) dimnames(x)[[3]]) |> unlist() |> unname()) )
+
+  if ( !("real" %in% ( lapply(smry[c("alpha", "lambda", "sigma2")], function(x) dimnames(x)[[3]]) |> unlist() |> unname())) ) {
+    table =
+      data.frame(
+        "p" =
+          smry$pred[,,"real"] |>
+          {\(.) (. >= smry$pred[,,"hpd_min"]) & (. <= smry$pred[,,"hpd_max"])}() |>
+          as.numeric() |>
+          mean(),
+        "bias" = smry$pred[,,"bias"] |> mean()
+        ) |>
+      `row.names<-`("pred")
+    return(table)
+  }
+
   table =
     matrix(0, nrow = 4, ncol = 3) |>
     as.data.frame() |>

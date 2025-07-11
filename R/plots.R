@@ -8,7 +8,7 @@
 #'
 #' @import ggplot2
 #' @import dplyr
-#' @import tidyr
+#' @importFrom tidyr pivot_longer
 plot_contrast = function(smry, par = "alpha", stat = "mean") {
   smry = validate_proj_arg(smry, "summary")
   df = smry[[par]][,,stat, drop=F] |>
@@ -134,14 +134,14 @@ plot_posterior = function(fit, par, row = 1, col = 1, type = c("hist", "dens")) 
     `colnames<-`("x")
 
   y_max = list(
-    {ggplot(df, aes(x = .data$x)) + geom_histogram(aes(y = after_stat(density)), binwidth = 1)},
+    {ggplot(df, aes(x = .data$x)) + geom_histogram(aes(y = after_stat(.data$density)), binwidth = 1)},
     {ggplot(df, aes(x = .data$x)) + geom_density()}
     ) |>
     sapply( function(x){ x |> {\(.) ggplot_build(.)$data}() |> {\(.) max(.[[1]]$ymax)}() } ) |>
     max()
 
   ggplot(df, aes(x = .data$x)) +
-    {if ("hist" %in% type) geom_histogram(aes(y = after_stat(density)), fill = "grey")} +
+    {if ("hist" %in% type) geom_histogram(aes(y = after_stat(.data$density)), fill = "grey")} +
     {if ("dens" %in% type) geom_density(lwd = 1.5, col = "red")} +
     #{if ("real" %in% type) geom_density(lwd = 1.5, col = "red")} +
     {if (par != "lp__") ylim(0, y_max)} +
@@ -161,7 +161,7 @@ plot_posterior = function(fit, par, row = 1, col = 1, type = c("hist", "dens")) 
 #' @import ggplot2
 #' @import rstan
 #' @import dplyr
-#' @import tidyr
+#' @importFrom tidyr pivot_longer starts_with
 plot_trace = function(fit, par, row = 1, col = 1) {
   fit = validate_proj_arg(fit, "fit")
   par_ = par |>
@@ -370,7 +370,7 @@ plot_missing = function(data) {
 #'
 #' @import dplyr
 #' @import ggplot2
-#' @import tidyr
+#' @importFrom tidyr pivot_longer
 #' @importFrom grDevices colorRampPalette
 plot_normal_prior = function(proj, par, stat, loc = "all") {
   stopifnot("stat must be either mean or cov" = stat %in% c("mean", "cov"))
@@ -446,7 +446,8 @@ plot_normal_prior = function(proj, par, stat, loc = "all") {
     scale_y_continuous(breaks = breaks.y, trans = "reverse") +
     scale_x_continuous(breaks = breaks.x) +
     {
-      if (length(vals) <= 5) scale_fill_manual(values = setNames(palette, vals), name = "Value")
+      #if (length(vals) <= 5) scale_fill_manual(values = setNames(palette, vals), name = "Value")
+      if (length(vals) <= 5) scale_fill_manual(values = stats::setNames(palette, vals), name = "Value")
       else scale_fill_gradient(low = "white", high = "black")
     }
 }
@@ -461,7 +462,7 @@ plot_normal_prior = function(proj, par, stat, loc = "all") {
 #' @export
 #'
 #' @import dplyr
-#' @import tidyr
+#' @importFrom tidyr pivot_longer pivot_wider
 matrix_to_df = function(m) {
   m |>
     {\(x)

@@ -58,6 +58,7 @@ plot_map_post = function(proj, par, col = 1, stat) {
 #' @import dplyr
 #' @import ggplot2
 #' @import purrr
+#' @importFrom stats var
 plot_map_data = function(proj, stat) {
   stopifnot("stat must be group, mean or var" = stat %in% c("group", "mean", "var"))
   df =
@@ -65,7 +66,7 @@ plot_map_data = function(proj, stat) {
     dplyr::group_by_at("row") |>
     dplyr::summarise(
       mean = mean(value),
-      var = var(value)
+      var = stats::var(value)
     ) |>
     dplyr::mutate(
       group = unique(proj$data$x[,c("row", "group")]) |> {\(.) .$group}() |> factor()
