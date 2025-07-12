@@ -6,7 +6,11 @@
 #'
 #' @export
 n.fac = function(proj){
-  proj$data$dim$group.n - as.integer(proj$prior$semi.conf)
+  if (is.null(proj$prior)) {
+    proj$data$dim$group.n
+  } else {
+    proj$data$dim$group.n - as.integer(proj$prior$semi.conf)
+  }
 }
 
 

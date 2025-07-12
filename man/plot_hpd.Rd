@@ -4,7 +4,7 @@
 \alias{plot_hpd}
 \title{Plot HPD interval & other stats}
 \usage{
-plot_hpd(smry, par, row = NULL, col = NULL, stat = c("mean", "median"))
+plot_hpd(smry, par, row = NULL, col = NULL, stat = "mean")
 }
 \arguments{
 \item{smry}{.}

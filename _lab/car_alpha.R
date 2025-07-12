@@ -1,4 +1,25 @@
 
+car_alpha_local = function(proj, tau) {
+  cov = list()
+  for (fac in 1:n.fac(proj)) {
+    lim = proj$data$dim$group.sizes |> fiat_groups_limits()
+    rows = lim[[1]][fac]:lim[[2]][fac]
+    # if (proj$prior$semi.conf) {
+    #   rows =
+    #     rows |>
+    #     c(lim[[1]][n.fac(proj)]:lim[[2]][n.fac(proj)])
+    # }
+    coor_group = dplyr::left_join(data.frame(row=rows), proj$space, by = "row")
+    neib = neib_voronoi(coor_group)
+    car = car(neib) * tau
+    m = matrix(0, proj$data$dim$row, proj$data$dim$row)
+    m[lim[[1]][fac]:lim[[2]][fac],lim[[1]][fac]:lim[[2]][fac]] = car
+    cov[[fac]] = m + diag(.01, proj$data$dim$row)
+  }
+  cov
+}
+
+
 car_alpha = function(neib, cov, type=1) {
   car = car(neib)
   vals = cov |> c() |> unique() |> sort()
@@ -29,6 +50,10 @@ car_alpha = function(neib, cov, type=1) {
 
   }
 }
+
+
+
+
 
 
 car_alpha2 = function(neib, cov, type=1) {  # desconsiderando entradas de fora do grupo para calcular car

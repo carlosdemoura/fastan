@@ -476,9 +476,9 @@ server0 = function(input, output, session) {
         )
       }()
 
-    if (project()$prior$semi.conf) {
+    if (!is.null(project()$prior)) { if (project()$prior$semi.conf) {
       df.groups[nrow(df.groups),1] = paste(df.groups[nrow(df.groups),1], "(group extra)")
-    }
+    }}
 
     output$Model.like = renderUI({
       paste0(
@@ -495,23 +495,30 @@ server0 = function(input, output, session) {
         withMathJax()
     })
 
-    output$Model.prior = renderUI({
-      tagList(
-        paste0(
-          "<p>\\[ \\alpha_{\\bullet, j} \\sim N_{", dim$row, "}(mean\\ \\alpha_j, cov\\ \\alpha_j); \\]</p>",
-          "<p>\\[ \\lambda_{i, \\bullet} \\sim N_{", dim$col, "}(mean\\ \\lambda_i, cov\\ \\lambda_i); \\]</p>",
-          "<p>\\[ \\sigma^2 \\sim Gama_{", dim$row, "}( shape = ", project()$prior$sigma2$shape, ",\\ rate = ", project()$prior$sigma2$rate, "); \\]</p>",
-          "<p>\\[ var\\ Y = \\bigr( var(Y_{i,j}) \\bigr)_{i,j}\\ , \\ Y = \\alpha, \\lambda; \\]</p>",
-          "<p>\\[ mean\\ Y = \\bigr( mean(Y_{i,j}) \\bigr)_{i,j}\\ , \\ Y = \\alpha, \\lambda. \\]</p>"
-        ) |>
-          HTML() |>
-          withMathJax(),
-        div(
-          style = "text-align: center; margin-top: 1em;",
-          actionButton("Model.prior_hyp", "See prior hyperparameters")
+    if (is.null(project()$prior)) {
+      output$Model.prior = renderUI({
+        "No prior on project."
+      })
+    } else {
+      output$Model.prior = renderUI({
+        tagList(
+          paste0(
+            "<p>\\[ \\alpha_{\\bullet, j} \\sim N_{", dim$row, "}(mean\\ \\alpha_j, cov\\ \\alpha_j); \\]</p>",
+            "<p>\\[ \\lambda_{i, \\bullet} \\sim N_{", dim$col, "}(mean\\ \\lambda_i, cov\\ \\lambda_i); \\]</p>",
+            "<p>\\[ \\sigma^2 \\sim Gama_{", dim$row, "}( shape = ", project()$prior$sigma2$shape, ",\\ rate = ", project()$prior$sigma2$rate, "); \\]</p>",
+            "<p>\\[ var\\ Y = \\bigr( var(Y_{i,j}) \\bigr)_{i,j}\\ , \\ Y = \\alpha, \\lambda; \\]</p>",
+            "<p>\\[ mean\\ Y = \\bigr( mean(Y_{i,j}) \\bigr)_{i,j}\\ , \\ Y = \\alpha, \\lambda. \\]</p>"
+          ) |>
+            HTML() |>
+            withMathJax(),
+          div(
+            style = "text-align: center; margin-top: 1em;",
+            actionButton("Model.prior_hyp", "See prior hyperparameters")
+          )
         )
-      )
-    })
+      })
+    }
+
 
     output$Model.info = renderUI({
       paste0(
@@ -917,10 +924,10 @@ server0
 #' Shiny App
 #'
 #' @param proj .
-#' @param upload_size .
+#' @param upload.size .
 #'
 #' @export
-shiny = function(proj = NULL, upload_size = 500) {
-  options(shiny.maxRequestSize = upload_size*1024^2)
+shiny = function(proj = NULL, upload.size = 500) {
+  options(shiny.maxRequestSize = upload.size*1024^2)
   shinyApp(ui = ui(), server = server(proj))
 }

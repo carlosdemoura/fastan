@@ -167,10 +167,16 @@ missing_validation = function(proj, ...) {
 #' Title
 #'
 #' @param proj .
-#' @param attr .
+#' @param ... .
 #'
 #' @export
-remove = function(proj, attr) {
+remove = function(proj, ...) {
+  if (lapply(list(...), is.character) |> unlist() |> all()) {
+    attr = unlist(list(...))
+  } else {
+    attr = sapply(substitute(list(...))[-1], deparse)
+  }
+
   if (length(attr)) {
     for (x in attr) {
       proj[[x]] = NULL

@@ -54,7 +54,7 @@ plot_contrast = function(smry, par = "alpha", stat = "mean") {
 #' @export
 #'
 #' @import ggplot2
-plot_hpd = function(smry, par, row = NULL, col = NULL, stat = c("mean", "median")) {
+plot_hpd = function(smry, par, row = NULL, col = NULL, stat = "mean") {
   smry = validate_proj_arg(smry, "summary")
   df = matrix_to_df(smry[[par]])
   loc.name = list(row=row,col=col) |> {\(.) names(.)[!sapply(., is.null)]}()

@@ -4,12 +4,12 @@
 \alias{remove}
 \title{Title}
 \usage{
-remove(proj, attr)
+remove(proj, ...)
 }
 \arguments{
 \item{proj}{.}
 
-\item{attr}{.}
+\item{...}{.}
 }
 \description{
 Title

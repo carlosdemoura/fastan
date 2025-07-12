@@ -8,3 +8,4 @@
 - R/tidy: turn try_set into decorator/wrapper
 - stan: option to treat alphas as constant zero
 - stan: chain correction, there may be the identification problem between different chains
+- R/prediction: fix rows on proj space after missing_validation proj space row |> unique()

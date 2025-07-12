@@ -236,3 +236,23 @@ get_chains_mcmc = function(fit, param) {
   }
   coda::as.mcmc.list(chains)
 }
+
+
+#' Title
+#'
+#' @param smry .
+#' @param locs .
+#'
+#' @export
+invert_signal_smry = function(smry, locs) {
+  if ("bias" %in% dimnames(smry$alpha)[[3]]) {
+    stat = c("mean", "median", "bias")
+  } else {
+    stat = c("mean", "median")
+  }
+  for (loc in locs) {
+    smry$alpha[,loc,c(stat, "hpd_min", "hpd_max")]  = -smry$alpha[,loc,c(stat, "hpd_max", "hpd_min")]
+    smry$lambda[loc,,c(stat, "hpd_min", "hpd_max")] = -smry$lambda[loc,,c(stat, "hpd_min", "hpd_max")]
+  }
+  smry
+}
