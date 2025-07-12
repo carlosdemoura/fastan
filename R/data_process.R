@@ -189,6 +189,7 @@ real_from_prior = function(proj) {
     {\(.) do.call(rbind, .)}()
   sigma2 =
     dist_gamma(shape = prior$sigma2$shape, rate = prior$sigma2$rate) |>
+    #dist_uniform(.1, 4) |>
     generate(nrow) |>
     purrr::pluck(1) |>
     as.matrix()

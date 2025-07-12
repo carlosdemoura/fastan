@@ -30,57 +30,6 @@ space_process = function(data, df, label, lat, lon, alt, position = "row") {
 
 #' Title
 #'
-#' @import ggplot2
-theme_map = function() {
-  theme(
-    axis.text.x      = element_blank(),
-    axis.ticks.x     = element_blank(),
-    axis.title.x     = element_blank(),
-    axis.text.y      = element_blank(),
-    axis.ticks.y     = element_blank(),
-    axis.title.y     = element_blank(),
-    panel.grid       = element_blank(),
-    panel.background = element_blank()
-  )
-}
-
-
-#' Title
-#'
-#' @param proj .
-#' @param x .
-#'
-#' @export
-#'
-#' @import ggplot2
-#' @import dplyr
-plot_map = function(proj, x = 1) {
-  df = proj$space
-  if ("id" %in% colnames(x)) {
-    df = dplyr::left_join(df, x, by = "id")
-  } else {
-    df$x = x
-  }
-
-  margin = 1/2
-  xrange = range(df$lon, na.rm = TRUE) + c(-margin, margin)
-  yrange = range(df$lat, na.rm = TRUE) + c(-margin, margin)
-
-  ggplot() +
-    geom_polygon(data = map_data("world"),
-                 aes(x = long, y = lat, group = group),
-                 fill = "lightblue", color = "black") +
-    geom_point(data = df,
-               aes(x = lon, y = lat, color = x),
-               size = 1) +
-    scale_color_viridis_c(option = "turbo") +
-    coord_fixed(xlim = xrange, ylim = yrange) +
-    theme_map()
-}
-
-
-#' Title
-#'
 #' @param coor .
 #' @param lon .
 #' @param lat .

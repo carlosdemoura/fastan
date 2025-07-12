@@ -93,10 +93,11 @@ export = function(proj, path_dump = getwd(), rds = T, plot.extension = "png") {
   plot_trace(proj, par = "lp__")
   ggsave(img("traceplot_lp"), width = 15, height = 5, dpi = 300, bg = "white")
 
+  diag = list()
   for (stat in c("Rhat", "n_eff", "geweke")) {
-    p_diag = plot_diagnostic(proj, stat)
-    ggsave(plot = p_diag, filename = img(paste0("diganostic", "_", stat)), width = 7, height = 5, dpi = 300, bg = "white")
+    diag[[stat]] = plot_diagnostic(proj, stat)
   }
+  ggsave(plot = gridExtra::grid.arrange(grobs = diag, ncol = 1), filename = img("diganostic"), width = 7, height = 15, dpi = 300, bg = "white")
 
   if (!is.null(proj$summary$pred)) {
     plot_missing(proj)
@@ -116,7 +117,7 @@ export = function(proj, path_dump = getwd(), rds = T, plot.extension = "png") {
     for (param in c("all", names(proj$summary))) {
       bias[[param]] = plot_bias(proj, param)
     }
-    p_bias = gridExtra::grid.arrange(grobs = bias, ncol=2)
+    p_bias = gridExtra::grid.arrange(grobs = bias, ncol = 2)
     ggsave(plot = p_bias, filename = img("bias"), width = 7, height = 5, dpi = 300, bg = "white")
   }
 
@@ -127,6 +128,29 @@ export = function(proj, path_dump = getwd(), rds = T, plot.extension = "png") {
     plot_bias(proj, "pred")
     ggsave(img("bias"), width = 7, height = 5, dpi = 300, bg = "white")
   }
+
+  prior = list(alpha = list(), lambda = list(), sigma2 = NA)
+
+  for (i in 1:n.fac(proj)) {
+    for (par in c("alpha", "lambda")) {
+      for (stat in c("mean", "cov")) {
+        prior[[par]][[paste0(stat, "_", i)]] =
+          plot_normal_prior(proj, par, stat, i) +
+          theme(plot.margin = unit(c(2,2,0,0), "cm"))
+      }
+    }
+  }
+
+  p_prior = list()
+
+  p_prior[["alpha"]] =
+    gridExtra::grid.arrange(grobs = prior$alpha, ncol = 2,
+                            widths=c(3, 10), heights=rep(12, times = i))
+  p_prior[["lambda"]] =
+    gridExtra::grid.arrange(grobs = prior$lambda, ncol = 2,
+                            widths=c(3, 10), heights=rep(12, times = i))
+
+  ggsave(plot = gridExtra::grid.arrange(grobs = p_prior, ncol=2), filename = img("prior"), width = 16, height = 6 * i, dpi = 300, bg = "white")
 
   if (rds) {
     saveRDS(proj, file.path(path, "proj.rds"))
