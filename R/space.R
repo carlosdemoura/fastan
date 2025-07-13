@@ -30,6 +30,24 @@ space_process = function(data, df, label, lat, lon, alt, position = "row") {
 
 #' Title
 #'
+#' @param n .
+#' @param cont .
+#'
+#' @export
+#'
+#' @importFrom dplyr arrange
+#' @importFrom geosphere randomCoordinates
+#' @importFrom stats runif
+generate_space = function(n, cont = F) {
+  geosphere::randomCoordinates(n) |>
+    as.data.frame() |>
+    {\(.) if (cont) dplyr::arrange(., .$lon) else .}() |>
+    cbind(data.frame(alt = round(runif(n, 0, 100), 2)))
+}
+
+
+#' Title
+#'
 #' @param coor .
 #' @param lon .
 #' @param lat .

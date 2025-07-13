@@ -73,11 +73,22 @@ set_data = function(proj, simdata = "", pred = NULL, cicles = 1, seed = NULL, ..
 #' Title
 #'
 #' @param proj .
+#' @param type .
 #' @param ... .
 #'
 #' @export
-set_space = function(proj, ...) {
-  proj$space = space_process(proj$data, ...)
+set_space = function(proj, type = "real", ...) {
+  stopifnot("type must bet real or random" = type %in% c("real", "random"))
+  if (type == "real") {
+    proj$space = space_process(proj$data, ...)
+  } else if (type == "random") {
+    df =
+      proj$data$label$loading |>
+      length() |>
+      generate_space(...) |>
+      cbind(data.frame(id = proj$data$label$loading))
+    proj$space = space_process(proj$data, df = df, label = "id", lat = "lat", lon = "lon", alt = "alt", position = "row")
+  }
 
   return(proj)
 }
@@ -85,7 +96,7 @@ set_space = function(proj, ...) {
 
 #' Title
 #'
-#' @inheritParams set_space
+#' @inheritParams set_summary
 #' @param type .
 #'
 #' @export
@@ -101,7 +112,7 @@ set_prior = function(proj, type, ...) {
 
 #' Title
 #'
-#' @inheritParams set_space
+#' @inheritParams set_summary
 #' @param set_summary .
 #' @param set_diagnostic .
 #'
@@ -121,7 +132,7 @@ set_fit = function(proj, set_summary = T, set_diagnostic = T, ...) {
 
 #' Title
 #'
-#' @inheritParams set_space
+#' @inheritParams set_summary
 #'
 #' @export
 set_diagnostic = function(proj, ...) {
@@ -134,7 +145,8 @@ set_diagnostic = function(proj, ...) {
 
 #' Title
 #'
-#' @inheritParams set_space
+#' @param proj .
+#' @param ... .
 #'
 #' @export
 set_summary = function(proj, ...) {
@@ -147,7 +159,7 @@ set_summary = function(proj, ...) {
 
 #' Title
 #'
-#' @inheritParams set_space
+#' @inheritParams set_summary
 #'
 #' @export
 #'

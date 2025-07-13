@@ -86,3 +86,18 @@ cov = proj$prior$alpha$cov[[1]]
 #   diag(car) = .01
 #   x + car
 # }
+
+
+
+proj =
+  blank_project() |>
+  set_info("dados de temperatura max semanal") |>
+  set_data(simdata = T, group.sizes = rep(30,3), columns = 4, semi.conf = F) |>
+  set_space(df = stations, label = "station.id", lat = "lat", lon = "lon", alt = "alt", position = "row") |>
+  set_prior(type = "normal", semi.conf = F) |>
+  {\(.) {.$prior$alpha$cov   = .$prior$alpha$cov |> lapply(function(x) {x[x == 10] = 100; x}) ; . }}() |>
+  #{\(.) {.$prior$alpha$cov   = car_alpha_local(., 250) ; . }}() |>
+  #{\(.) {.$prior$alpha$cov   = .$prior$alpha$cov  |> lapply(function(x) car_alpha(neib_voronoi(.$space), x, 4)) ; . }}() |>
+  {\(.) {.$prior$lambda$cov  = .$prior$lambda$cov |> lapply(function(x) car(neib_simple(ncol(x)))) ; . }}() |>
+  set_fit(iter = 1000, seed = 12345)
+
