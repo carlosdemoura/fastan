@@ -330,16 +330,17 @@ accuracy = function(smry, correct = F) {
           {\(.) (. >= smry$pred[,,"hpd_min"]) & (. <= smry$pred[,,"hpd_max"])}() |>
           as.numeric() |>
           mean(),
-        "bias" = smry$pred[,,"bias"] |> mean()
+        "bias" = smry$pred[,,"bias"] |> mean(),
+        "hpd_amp" = smry$pred[,,"hpd_amp"] |> mean()
         ) |>
       `row.names<-`("pred")
     return(table)
   }
 
   table =
-    matrix(0, nrow = 4, ncol = 3) |>
+    matrix(0, nrow = 4, ncol = 4) |>
     as.data.frame() |>
-    `colnames<-`(c("p", "bias", "total")) |>
+    `colnames<-`(c("p", "bias", "hpd_amp", "n")) |>
     `rownames<-`(c("alpha", "lambda", "sigma2", "pred"))
   for (par in names(smry)) {
     p =
@@ -348,22 +349,27 @@ accuracy = function(smry, correct = F) {
       as.numeric() |>
       c()
     b = smry[[par]][,,"bias"] |> c()
+    h = smry[[par]][,,"hpd_amp"] |> c()
 
     if ((par == "alpha") & correct) {
       p = p[as.logical(smry$alpha[,,"in_group"])]
       b = b[as.logical(smry$alpha[,,"in_group"])]
+      h = h[as.logical(smry$alpha[,,"in_group"])]
     }
 
     table[par, "p"] = mean(p)
     table[par, "bias"] = mean(b)
+    table[par, "hpd_amp"] = mean(h)
   }
   if (!("pred" %in% names(smry))) {
     table = table[-4,]
   }
-  table$total = param.dim(list(summary = smry))$total
+  table[,"n"] = param.dim(list(summary = smry))$total
   table["all",] =
-    stats::weighted.mean(table$p, table$total) |>
-    c(stats::weighted.mean(table$bias, table$total)) |>
-    c(sum(table$total))
+    stats::weighted.mean(table$p, table$n) |>
+    c(stats::weighted.mean(table$bias, table$n)) |>
+    c(stats::weighted.mean(table$hpd_amp, table$n)) |>
+    c(sum(table$n))
+
   table
 }

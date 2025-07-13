@@ -9,3 +9,7 @@
 - stan: option to treat alphas as constant zero
 - stan: chain correction, there may be the identification problem between different chains
 - R/prediction: fix rows on proj space after missing_validation proj space row |> unique()
+- R/invert_signal_smry: bias and p fix
+- R/matrix to df: include labels
+- R/accuracy: hpd_amp mean; rename total
+- R/missing_validation: space_rows from join

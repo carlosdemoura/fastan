@@ -431,7 +431,7 @@ server0 = function(input, output, session) {
 
     df =
       project()$summary$pred |>
-      matrix_to_df() |>
+      summary_as_df() |>
       {\(.) dplyr::filter(., .$row_ == coor$row, .$col_ == coor$col)}()
 
     cat("Row:", coor$row, "  Col.:", coor$col, "\tRow param.:", df$row,"\n")
@@ -451,7 +451,7 @@ server0 = function(input, output, session) {
 
     row =
       project()$summary$pred |>
-      matrix_to_df() |>
+      summary_as_df() |>
       {\(.) dplyr::filter(., .$row_ == coor$row, .$col_ == coor$col)}() |>
       dplyr::select(dplyr::all_of("row")) |>
       purrr::pluck(1)
@@ -865,7 +865,16 @@ server0 = function(input, output, session) {
             column(10,
               plotly::plotlyOutput("Maps.map_post", height = "80vh")
             )
+          ),
+          fluidRow(
+            column(10,
+              "groups"
+            )
           )
+
+
+
+
         )
       })
     }

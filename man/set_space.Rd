@@ -4,10 +4,14 @@
 \alias{set_space}
 \title{Title}
 \usage{
-set_space(proj, ...)
+set_space(proj, type = "real", seed = NULL, ...)
 }
 \arguments{
 \item{proj}{.}
+
+\item{type}{.}
+
+\item{seed}{.}
 
 \item{...}{.}
 }

@@ -74,11 +74,17 @@ set_data = function(proj, simdata = "", pred = NULL, cicles = 1, seed = NULL, ..
 #'
 #' @param proj .
 #' @param type .
+#' @param seed .
 #' @param ... .
 #'
 #' @export
-set_space = function(proj, type = "real", ...) {
+set_space = function(proj, type = "real", seed = NULL, ...) {
   stopifnot("type must bet real or random" = type %in% c("real", "random"))
+
+  if (!is.null(seed)) {
+    set.seed(seed)
+  }
+
   if (type == "real") {
     proj$space = space_process(proj$data, ...)
   } else if (type == "random") {

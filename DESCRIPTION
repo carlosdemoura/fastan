@@ -15,6 +15,7 @@ Imports:
     deldir,
     dplyr,
     geosphere,
+    ggforce,
     gridExtra,
     plotly,
     posterior,

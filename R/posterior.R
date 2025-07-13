@@ -241,18 +241,71 @@ get_chains_mcmc = function(fit, param) {
 #' Title
 #'
 #' @param smry .
-#' @param locs .
+#' @param fac .
+#' @param bias.stat .
 #'
 #' @export
-invert_signal_smry = function(smry, locs) {
-  if ("bias" %in% dimnames(smry$alpha)[[3]]) {
-    stat = c("mean", "median", "bias")
-  } else {
-    stat = c("mean", "median")
-  }
-  for (loc in locs) {
+invert_signal_smry = function(smry, fac, bias.stat = "mean") {
+  stat = c("mean", "median")
+  for (loc in fac) {
     smry$alpha[,loc,c(stat, "hpd_min", "hpd_max")]  = -smry$alpha[,loc,c(stat, "hpd_max", "hpd_min")]
-    smry$lambda[loc,,c(stat, "hpd_min", "hpd_max")] = -smry$lambda[loc,,c(stat, "hpd_min", "hpd_max")]
+    smry$lambda[loc,,c(stat, "hpd_min", "hpd_max")] = -smry$lambda[loc,,c(stat, "hpd_max", "hpd_min")]
   }
+
+  for (parameter in c("alpha", "lambda")) {
+    if ("real" %in% dimnames(smry[[parameter]])[[3]]) {
+      denom = smry[[parameter]][,,"real"]
+      denom[denom == 0] = 1
+      smry[[parameter]][,,"bias"] = (smry[[parameter]][,,bias.stat] - smry[[parameter]][,,"real"]) / abs(denom)
+    }
+  }
+
   smry
+}
+
+
+#' Transform 3D matrix into elongated data frame
+#'
+#' @param m matrix 3d, the 3rd dim will be elongated.
+#' @param label .
+#'
+#' @return `data.frame()`
+#'
+#' @export
+#'
+#' @import dplyr
+#' @importFrom tidyr pivot_longer pivot_wider
+summary_as_df = function(m, label = NULL) {
+  df =
+    m |>
+    {\(x)
+      do.call(rbind, lapply(dimnames(x)[[3]], function(slice) {
+        x[, , slice, drop = FALSE] |>
+          as.data.frame() |>
+          {\(.) `colnames<-`(., 1:ncol(.)) }() |>
+          {\(.) dplyr::mutate(., row = row.names(.)) }() |>
+          {\(.) tidyr::pivot_longer(., names_to = "col", values_to = "v", cols = 1:ncol(x)) }() |>
+          {\(.) dplyr::mutate(., stat = slice) }()
+      }))
+    }() |>
+    tidyr::pivot_wider(values_from = "v", names_from = "stat") |>
+    {\(.) dplyr::mutate(
+      .,
+      row = as.numeric(.$row),
+      col = as.numeric(.$col)
+    )}()
+  # PROJECT IS NEEDED!!!!!!!!!!
+  # if (!is.null(label)) {
+  #   if (label == "alpha") {
+  #     df_ = data.frame(id = proj)
+  #   } else if (label == "lambda") {
+  #   } else if (label == "sigma2") {
+  #   } else {
+  #     stop("label must be either a parameter or NULL")
+  #   }
+  #
+  #   df = dplyr::left_join(df, df_)
+  # }
+
+  df
 }

@@ -56,7 +56,7 @@ plot_contrast = function(smry, par = "alpha", stat = "mean") {
 #' @import ggplot2
 plot_hpd = function(smry, par, row = NULL, col = NULL, stat = "mean") {
   smry = validate_proj_arg(smry, "summary")
-  df = matrix_to_df(smry[[par]])
+  df = summary_as_df(smry[[par]])
   loc.name = list(row=row,col=col) |> {\(.) names(.)[!sapply(., is.null)]}()
   df = df[df[[loc.name]] == get(loc.name), ]
   real = "real" %in% colnames(df)
@@ -95,7 +95,7 @@ plot_hpd = function(smry, par, row = NULL, col = NULL, stat = "mean") {
 #' @import ggplot2
 plot_lambda = function(smry, stat = "mean") {
   smry = validate_proj_arg(smry, "summary")
-  df = matrix_to_df(smry$lambda)
+  df = summary_as_df(smry$lambda)
 
   ggplot(df, aes(x = .data$col, group = factor(.data$row), color = factor(.data$row), fill = factor(.data$row))) +
     geom_ribbon(aes(ymin = .data$hpd_min, ymax = .data$hpd_max), alpha = 0.2, color = NA) +
@@ -428,7 +428,6 @@ plot_normal_prior = function(proj, par, stat, loc = "all") {
     title = bquote(.(paste0(stat, " ")) * .(as.name(par))[.(loc)])
   }
 
-
   ggplot(df, aes(x = .data$col, y = .data$row, fill = .data$value)) +
     {
       if ((stat == "mean") & (length(vals) ==1)) geom_tile(color = "black")
@@ -450,37 +449,6 @@ plot_normal_prior = function(proj, par, stat, loc = "all") {
       if (length(vals) <= 5) scale_fill_manual(values = stats::setNames(palette, vals), name = "Value")
       else scale_fill_gradient(low = "white", high = "black")
     }
-}
-
-
-#' Transform 3D matrix into elongated data frame
-#'
-#' @param m matrix 3d, the 3rd dim will be elongated.
-#'
-#' @return `data.frame()`
-#'
-#' @export
-#'
-#' @import dplyr
-#' @importFrom tidyr pivot_longer pivot_wider
-matrix_to_df = function(m) {
-  m |>
-    {\(x)
-      do.call(rbind, lapply(dimnames(x)[[3]], function(slice) {
-        x[, , slice, drop = FALSE] |>
-          as.data.frame() |>
-          {\(.) `colnames<-`(., 1:ncol(.)) }() |>
-          {\(.) dplyr::mutate(., row = row.names(.)) }() |>
-          {\(.) tidyr::pivot_longer(., names_to = "col", values_to = "v", cols = 1:ncol(x)) }() |>
-          {\(.) dplyr::mutate(., stat = slice) }()
-      }))
-    }() |>
-    tidyr::pivot_wider(values_from = "v", names_from = "stat") |>
-    {\(.) dplyr::mutate(
-      .,
-      row = as.numeric(.$row),
-      col = as.numeric(.$col)
-    )}()
 }
 
 

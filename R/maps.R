@@ -30,6 +30,7 @@ plot_map = function(proj) {
     )
 }
 
+
 #' Title
 #'
 #' @param proj .
@@ -47,6 +48,53 @@ plot_map_post = function(proj, par, col = 1, stat) {
     geom_point(data = df, aes(x = .data$lon, y = .data$lat, color = .data$x), size = 1.5) +
     scale_color_viridis_c(option = "turbo") +
     labs(title = paste0(par, "[,",col,"]", " posterior ", stat))
+}
+
+
+#' Title
+#'
+#' @param proj .
+#' @param extra.only .
+#'
+#' @export
+#'
+#' @import ggplot2
+#' @importFrom ggforce geom_arc_bar
+plot_map_post_factor = function(proj, extra.only = F) {
+  df =
+    (1 - proj$summary$alpha[,,"hpd_contains_0"]) |>
+    as.data.frame() |>
+    {\(.) `colnames<-`(., paste0("factor ", 1:ncol(.)))}() |>
+    {\(.) cbind(proj$space, .)}() |>
+    {\(.) if (extra.only) .[tail(fiat_groups_limits(proj$data$dim$group.sizes)[[1]], 1):tail(fiat_groups_limits(proj$data$dim$group.sizes)[[2]], 1),] else .}() |>
+    tidyr::pivot_longer(cols = starts_with("factor"), names_to = "factor", values_to = "value") |>
+    dplyr::filter(value == 1) |>
+    dplyr::group_by_at("id") |>
+    dplyr::mutate(
+      n = n(),
+      angle_start = (row_number() - 1) * 2 * pi / n,
+      angle_end   = row_number() * 2 * pi / n
+    ) |>
+    dplyr::ungroup()
+
+  #colors = scales::hue_pal()(length(unique(df$factor)))
+  #names(colors) = unique(df$factor)
+
+  p = plot_map(proj)
+  p$layers[[2]] = NULL
+
+  p +
+    ggforce::geom_arc_bar(
+      data = df,
+      aes(
+        x0 = .data$lon, y0 = .data$lat, r0 = 0, r = 1.5,
+        start = .data$angle_start, end = .data$angle_end,
+        fill = .data$factor
+      ),
+      color = NA
+    ) +
+    #scale_fill_manual(values = colors) +
+    labs(fill = "Legend", x = "x", y = "y")
 }
 
 
