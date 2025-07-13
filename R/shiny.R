@@ -246,7 +246,7 @@ PanelMaps = tabPanel(
 
   fluidRow(
     column(12,
-           uiOutput("Maps.general")
+      uiOutput("Maps.general")
     )
   )
 
@@ -372,7 +372,7 @@ server0 = function(input, output, session) {
       )
     })
 
-    output$Inference.accuracy_table = renderTable(accuracy(project()$summary) |> round(4), rownames = T)
+    output$Inference.accuracy_table = renderTable(accuracy(project()$summary, correct = T) |> round(4), rownames = T)
 
     output$Inference.bias = renderPlot({
       if (real()) {
@@ -867,16 +867,31 @@ server0 = function(input, output, session) {
             )
           ),
           fluidRow(
-            column(10,
-              "groups"
+            column(12,
+              uiOutput("Maps.map_sc")
             )
           )
-
-
-
-
         )
       })
+
+      if (project()$prior$semi.conf) {
+        output$Maps.map_sc = renderUI({
+          tagList(
+            fluidRow(header_col("Posterior factor association", "#a8f2fe", "8vh", 12)),
+
+            fluidRow(
+              column(10,
+                plotOutput("Maps.map_sc_plot", height = "80vh")
+              ),
+              column(2,
+                checkboxInput("Maps.map_sc_extra", "Only group extra", value = FALSE),
+              )
+            )
+          )
+        })
+      }
+
+
     }
   })
 
@@ -913,14 +928,20 @@ server0 = function(input, output, session) {
 
   ###  PanelMaps - maps  ###
 
-  output$Maps.map_data = renderPlotly({
+  output$Maps.map_data = plotly::renderPlotly({
     plot_map_data(project(), input$Maps.data_type) |>
       plotly::ggplotly()
   })
 
-  output$Maps.map_post = renderPlotly({
+  output$Maps.map_post = plotly::renderPlotly({
     plot_map_post(project(), input$Maps.post_par, as.numeric(input$Maps.post_col), input$Maps.post_stat) |>
       plotly::ggplotly()
+  })
+
+  observeEvent(input$Maps.map_sc_extra, {
+    output$Maps.map_sc_plot = renderPlot({
+      plot_map_post_factor(project(), input$Maps.map_sc_extra)
+    })
   })
 
 

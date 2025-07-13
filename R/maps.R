@@ -15,7 +15,7 @@ plot_map = function(proj) {
   ggplot() +
     geom_polygon(data = map_data("world"),
                  aes(x = .data$long, y = .data$lat, group = .data$group),
-                 fill = "lightblue", color = "black") +
+                 fill = "lightblue", color = "black", lwd = .2) +
     geom_point(data = df, aes(x = .data$lon, y = .data$lat), size = 1.5) +
     coord_fixed(xlim = xrange, ylim = yrange) +
     theme(

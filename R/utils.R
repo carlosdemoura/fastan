@@ -156,6 +156,11 @@ export = function(proj, path_dump = getwd(), rds = T, plot.extension = "png") {
 
   ggsave(plot = gridExtra::grid.arrange(grobs = p_prior, ncol=2), filename = img("prior"), width = 16, height = 6 * i, dpi = 300, bg = "white")
 
+  if (proj$prior$semi.conf) {
+    plot_map_post_factor(proj, T)
+    ggsave(img("map_factor"), width = 5, height = 5, dpi = 300, bg = "white")
+  }
+
   if (rds) {
     saveRDS(proj, file.path(path, "proj.rds"))
   }

@@ -4,12 +4,14 @@
 \alias{invert_signal_smry}
 \title{Title}
 \usage{
-invert_signal_smry(smry, locs)
+invert_signal_smry(smry, fac, bias.stat = "mean")
 }
 \arguments{
 \item{smry}{.}
 
-\item{locs}{.}
+\item{fac}{.}
+
+\item{bias.stat}{.}
 }
 \description{
 Title
