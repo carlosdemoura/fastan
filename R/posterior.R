@@ -266,8 +266,8 @@ invert_signal_smry = function(smry, fac, bias.stat = "mean") {
 
 #' Transform 3D matrix into elongated data frame
 #'
-#' @param m matrix 3d, the 3rd dim will be elongated.
-#' @param label .
+#' @param proj .
+#' @param par .
 #'
 #' @return `data.frame()`
 #'
@@ -275,37 +275,52 @@ invert_signal_smry = function(smry, fac, bias.stat = "mean") {
 #'
 #' @import dplyr
 #' @importFrom tidyr pivot_longer pivot_wider
-summary_as_df = function(m, label = NULL) {
-  df =
-    m |>
-    {\(x)
-      do.call(rbind, lapply(dimnames(x)[[3]], function(slice) {
-        x[, , slice, drop = FALSE] |>
-          as.data.frame() |>
-          {\(.) `colnames<-`(., 1:ncol(.)) }() |>
-          {\(.) dplyr::mutate(., row = row.names(.)) }() |>
-          {\(.) tidyr::pivot_longer(., names_to = "col", values_to = "v", cols = 1:ncol(x)) }() |>
-          {\(.) dplyr::mutate(., stat = slice) }()
-      }))
-    }() |>
-    tidyr::pivot_wider(values_from = "v", names_from = "stat") |>
-    {\(.) dplyr::mutate(
-      .,
-      row = as.numeric(.$row),
-      col = as.numeric(.$col)
-    )}()
-  # PROJECT IS NEEDED!!!!!!!!!!
-  # if (!is.null(label)) {
-  #   if (label == "alpha") {
-  #     df_ = data.frame(id = proj)
-  #   } else if (label == "lambda") {
-  #   } else if (label == "sigma2") {
-  #   } else {
-  #     stop("label must be either a parameter or NULL")
-  #   }
-  #
-  #   df = dplyr::left_join(df, df_)
-  # }
+summary_as_df = function(proj, par = NULL) {
+  as_df = function(par) {
+    df =
+      proj$summary[[par]] |>
+      {\(x)
+        do.call(rbind, lapply(dimnames(x)[[3]], function(slice) {
+          x[, , slice, drop = FALSE] |>
+            as.data.frame() |>
+            {\(.) `colnames<-`(., 1:ncol(.)) }() |>
+            {\(.) dplyr::mutate(., row = row.names(.)) }() |>
+            {\(.) tidyr::pivot_longer(., names_to = "col", values_to = "v", cols = 1:ncol(x)) }() |>
+            {\(.) dplyr::mutate(., stat = slice) }()
+        }))
+      }() |>
+      tidyr::pivot_wider(values_from = "v", names_from = "stat") |>
+      {\(.) dplyr::mutate(
+        .,
+        row = as.numeric(.$row),
+        col = as.numeric(.$col)
+      )}()
 
-  df
+    if (!is.null(par) & !is.null(proj$data) & (par != "pred")) {
+      if (par %in% c("alpha", "sigma2")) {
+        df_ = data.frame(id = proj$data$label$loading)
+        df_$row = 1:nrow(df_)
+      } else if (par == "lambda") {
+        df_ = data.frame(id = proj$data$label$factor_level)
+        df_$col = 1:nrow(df_)
+      } else {
+        stop("label must be either a parameter or NULL")
+      }
+
+      df = dplyr::left_join(df, df_)
+    }
+
+    df
+  }
+
+  if (is.null(par)) {
+    par =
+      c("alpha", "lambda", "sigma2") |>
+      {\(.) if (is.null(proj$data$pred)) . else c("pred")}()
+  }
+
+  ans = lapply(par, as_df)
+  names(ans) = par
+
+  ans
 }

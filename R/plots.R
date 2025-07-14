@@ -56,7 +56,8 @@ plot_contrast = function(smry, par = "alpha", stat = "mean") {
 #' @import ggplot2
 plot_hpd = function(smry, par, row = NULL, col = NULL, stat = "mean") {
   smry = validate_proj_arg(smry, "summary")
-  df = summary_as_df(smry[[par]])
+  #df = summary_as_df(smry[[par]])
+  df = summary_as_df(list(summary = smry), par)[[par]]
   loc.name = list(row=row,col=col) |> {\(.) names(.)[!sapply(., is.null)]}()
   df = df[df[[loc.name]] == get(loc.name), ]
   real = "real" %in% colnames(df)
@@ -95,7 +96,8 @@ plot_hpd = function(smry, par, row = NULL, col = NULL, stat = "mean") {
 #' @import ggplot2
 plot_lambda = function(smry, stat = "mean") {
   smry = validate_proj_arg(smry, "summary")
-  df = summary_as_df(smry$lambda)
+  #df = summary_as_df(smry$lambda)
+  df = summary_as_df(list(summary = smry), "lambda")[["lambda"]]
 
   ggplot(df, aes(x = .data$col, group = factor(.data$row), color = factor(.data$row), fill = factor(.data$row))) +
     geom_ribbon(aes(ymin = .data$hpd_min, ymax = .data$hpd_max), alpha = 0.2, color = NA) +

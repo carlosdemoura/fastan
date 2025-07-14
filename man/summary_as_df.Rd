@@ -4,12 +4,12 @@
 \alias{summary_as_df}
 \title{Transform 3D matrix into elongated data frame}
 \usage{
-summary_as_df(m, label = NULL)
+summary_as_df(proj, par = NULL)
 }
 \arguments{
-\item{m}{matrix 3d, the 3rd dim will be elongated.}
+\item{proj}{.}
 
-\item{label}{.}
+\item{par}{.}
 }
 \value{
 \code{data.frame()}

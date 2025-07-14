@@ -136,7 +136,7 @@ PanelConvergence = tabPanel(
     column(6,
       checkboxGroupInput(
         "Convergence.density_type",
-        label = "Density sample",
+        label = "Posterior density",
         choices = list(
           "histogram" = "hist",
           "density" = "dens"
@@ -430,8 +430,7 @@ server0 = function(input, output, session) {
     if (is.null(coor)) return(cat("Click on the black squares."))
 
     df =
-      project()$summary$pred |>
-      summary_as_df() |>
+      summary_as_df(project(), "pred")[["pred"]] |>
       {\(.) dplyr::filter(., .$row_ == coor$row, .$col_ == coor$col)}()
 
     cat("Row:", coor$row, "  Col.:", coor$col, "\tRow param.:", df$row,"\n")
@@ -450,8 +449,7 @@ server0 = function(input, output, session) {
     if (is.null(coor)) return(ggplot()+annotate("text", x=0, y=0, label="posterior predictive plot")+theme_void())
 
     row =
-      project()$summary$pred |>
-      summary_as_df() |>
+      summary_as_df(project(), "pred")[["pred"]] |>
       {\(.) dplyr::filter(., .$row_ == coor$row, .$col_ == coor$col)}() |>
       dplyr::select(dplyr::all_of("row")) |>
       purrr::pluck(1)
