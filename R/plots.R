@@ -53,34 +53,37 @@ plot_contrast = function(smry, par = "alpha", stat = "mean") {
 #'
 #' @export
 #'
+#' @importFrom dplyr all_of select
 #' @import ggplot2
+#' @importFrom tidyr pivot_longer
 plot_hpd = function(smry, par, row = NULL, col = NULL, stat = "mean") {
+  stopifnot("stat must be mean, mode, median or real" = all(stat %in% c("mean", "mode", "median", "real")))
+
   smry = validate_proj_arg(smry, "summary")
-  #df = summary_as_df(smry[[par]])
-  df = summary_as_df(list(summary = smry), par)[[par]]
   loc.name = list(row=row,col=col) |> {\(.) names(.)[!sapply(., is.null)]}()
-  df = df[df[[loc.name]] == get(loc.name), ]
-  real = "real" %in% colnames(df)
+  df =
+    summary_as_df(list(summary = smry), par)[[par]] |>
+    {\(.) .[.[[loc.name]] == get(loc.name), ]}() |>
+    dplyr::select(dplyr::all_of(c("row", "col", "hpd_min", "hpd_max", stat))) |>
+    tidyr::pivot_longer(cols = dplyr::all_of(stat), names_to = "stat", values_to = "value")
 
-  y_min = min(smry[[par]][,,"hpd_min"])
-  y_max = max(smry[[par]][,,"hpd_max"])
+  # y_min = min(smry[[par]][,,"hpd_min"])
+  # y_max = max(smry[[par]][,,"hpd_max"])
 
-  ggplot(df) +
-    {if (loc.name == "row") { aes(x = .data$col) }
-      else { aes(x = .data$row) } } +
-    geom_errorbar(aes(ymin = .data$hpd_min, ymax = .data$hpd_max, color = "HPD"), width = .6, linewidth = .6) +
-    {if ("median" %in% stat) geom_point(aes(y = .data$median, color = "Median"), size = 2, shape = 17)} +
-    {if ("mean"   %in% stat) geom_point(aes(y = .data$mean  , color = "Mean")  , size = 2, shape = 16)} +
-    {if ("real"   %in% stat) geom_point(aes(y = .data$real  , color = "Real")  , size = 2, shape = 15)} +
+  ggplot(df, aes(x = if (loc.name == "row") col else row)) +
+    # ylim(y_min, y_max) +
+    geom_errorbar(aes(ymin = hpd_min, ymax = hpd_max, color = "hpd"), width = .6, linewidth = .6) +
+    geom_point(aes(y = .data$value, color = .data$stat, shape = .data$stat), size = 2) +
+    scale_color_manual(values = stat_plt("color")) +
+    scale_shape_manual(values = stat_plt("shape")) +
+    guides(color = guide_legend(override.aes = list(shape = c(list(hpd = 1), stat_plt("shape")[stat]))),
+           shape = "none") +
     labs(
       x = ifelse(loc.name == "row", "col", "row"),
       y = "Values",
       title = paste(par, "posterior", loc.name, c(row, col)),
       color = "Legend"
     ) +
-    ylim(y_min, y_max) +
-    {if (real) { scale_color_manual(values = c("HPD" = "black", "Mean" = "red", "Median" = "blue", "Real" = "green")) }
-      else { scale_color_manual(values = c("HPD" = "black", "Mean" = "red", "Median" = "blue")) } } +
     theme_minimal() +
     theme(legend.title = element_blank(),
           axis.text.x = element_text(angle = 45, hjust = 1))
@@ -93,17 +96,32 @@ plot_hpd = function(smry, par, row = NULL, col = NULL, stat = "mean") {
 #'
 #' @export
 #'
+#' @importFrom dplyr all_of select
 #' @import ggplot2
+#' @importFrom tidyr pivot_longer
 plot_lambda = function(smry, stat = "mean") {
+  stopifnot(
+    "stat must be mean, mode, median or real" = all(stat %in% c("mean", "mode", "median", "real")),
+    "only one stat possible" = (length(stat) == 1)
+  )
   smry = validate_proj_arg(smry, "summary")
-  #df = summary_as_df(smry$lambda)
-  df = summary_as_df(list(summary = smry), "lambda")[["lambda"]]
+  df =
+    summary_as_df(list(summary = smry), "lambda")[["lambda"]] |>
+    dplyr::select(dplyr::all_of(c("row", "col", "hpd_min", "hpd_max", stat))) |>
+    tidyr::pivot_longer(cols = dplyr::all_of(stat), names_to = "stat", values_to = "value")
 
-  ggplot(df, aes(x = .data$col, group = factor(.data$row), color = factor(.data$row), fill = factor(.data$row))) +
-    geom_ribbon(aes(ymin = .data$hpd_min, ymax = .data$hpd_max), alpha = 0.2, color = NA) +
-    {if ("mean" %in% stat)   geom_line(aes(y = .data$mean)  , size = 1)} +
-    {if ("median" %in% stat) geom_line(aes(y = .data$median), size = 1)} +
-    {if ("real" %in% stat)   geom_line(aes(y = .data$real)  , size = 1)} +
+  ggplot(df, aes(x = col)) +
+    geom_ribbon(
+      aes(ymin = .data$hpd_min, ymax = .data$hpd_max, fill = factor(.data$row)),
+      alpha = 0.2,
+      color = NA,
+      show.legend = TRUE
+    ) +
+    geom_line(
+      aes(y = .data$value, color = factor(.data$row), group = interaction(.data$stat, .data$row)),
+      linewidth = 1,
+      show.legend = FALSE
+    ) +
     scale_color_brewer(name = "Factor", palette = "Set1") +
     scale_fill_brewer(name = "Factor", palette = "Set1") +
     labs(

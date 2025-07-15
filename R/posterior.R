@@ -117,6 +117,11 @@ stan = function(proj, init = NULL, chains = 1, ...) {
 #' @importFrom rstan extract
 #' @importFrom stats median sd
 summary_matrix = function(proj, bias.stat = "mean") {
+  get_mode = function(x) {
+    d = density(x)
+    d$x[which.max(d$y)]
+  }
+
   fit = proj$fit
   data = proj$data
   samp = rstan::extract(fit)
@@ -133,6 +138,7 @@ summary_matrix = function(proj, bias.stat = "mean") {
     matrices[[parameter]] = list(
       "mean"    = apply( samp[parameter][[1]], c(2,3), mean          )                   ,
       "median"  = apply( samp[parameter][[1]], c(2,3), stats::median )                   ,
+      "mode"    = apply( samp[parameter][[1]], c(2,3), get_mode      )                   ,
       "sd"      = apply( samp[parameter][[1]], c(2,3), stats::sd     )                   ,
       "hpd_min" = apply( hpd_temp, c(1,2), function(x) { unlist(x) |> purrr::pluck(1) }) ,
       "hpd_max" = apply( hpd_temp, c(1,2), function(x) { unlist(x) |> purrr::pluck(2) }) ,

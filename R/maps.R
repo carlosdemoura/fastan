@@ -55,12 +55,13 @@ plot_map_post = function(proj, par, col = 1, stat) {
 #'
 #' @param proj .
 #' @param extra.only .
+#' @param r .
 #'
 #' @export
 #'
 #' @import ggplot2
 #' @importFrom ggforce geom_arc_bar
-plot_map_post_factor = function(proj, extra.only = F) {
+plot_map_post_factor = function(proj, extra.only = F, r = 1) {
   df =
     (1 - proj$summary$alpha[,,"hpd_contains_0"]) |>
     as.data.frame() |>
@@ -87,7 +88,7 @@ plot_map_post_factor = function(proj, extra.only = F) {
     ggforce::geom_arc_bar(
       data = df,
       aes(
-        x0 = .data$lon, y0 = .data$lat, r0 = 0, r = 1.5,
+        x0 = .data$lon, y0 = .data$lat, r0 = 0, r = r,
         start = .data$angle_start, end = .data$angle_end,
         fill = .data$factor
       ),
