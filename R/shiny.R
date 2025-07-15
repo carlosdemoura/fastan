@@ -303,7 +303,13 @@ server0 = function(input, output, session) {
     req(project_rv())
   })
 
-  real = reactive(!is.null(project()$data$real))
+  #real = reactive(!is.null(project()$data$real))
+  real = reactive(
+    lapply( c("alpha", "lambda", "sigma2"), function(x) ("real" %in% dimnames(project()$summary[[x]])[[3]]) ) |>
+      unlist() |>
+      all()
+  )
+
   real_pred = reactive("real" %in% dimnames(project()$summary$pred)[[3]])
   stat = reactive(c("mean") |> {\(.) if (real()) c(., "real") else .}())
 
@@ -938,7 +944,7 @@ server0 = function(input, output, session) {
 
   observeEvent(input$Maps.map_sc_extra, {
     output$Maps.map_sc_plot = renderPlot({
-      plot_map_post_factor(project(), input$Maps.map_sc_extra)
+      plot_map_post_factor(project(), input$Maps.map_sc_extra, 2)
     })
   })
 
