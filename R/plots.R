@@ -57,6 +57,14 @@ plot_contrast = function(smry, par = "alpha", stat = "mean") {
 #' @import ggplot2
 #' @importFrom tidyr pivot_longer
 plot_hpd = function(smry, par, row = NULL, col = NULL, stat = "mean") {
+  stat_plt = function(x) {
+    if (x == "shape") {
+      list(real = 15, mean = 16, median = 17, mode = 18)
+    } else if (x == "color") {
+      c("hpd" = "black", "real" = "green", "mean" = "red", "median" = "blue", "mode" = "orange")
+    }
+  }
+
   stopifnot("stat must be mean, mode, median or real" = all(stat %in% c("mean", "mode", "median", "real")))
 
   smry = validate_proj_arg(smry, "summary")
