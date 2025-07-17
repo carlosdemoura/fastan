@@ -4,7 +4,7 @@
 \alias{distances}
 \title{Title}
 \usage{
-distances(coor, lon = "lon", lat = "lat")
+distances(coor, lon = "lon", lat = "lat", pairs = F)
 }
 \arguments{
 \item{coor}{.}
@@ -12,6 +12,8 @@ distances(coor, lon = "lon", lat = "lat")
 \item{lon}{.}
 
 \item{lat}{.}
+
+\item{pairs}{.}
 }
 \description{
 Title

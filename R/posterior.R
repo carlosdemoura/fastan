@@ -115,10 +115,10 @@ stan = function(proj, init = NULL, chains = 1, ...) {
 #' @importFrom coda as.mcmc HPDinterval
 #' @import purrr
 #' @importFrom rstan extract
-#' @importFrom stats median sd
+#' @importFrom stats density median sd
 summary_matrix = function(proj, bias.stat = "mean") {
   get_mode = function(x) {
-    d = density(x)
+    d = stats::density(x)
     d$x[which.max(d$y)]
   }
 

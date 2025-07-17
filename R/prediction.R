@@ -57,9 +57,9 @@ missing_validation_selection = function (proj) {
       proj$data$x |>
       {\(.) dplyr::filter(., .$row %in% rows_present) }() |>
       dplyr::mutate(
-        row = proj$data$label$loading[row],
-        col = proj$data$label$factor_level[col],
-        group = proj$data$label$group[group]
+        row = proj$data$label$loading[.data$row],
+        col = proj$data$label$factor_level[.data$col],
+        group = proj$data$label$group[.data$group]
       )
 
     df_pred =
@@ -69,9 +69,9 @@ missing_validation_selection = function (proj) {
       dplyr::select(dplyr::all_of(c("value", "nearest_row", "col", "group"))) |>
       `colnames<-`(c("value", "row", "col", "group")) |>
       dplyr::mutate(
-        row   = proj$data$label$loading[row],
-        col   = proj$data$label$factor_level[col],
-        group = proj$data$label$group[group]
+        row   = proj$data$label$loading[.data$row],
+        col   = proj$data$label$factor_level[.data$col],
+        group = proj$data$label$group[.data$group]
       )
 
     df_pred_real_value =
@@ -85,9 +85,9 @@ missing_validation_selection = function (proj) {
     proj$data$x |>
     {\(.) dplyr::filter(., !(.$row %in% proj$data$pred$row)) }() |>
     dplyr::mutate(
-      row = proj$data$label$loading[row],
-      col = proj$data$label$factor_level[col],
-      group = proj$data$label$group[group]
+      row = proj$data$label$loading[.data$row],
+      col = proj$data$label$factor_level[.data$col],
+      group = proj$data$label$group[.data$group]
     ) |>
     process_data("value", "row", "col", "group")
 

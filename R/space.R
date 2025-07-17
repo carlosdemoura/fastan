@@ -51,14 +51,34 @@ generate_space = function(n, cont = F) {
 #' @param coor .
 #' @param lon .
 #' @param lat .
+#' @param pairs .
 #'
 #' @export
 #'
+#' @import dplyr
 #' @importFrom geosphere distm
-distances = function(coor, lon = "lon", lat = "lat") {
-  as.matrix(coor[, c(lon, lat)]) |>
+#' @importFrom tidyr pivot_longer
+distances = function(coor, lon = "lon", lat = "lat", pairs = F) {
+  dist =
+    as.matrix(coor[, c(lon, lat)]) |>
     geosphere::distm() |>
     {\(.) ./1000}()
+
+  if (pairs) {
+    n = ncol(dist)
+    dist =
+      dist |>
+      as.data.frame() |>
+      `colnames<-`(1:n) |>
+      tidyr::pivot_longer(cols = dplyr::everything(), names_to = 'est2', values_to = 'dist') |>
+      dplyr::mutate(
+        est1 = rep(1:n, each = n),
+        est2 = as.integer(.data$est2)
+      ) |>
+      dplyr::relocate(dplyr::all_of("est1"))
+  }
+
+  return(dist)
 }
 
 
@@ -70,7 +90,22 @@ distances = function(coor, lon = "lon", lat = "lat") {
 #' @param lat .
 #'
 #' @export
-neib_dist = function(coor, dist, lon = "lon", lat = "lat") {
+#'
+#' @importFrom tidyr pivot_longer
+#' @importFrom dplyr everything
+neib_dist = function(coor, dist = NULL, lon = "lon", lat = "lat") {
+  if (is.null(dist)) {
+    temp =
+      distances(coor, pairs = T) |>
+      {\(.) .[.$dist>0,]}() |>
+      group_by(.data$est1) |>
+      summarise(
+        dist = min(.data$dist)
+      )
+    dist = max(temp$dist) + 0.01
+    warning(paste0("minimum distance considered: ", dist))
+  }
+
   distances(coor, lon, lat) |>
     {\(.) 1*(. <= dist)}() |>
     {\(.) . - diag(diag(.))}()

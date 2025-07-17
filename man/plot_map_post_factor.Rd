@@ -4,12 +4,14 @@
 \alias{plot_map_post_factor}
 \title{Title}
 \usage{
-plot_map_post_factor(proj, extra.only = F)
+plot_map_post_factor(proj, extra.only = F, r = 1)
 }
 \arguments{
 \item{proj}{.}
 
 \item{extra.only}{.}
+
+\item{r}{.}
 }
 \description{
 Title

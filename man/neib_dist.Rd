@@ -4,7 +4,7 @@
 \alias{neib_dist}
 \title{Title}
 \usage{
-neib_dist(coor, dist, lon = "lon", lat = "lat")
+neib_dist(coor, dist = NULL, lon = "lon", lat = "lat")
 }
 \arguments{
 \item{coor}{.}

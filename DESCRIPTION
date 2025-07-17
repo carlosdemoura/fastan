@@ -2,7 +2,7 @@ Package: fastan
 Title: Bayesian Factor Analysis with STAN
 Version: 0.0.0.9000
 Authors@R: 
-    person("Carlos", "de Moura", , "lcbarrosdemoura@gmail.br", role = c("aut", "cre", "cph"))
+    person("Carlos", "de Moura", , "lcbarrosdemoura@gmail.com", role = c("aut", "cre", "cph"))
 Description: What the package does (one paragraph).
 License: MIT + file LICENSE
 Encoding: UTF-8

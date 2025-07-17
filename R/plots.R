@@ -80,7 +80,7 @@ plot_hpd = function(smry, par, row = NULL, col = NULL, stat = "mean") {
 
   ggplot(df, aes(x = if (loc.name == "row") col else row)) +
     # ylim(y_min, y_max) +
-    geom_errorbar(aes(ymin = hpd_min, ymax = hpd_max, color = "hpd"), width = .6, linewidth = .6) +
+    geom_errorbar(aes(ymin = .data$hpd_min, ymax = .data$hpd_max, color = "hpd"), width = .6, linewidth = .6) +
     geom_point(aes(y = .data$value, color = .data$stat, shape = .data$stat), size = 2) +
     scale_color_manual(values = stat_plt("color")) +
     scale_shape_manual(values = stat_plt("shape")) +

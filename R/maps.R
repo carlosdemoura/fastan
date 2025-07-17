@@ -69,7 +69,7 @@ plot_map_post_factor = function(proj, extra.only = F, r = 1) {
     {\(.) cbind(proj$space, .)}() |>
     {\(.) if (extra.only) .[tail(fiat_groups_limits(proj$data$dim$group.sizes)[[1]], 1):tail(fiat_groups_limits(proj$data$dim$group.sizes)[[2]], 1),] else .}() |>
     tidyr::pivot_longer(cols = starts_with("factor"), names_to = "factor", values_to = "value") |>
-    dplyr::filter(value == 1) |>
+    dplyr::filter(.data$value == 1) |>
     dplyr::group_by_at("id") |>
     dplyr::mutate(
       n = n(),
@@ -114,8 +114,8 @@ plot_map_data = function(proj, stat) {
     proj$data$x |>
     dplyr::group_by_at("row") |>
     dplyr::summarise(
-      mean = mean(value),
-      var = stats::var(value)
+      mean = mean(.data$value),
+      var = stats::var(.data$value)
     ) |>
     dplyr::mutate(
       group = unique(proj$data$x[,c("row", "group")]) |> {\(.) .$group}() |> factor()
