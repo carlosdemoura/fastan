@@ -2,10 +2,10 @@
 #'
 #' @param data .
 #' @param semi.conf .
-#' @param alpha0 .
+#' @param omit.alpha0 .
 #'
 #' @export
-prior_normal = function(data, semi.conf, alpha0 = F) {
+prior_normal = function(data, semi.conf, omit.alpha0 = F) {
   nfac = data$dim$group.n - as.integer(semi.conf)
   prior = list(alpha  = list(mean = list_vec(data$dim$row, nfac)),
                lambda = list(mean = list_vec(data$dim$col, nfac)),
@@ -21,7 +21,7 @@ prior_normal = function(data, semi.conf, alpha0 = F) {
     prior[["alpha"]][["cov"]][[i]] = diag(alpha_var[,i])
   }
   prior$alpha[["in_group"]] = alpha_in_group(data$dim$group.sizes, semi.conf)
-  prior$alpha[["force0"]] = alpha0
+  prior$alpha[["omit.alpha0"]] = omit.alpha0
 
   class(prior) = "prior"
   prior

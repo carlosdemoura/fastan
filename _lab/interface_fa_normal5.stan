@@ -22,39 +22,35 @@ functions {
     return result;
   }
   // rows_alpha_not_zero
-  int[] rows_alpha_not_zero(int k, int omit_alpha0, int semi_conf, int[,] group_lim, int[] group_size, int n_fac, int n_row) {
+  int[] rows_alpha_not_zero(int k, int omit_alpha0, int semi_conf, int[,] group_lim, int n_fac, int n_row) {
     if ((omit_alpha0 == 1) && (semi_conf == 0)) {
-      int out[group_size[k]];
+      int size = group_lim[k, 2] - group_lim[k, 1] + 1;
+      int out[size];
       int start = group_lim[k, 1];
-      for (i in 1:group_size[k])
+      for (i in 1:size)
         out[i] = start + i - 1;
       return out;
+
     } else if ((omit_alpha0 == 1) && (semi_conf == 1)) {
-      int size1 = group_size[k];
-      int size2 = group_size[n_fac + 1];
+      int size1 = group_lim[k, 2] - group_lim[k, 1] + 1;
+      int size2 = group_lim[n_fac + 1, 2] - group_lim[n_fac + 1, 1] + 1;
       int out[size1 + size2];
+
       int start1 = group_lim[k, 1];
       for (i in 1:size1)
         out[i] = start1 + i - 1;
+
       int start2 = group_lim[n_fac + 1, 1];
       for (i in 1:size2)
         out[size1 + i] = start2 + i - 1;
+
       return out;
+
     } else {  // omit_alpha0 == 0
       int out[n_row];
       for (i in 1:n_row)
         out[i] = i;
       return out;
-    }
-  }
-  // rows_alpha_not_zero_size
-  int rows_alpha_not_zero_size(int k, int omit_alpha0, int semi_conf, int[] group_size, int n_fac, int n_row) {
-    if ((omit_alpha0 == 1) && (semi_conf == 0)) {
-      return group_size[k];
-    } else if ((omit_alpha0 == 1) && (semi_conf == 1)) {
-      return group_size[k] + group_size[n_fac + 1];
-    } else {
-      return n_row;
     }
   }
 }
@@ -75,7 +71,6 @@ data {
   int<lower=0> omit_alpha0;
   int<lower=1> n_groups;
   int group_lim[n_groups,2];
-  int group_size[n_groups];
   int alpha_in_group[n_row, n_fac];
   // obs args
   int<lower=1> n_obs;
@@ -119,9 +114,8 @@ model {
     sigma2[i,1] ~ gamma(sigma2_shape, sigma2_rate);
   }
   for(k in 1:n_fac) {
-    //int rows_alpha[rows_alpha_not_zero_size(k, omit_alpha0, semi_conf, group_size, n_fac, n_row)];
-    int rows_alpha[num_elements(rows_alpha_not_zero(k, omit_alpha0, semi_conf, group_lim, group_size, n_fac, n_row))];
-    rows_alpha = rows_alpha_not_zero(k, omit_alpha0, semi_conf, group_lim, group_size, n_fac, n_row);
+    int rows_alpha[num_elements(rows_alpha_not_zero(k, omit_alpha0, semi_conf, group_lim, n_fac, n_row))];
+    rows_alpha = rows_alpha_not_zero(k, omit_alpha0, semi_conf, group_lim, n_fac, n_row);
     alpha[rows_alpha,k] ~ multi_normal(alpha_mean[k][rows_alpha], alpha_cov[k][rows_alpha,rows_alpha]);
     lambda[k,] ~ multi_normal(lambda_mean[k], lambda_cov[k]);
   }

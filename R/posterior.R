@@ -202,16 +202,15 @@ diagnostic = function(fit) {
       dplyr::mutate(dplyr::across(-1, as.numeric))
   }
 
-  df =
-    summary(fit)$summary |>
+  summary(fit)$summary |>
     as.data.frame() |>
     {\(.) dplyr::mutate(., par = row.names(.))}() |>
     dplyr::select(dplyr::all_of(c("n_eff", "Rhat", "par"))) |>
     merge(get_geweke(fit), by = "par") |>
-    tidyr::extract("par", into = c("par", "row", "col"), regex = "([a-zA-Z0-9_]+)\\[(\\d+),(\\d+)\\]", convert = TRUE)
-  df[is.na(df$par),c("par", "row", "col")] = c("lp__", 1, 1)
-
-  df
+    tidyr::extract("par", into = c("par", "row", "col"), regex = "([a-zA-Z0-9_]+)\\[(\\d+),(\\d+)\\]", convert = TRUE) |>
+    {\(.) {.[is.na(.$par),c("par", "row", "col")] = c("lp__", 1, 1); .}}() |>
+    dplyr::mutate(row = as.numeric(.data$row), col = as.numeric(.data$col)) |>
+    dplyr::as_tibble()
 }
 
 
