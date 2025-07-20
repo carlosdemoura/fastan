@@ -47,7 +47,7 @@ prop.missing = function(data) {
 #' @export
 #'
 #' @import ggplot2
-#' @importFrom gridExtra grid.arrange
+#' @importFrom gridExtra arrangeGrob
 export = function(proj, path_dump = getwd(), rds = T, plot.extension = "png") {
   real = !is.null(proj$data$real)
   path = paste0(path_dump, "/fastanExport-", format(Sys.time(), "%Y_%m_%d-%Hh%Mm%Ss"))
@@ -61,50 +61,50 @@ export = function(proj, path_dump = getwd(), rds = T, plot.extension = "png") {
   img = function(file) {
     file.path(path, paste0(file, ".", plot.extension))
   }
-
+  alpha_hpd = list()
   for (fac in 1:n.fac(proj)) {
     if (real) {
-      plot_hpd(proj, "alpha", col = fac, stat = c("mean", "real"))
+      alpha_hpd[[fac]] = plot_hpd(proj, "alpha", col = fac, stat = c("mean", "real"))
     } else {
-      plot_hpd(proj, "alpha", col = fac, stat = c("mean"))
+      alpha_hpd[[fac]] = plot_hpd(proj, "alpha", col = fac, stat = c("mean"))
     }
-    ggsave(img(paste0("alpha_hpd", "_", fac)), width = 15, height = 5, dpi = 300, bg = "white")
   }
+  ggsave(plot = gridExtra::arrangeGrob(grobs = alpha_hpd, ncol = 1), filename = img("alpha_hpd"), width = 15, height = 5*fac, dpi = 300, bg = "white")
 
   if (real) {
-    lambda = plot_lambda(proj, stat = "real")
-    sigma2 = plot_hpd(proj, "sigma2", col = 1, stat = c("mean", "real"))
+    lambda = plot_lambda(proj, stat = "real") |> invisible()
+    sigma2 = plot_hpd(proj, "sigma2", col = 1, stat = c("mean", "real")) |> invisible()
   } else {
-    lambda = plot_lambda(proj)
-    sigma2 = plot_hpd(proj, "sigma2", col = 1, stat = "mean")
+    lambda = plot_lambda(proj) |> invisible()
+    sigma2 = plot_hpd(proj, "sigma2", col = 1, stat = "mean") |> invisible()
   }
   ggsave(plot = lambda, filename = img("lambda_hpd"), width = 15, height = 5, dpi = 300, bg = "white")
   ggsave(plot = sigma2, filename = img("sigma2_hpd"), width = 15, height = 5, dpi = 300, bg = "white")
 
-  plot_contrast(proj, par = "alpha")
+  plot_contrast(proj, par = "alpha") |> invisible()
   ggsave(img("alpha_contrast_mean"), width = 8, height = 8, dpi = 300, bg = "white")
-  plot_contrast(proj, par = "alpha", stat = "hpd_contains_0")
+  plot_contrast(proj, par = "alpha", stat = "hpd_contains_0") |> invisible()
   ggsave(img("alpha_contrast_0"), width = 8, height = 8, dpi = 300, bg = "white")
-  plot_contrast(proj, par = "lambda")
+  plot_contrast(proj, par = "lambda") |> invisible()
   ggsave(img("lambda_contrast_mean"), width = 15, height = 5, dpi = 300, bg = "white")
   if (real) {
-    plot_contrast(proj, par = "alpha", stat = "real")
+    plot_contrast(proj, par = "alpha", stat = "real") |> invisible()
     ggsave(img("alpha_contrast_real"), width = 8, height = 8, dpi = 300, bg = "white")
-    plot_contrast(proj, par = "lambda", stat = "real")
+    plot_contrast(proj, par = "lambda", stat = "real") |> invisible()
     ggsave(img("lambda_contrast_real"), width = 15, height = 5, dpi = 300, bg = "white")
   }
 
-  plot_trace(proj, par = "lp__")
+  plot_trace(proj, par = "lp__") |> invisible()
   ggsave(img("traceplot_lp"), width = 15, height = 5, dpi = 300, bg = "white")
 
   diag = list()
   for (stat in c("Rhat", "n_eff", "geweke")) {
-    diag[[stat]] = plot_diagnostic(proj, stat)
+    diag[[stat]] = gridExtra::arrangeGrob(grobs = plot_diagnostic(proj, stat, T), ncol = 2)
   }
-  ggsave(plot = gridExtra::grid.arrange(grobs = diag, ncol = 1), filename = img("diganostic"), width = 7, height = 15, dpi = 300, bg = "white")
+  ggsave(plot = gridExtra::arrangeGrob(grobs = diag, ncol = 1), filename = img("diganostic"), width = 7, height = 15, dpi = 300, bg = "white")
 
   if (!is.null(proj$summary$pred)) {
-    plot_missing(proj)
+    plot_missing(proj) |> suppressWarnings() |> invisible()
     ggsave(img("missing_pattern"), width = 8, height = 6, dpi = 300, bg = "white")
   }
 
@@ -121,7 +121,7 @@ export = function(proj, path_dump = getwd(), rds = T, plot.extension = "png") {
     for (param in c("all", names(proj$summary))) {
       bias[[param]] = plot_bias(proj, param)
     }
-    p_bias = gridExtra::grid.arrange(grobs = bias, ncol = 2)
+    p_bias = gridExtra::arrangeGrob(grobs = bias, ncol = 2)
     ggsave(plot = p_bias, filename = img("bias"), width = 7, height = 5, dpi = 300, bg = "white")
   }
 
@@ -146,19 +146,19 @@ export = function(proj, path_dump = getwd(), rds = T, plot.extension = "png") {
   }
 
   p_prior = list()
-
   p_prior[["alpha"]] =
-    gridExtra::grid.arrange(grobs = prior$alpha, ncol = 2,
+    gridExtra::arrangeGrob(grobs = prior$alpha, ncol = 2,
                             widths=c(3, 10), heights=rep(12, times = i))
   p_prior[["lambda"]] =
-    gridExtra::grid.arrange(grobs = prior$lambda, ncol = 2,
+    gridExtra::arrangeGrob(grobs = prior$lambda, ncol = 2,
                             widths=c(3, 10), heights=rep(12, times = i))
+  ggsave(plot = gridExtra::arrangeGrob(grobs = p_prior, ncol=2), filename = img("prior"), width = 16, height = 6 * i, dpi = 300, bg = "white")
 
-  ggsave(plot = gridExtra::grid.arrange(grobs = p_prior, ncol=2), filename = img("prior"), width = 16, height = 6 * i, dpi = 300, bg = "white")
-
-  if (proj$prior$semi.conf) {
-    plot_map_post_factor(proj, T)
-    ggsave(img("map_factor"), width = 5, height = 5, dpi = 300, bg = "white")
+  if (!is.null(proj$space)) {
+    if (proj$prior$semi.conf) {
+      plot_map_post_factor(proj, T) |> invisible()
+      ggsave(img("map_factor"), width = 5, height = 5, dpi = 300, bg = "white")
+    }
   }
 
   if (rds) {

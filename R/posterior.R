@@ -147,14 +147,7 @@ summary_matrix = function(proj, bias.stat = "mean") {
 
     if (parameter == "alpha") {
       matrices[[parameter]][["hpd_contains_0"]] = ifelse((matrices[[parameter]][["hpd_max"]] >= 0) & (matrices[[parameter]][["hpd_min"]] <= 0), T, F)
-
-      in_group = real_from_dist(group.sizes = data$dim$group.sizes, columns = data$dim$col, semi.conf = proj$prior$semi.conf)$alpha
-      in_group[in_group!=0] = T
-      if (proj$prior$semi.conf) {
-        x = fiat_groups_limits(data$dim$group.sizes)
-        in_group[rev(x[[1]])[1]:rev(x[[2]])[1], ] = 1
-      }
-      matrices[[parameter]][["in_group"]] = in_group
+      matrices[[parameter]][["in_group"]] = alpha_in_group(data$dim$group.sizes, proj$prior$semi.conf)
     }
 
     if ((parameter == "pred") & !is.null(data)) {
@@ -252,6 +245,8 @@ get_chains_mcmc = function(fit, param) {
 #'
 #' @export
 invert_signal_smry = function(smry, fac, bias.stat = "mean") {
+  smry = validate_proj_arg(smry, "summary")
+
   stat = c("mean", "median")
   for (loc in fac) {
     smry$alpha[,loc,c(stat, "hpd_min", "hpd_max")]  = -smry$alpha[,loc,c(stat, "hpd_max", "hpd_min")]

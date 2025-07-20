@@ -4,13 +4,7 @@
 \alias{real_from_dist}
 \title{Title}
 \usage{
-real_from_dist(
-  group.sizes,
-  columns,
-  semi.conf,
-  dist = list(alpha = dist_uniform(-6, 6), lambda = dist_normal(0, 1), sigma2 =
-    dist_uniform(0.1, 2))
-)
+real_from_dist(group.sizes, columns, semi.conf, dist = list())
 }
 \arguments{
 \item{group.sizes}{.}

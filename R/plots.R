@@ -169,9 +169,8 @@ plot_posterior = function(fit, par, row = 1, col = 1, type = c("hist", "dens")) 
     max()
 
   ggplot(df, aes(x = .data$x)) +
-    {if ("hist" %in% type) geom_histogram(aes(y = after_stat(.data$density)), fill = "grey")} +
+    {if ("hist" %in% type) geom_histogram(aes(y = after_stat(.data$density)), bins = 30, fill = "grey")} +
     {if ("dens" %in% type) geom_density(lwd = 1.5, col = "red")} +
-    #{if ("real" %in% type) geom_density(lwd = 1.5, col = "red")} +
     {if (par != "lp__") ylim(0, y_max)} +
     xlim(floor(min(df$x)), ceiling(max(df$x))) +
     theme_minimal()
@@ -227,7 +226,8 @@ plot_trace = function(fit, par, row = 1, col = 1) {
 #'
 #' @import dplyr
 #' @import ggplot2
-#' @importFrom gridExtra grid.arrange
+#' @importFrom gridExtra grid.arrange arrangeGrob
+#' @importFrom stats na.omit
 plot_diagnostic = function(proj, stat, list = F) {
   stopifnot("stat must bet either 'Rhat', 'n_eff', or 'geweke'" = stat %in% c("Rhat", "n_eff", "geweke"))
 
@@ -238,7 +238,7 @@ plot_diagnostic = function(proj, stat, list = F) {
         else paste(., "for", par) }()
 
     ggplot(df, aes(x = .data$x)) +
-      geom_histogram(fill = "grey", color = "black") +
+      geom_histogram(fill = "grey", color = "black", bins = 30) +
       labs(
         title = title,
         x = stat,
@@ -261,8 +261,9 @@ plot_diagnostic = function(proj, stat, list = F) {
   df =
     df |>
     {\(.) dplyr::mutate(., geweke = apply(select(., starts_with("geweke")), 1, function(x) x[which.max(abs(x))])) }() |>
-    dplyr::select(dplyr::all_of(c("par", "row", "col", "n_eff", "Rhat", "geweke")))
-
+    dplyr::select(dplyr::all_of(c("par", "row", "col", "n_eff", "Rhat", "geweke"))) |>
+    tidyr::drop_na()
+  df$geweke=as.numeric(df$geweke)  # why???
   plots = list()
 
   for ( par_ in c("all", setdiff(unique(df$par), "lp__")) ) {
@@ -284,7 +285,7 @@ plot_diagnostic = function(proj, stat, list = F) {
   if (list) {
     return(plots)
   } else {
-    gridExtra::grid.arrange(grobs = plots, ncol=2)
+    gridExtra::grid.arrange(grobs = plots, ncol = 2)
   }
 
 }
@@ -322,7 +323,7 @@ plot_bias = function(smry, par = "all", correct = T) {
   df = data.frame(bias = x)
 
   ggplot(df, aes(x=.data$bias)) +
-    geom_histogram(fill = "grey", color = "black") +
+    geom_histogram(fill = "grey", color = "black", bins = 30) +
     labs(
       title = paste0("Relative bias for ", ifelse(par == "all", "all parameters", par)),
       x = "relative bias",
@@ -349,29 +350,6 @@ plot_missing = function(data) {
       missing = factor(TRUE, levels = c(TRUE, FALSE)),
       row     = factor(row, levels = rev(unique(row))),
     )
-
-  # Add line with present value
-  # for (i in 1:length(unique(df$row))) {
-  #   for (j in 1:length(unique(df$col))) {
-  #     stop = F
-  #     r = unique(df$row)[i]
-  #     c = unique(df$col)[j]
-  #     if (dplyr::filter(df, row == r, col == c) |> nrow() == 0) {
-  #       df =
-  #         df |>
-  #         dplyr::bind_rows(tibble::tibble(
-  #           value = NA,
-  #           group = 1,
-  #           col = c,
-  #           row = factor(r),
-  #           missing = factor(FALSE, levels = c(TRUE, FALSE))
-  #         ))
-  #       stop = T
-  #       break
-  #     }
-  #   }
-  #   if(stop){break}
-  # }
 
   row_labels = levels(df$row)
   row_labels[seq_along(row_labels) %% 5 < 4] = ""

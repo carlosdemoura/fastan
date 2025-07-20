@@ -84,13 +84,13 @@ generate_data = function(real, cicles = 1) {
 #'
 #' @import distributional
 #' @importFrom stats rbeta
-real_from_dist = function(group.sizes, columns, semi.conf, dist = list( alpha = dist_uniform(-6,6), lambda = dist_normal(0,1), sigma2 = dist_uniform(.1,2) )) {
+real_from_dist = function(group.sizes, columns, semi.conf, dist = list()) {
   stopifnot(
     "if the model is semi.conf there
     must be at least three groups" = ifelse(semi.conf, length(group.sizes) >= 3, T)
   )
 
-  dist_ = list( alpha = dist_uniform(-6,6), lambda = dist_normal(0,1), sigma2 = dist_uniform(.1,2) )
+  dist_ = list( alpha = dist_uniform(-6,6), lambda = dist_normal(0,1), sigma2 = dist_uniform(.1,3) )
   for (par in c("alpha", "lambda", "sigma2")) {
     if (is.null(dist[[par]])) {
       dist[[par]] = dist_[[par]]
@@ -293,6 +293,16 @@ process_data = function(data, value, row, col, group = NULL) {
 #'
 #' @export
 alpha_in_group = function(group.sizes, semi.conf) {
-
+  groups_limits = fiat_groups_limits(group.sizes)
+  n.fac = length(group.sizes) - as.numeric(semi.conf)
+  alpha = matrix(0, nrow = sum(group.sizes), ncol = n.fac)
+  for (i in 1:n.fac) {
+    alpha[groups_limits[[1]][i] : groups_limits[[2]][i], i] = rep(1, group.sizes[i])
+  }
+  if (semi.conf) {
+    i = i +1
+    alpha[groups_limits[[1]][i] : groups_limits[[2]][i],] = 1
+  }
+  alpha
 }
 

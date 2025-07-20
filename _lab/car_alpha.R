@@ -1,8 +1,7 @@
-
-car_by_groups = function(proj, tau, neib.by.group) {
+car_by_groups = function(proj, tau, neib.by.group = T) {
   cov = list()
+  lim = proj$data$dim$group.sizes |> fiat_groups_limits()
   for (fac in 1:n.fac(proj)) {
-    lim = proj$data$dim$group.sizes |> fiat_groups_limits()
     rows = lim[[1]][fac]:lim[[2]][fac]
     if (proj$prior$semi.conf) {
       rows_extra = lim[[1]][n.fac(proj)+1]:lim[[2]][n.fac(proj)+1]
