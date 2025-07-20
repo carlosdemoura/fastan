@@ -49,22 +49,30 @@ interface = function(proj) {
     data_pred = list(
       pred_coor     = matrix(1:2, nrow = 1),
       n_pred        = 0
-      )
+    )
   } else {
     data_pred = list(
       pred_coor     = proj$data$pred[,2:3] |> as.matrix() |> unname()
-      ) |>
+    ) |>
       {\(.) c(., list(n_pred = nrow(.$pred_coor)))}()
   }
 
   type = proj$prior$type
   if (type == "normal") {
-    x = interface_normal(proj)
+    data_norm = interface_normal(proj)
   } else {
     stop("prior type not accepted")
   }
 
-  c(data, data_pred, x)
+  data_alpha = list(
+    omit_alpha0    = as.numeric(proj$prior$alpha$omit.alpha0),
+    n_groups       = length(proj$data$dim$group.sizes),
+    group_lim      = fiat_groups_limits(proj$data$dim$group.sizes) |> {\(.) do.call(cbind, .)}(),
+    semi_conf      = as.numeric(proj$prior$semi.conf),
+    alpha_in_group = proj$prior$alpha$in_group |> {\(.) if (proj$prior$alpha$omit.alpha0) . else . + 1}() |> {\(.) {.[.>0] = 1:length(.[.>0]); .}}()
+  )
+
+  c(data, data_pred, data_norm, data_alpha)
 }
 
 
@@ -73,6 +81,7 @@ interface = function(proj) {
 #' @param proj .
 #' @param init .
 #' @param chains .
+#' @param pred .
 #' @param ... arguments that will be passed to `rstan::stan()`
 #'
 #' @return rstan::stanfit object.
@@ -80,9 +89,16 @@ interface = function(proj) {
 #' @export
 #'
 #' @importFrom rstan stan
-stan = function(proj, init = NULL, chains = 1, ...) {
+stan = function(proj, init = NULL, chains = 1, pred = T, ...) {
   if (is.null(init)) {
     init = init(proj, chains)
+  }
+
+  pars = c("alpha", "lambda", "sigma2") |> {\(.) if (!is.null(proj$data$pred)) append(., "pred") else .}()
+  data = interface(proj)
+  if (!pred & !is.null(proj$data$pred)) {
+    data[c("pred_coor", "n_pred")] = list(t(as.matrix(1:2)), 0)
+    pars = setdiff(pars, "pred")
   }
 
   type = proj$prior$type
@@ -93,12 +109,12 @@ stan = function(proj, init = NULL, chains = 1, ...) {
   }
 
   rstan::stan(file   = file,
-              data   = interface(proj),
-              pars   = c("alpha", "lambda", "sigma2") |> {\(.) if (!is.null(proj$data$pred)) append(., "pred") else .}(),
+              data   = data,
+              pars   = pars,
               init   = init,
               chains = chains,
               ...
-              )
+  )
 }
 
 
