@@ -203,6 +203,7 @@ PanelInference = tabPanel(
   fluidRow(
     column(7,
       selectInput("Inference.alpha_col", label = "Column", choices = 1),
+      checkboxInput("Inference.alpha0", "Only not zero alpha", value = FALSE),
       plotly::plotlyOutput("alpha_hpd")
     ),
     column(5,
@@ -269,7 +270,7 @@ navbarPage(
 #' @importFrom coda gelman.plot gelman.diag geweke.diag
 #' @import dplyr
 #' @importFrom gridExtra grid.arrange
-#' @importFrom plotly event_data ggplotly plotlyOutput renderPlotly
+#' @importFrom plotly event_data ggplotly plotlyOutput renderPlotly subplot
 #' @import purrr
 #' @importFrom rstan extract
 #' @import shiny
@@ -341,7 +342,7 @@ server0 = function(input, output, session) {
     })
 
     output$alpha_hpd = plotly::renderPlotly({
-      plot_hpd(project()$summary, "alpha", stat = stat(), col = input$Inference.alpha_col |> as.integer()) |>
+      plot_hpd(project(), "alpha", stat = stat(), col = input$Inference.alpha_col |> as.integer(), omit.alpha0 = F) |>
         plotly::ggplotly()
     })
 
@@ -351,7 +352,7 @@ server0 = function(input, output, session) {
     })
 
     output$sigma2 = plotly::renderPlotly({
-      plot_hpd(project()$summary, "sigma2", stat = stat(), col = 1) |>
+      plot_hpd(project(), "sigma2", stat = stat(), col = 1) |>
         plotly::ggplotly()
     })
 
@@ -417,6 +418,35 @@ server0 = function(input, output, session) {
     }
   })
 
+  ### PanelInference - omit alpha0 ###
+
+  observeEvent(input$Inference.alpha0, {
+    if (input$Inference.alpha0) {
+      p = plot_hpd(project(), "alpha", stat = stat(), col = input$Inference.alpha_col |> as.integer(), omit.alpha0 = T, omit.alpha0.list = T)
+      output$alpha_hpd = plotly::renderPlotly({
+        plotly::subplot(p[[1]], p[[2]], nrows = 1)
+      })
+    } else {
+      output$alpha_hpd = plotly::renderPlotly({
+        plot_hpd(project(), "alpha", stat = stat(), col = input$Inference.alpha_col |> as.integer(), omit.alpha0 = F) |>
+          plotly::ggplotly()
+      })
+    }
+  })
+
+  observeEvent(input$Inference.alpha_col, {
+    if (input$Inference.alpha0) {
+      p = plot_hpd(project(), "alpha", stat = stat(), col = input$Inference.alpha_col |> as.integer(), omit.alpha0 = T, omit.alpha0.list = T)
+      output$alpha_hpd = plotly::renderPlotly({
+        plotly::subplot(p[[1]], p[[2]], nrows = 1)
+      })
+    } else {
+      output$alpha_hpd = plotly::renderPlotly({
+        plot_hpd(project(), "alpha", stat = stat(), col = input$Inference.alpha_col |> as.integer(), omit.alpha0 = F) |>
+          plotly::ggplotly()
+      })
+    }
+  })
 
   ### PanelInference - prediction ###
 

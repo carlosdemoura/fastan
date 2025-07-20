@@ -49,17 +49,18 @@ plot_contrast = function(smry, par = "alpha", stat = "mean") {
 #'
 #' @inheritParams plot_mock_doc
 #' @param omit.alpha0 .
+#' @param omit.alpha0.list .
 #'
 #' @return ggplot2 plot
 #'
 #' @export
 #'
-#' @importFrom dplyr all_of select
+#' @importFrom dplyr all_of filter select
 #' @import ggplot2
 #' @importFrom gridExtra grid.arrange
 #' @importFrom tidyr pivot_longer
 #' @importFrom utils tail
-plot_hpd = function(proj, par, row = NULL, col = NULL, stat = "mean", omit.alpha0 = T) {
+plot_hpd = function(proj, par, row = NULL, col = NULL, stat = "mean", omit.alpha0 = T, omit.alpha0.list = F) {
   stopifnot("stat must be mean, mode, median or real" = all(stat %in% c("mean", "mode", "median", "real")))
 
   plot_hpd0 = function(df) {
@@ -102,8 +103,10 @@ plot_hpd = function(proj, par, row = NULL, col = NULL, stat = "mean", omit.alpha
     if (!proj$prior$semi.conf) {
       df = df[lim[[1]][col]:lim[[2]][col],]
     } else {
-      df1 = df[lim[[1]][col]:lim[[2]][col],]
-      df2 = df[utils::tail(lim[[1]],1):utils::tail(lim[[2]],1),]
+      row1 = lim[[1]][col]:lim[[2]][col]
+      row2 = utils::tail(lim[[1]],1):utils::tail(lim[[2]],1)
+      df1 = dplyr::filter(df, df$row %in% row1)
+      df2 = dplyr::filter(df, df$row %in% row2)
       y_min = min(rbind(df1, df2)$hpd_min)
       y_max = max(rbind(df1, df2)$hpd_max)
       p = list()
@@ -120,6 +123,7 @@ plot_hpd = function(proj, par, row = NULL, col = NULL, stat = "mean", omit.alpha
         labs(
           title = ""
         )
+      if (omit.alpha0.list) {return(p)}
       return(gridExtra::grid.arrange(grobs=p, ncol=2))
     }
   }
