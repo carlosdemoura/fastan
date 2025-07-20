@@ -48,6 +48,7 @@ plot_contrast = function(smry, par = "alpha", stat = "mean") {
 #' Plot HPD interval & other stats
 #'
 #' @inheritParams plot_mock_doc
+#' @param omit.alpha0 .
 #'
 #' @return ggplot2 plot
 #'
@@ -55,8 +56,32 @@ plot_contrast = function(smry, par = "alpha", stat = "mean") {
 #'
 #' @importFrom dplyr all_of select
 #' @import ggplot2
+#' @importFrom gridExtra grid.arrange
 #' @importFrom tidyr pivot_longer
-plot_hpd = function(smry, par, row = NULL, col = NULL, stat = "mean") {
+#' @importFrom utils tail
+plot_hpd = function(proj, par, row = NULL, col = NULL, stat = "mean", omit.alpha0 = T) {
+  stopifnot("stat must be mean, mode, median or real" = all(stat %in% c("mean", "mode", "median", "real")))
+
+  plot_hpd0 = function(df) {
+    ggplot(df, aes(x = if (loc.name == "row") col else row)) +
+      ylim(y_min, y_max) +
+      geom_errorbar(aes(ymin = .data$hpd_min, ymax = .data$hpd_max, color = "hpd"), width = .6, linewidth = .6) +
+      geom_point(aes(y = .data$value, color = .data$stat, shape = .data$stat), size = 2) +
+      scale_color_manual(values = stat_plt("color")) +
+      scale_shape_manual(values = stat_plt("shape")) +
+      guides(color = guide_legend(override.aes = list(shape = c(list(hpd = 1), stat_plt("shape")[stat]))),
+             shape = "none") +
+      labs(
+        x = ifelse(loc.name == "row", "col", "row"),
+        y = "Values",
+        title = paste(par, "posterior", loc.name, c(row, col)),
+        color = "Legend"
+      ) +
+      theme_minimal() +
+      theme(legend.title = element_blank(),
+            axis.text.x = element_text(angle = 45, hjust = 1))
+  }
+
   stat_plt = function(x) {
     if (x == "shape") {
       list(real = 15, mean = 16, median = 17, mode = 18)
@@ -65,36 +90,43 @@ plot_hpd = function(smry, par, row = NULL, col = NULL, stat = "mean") {
     }
   }
 
-  stopifnot("stat must be mean, mode, median or real" = all(stat %in% c("mean", "mode", "median", "real")))
-
-  smry = validate_proj_arg(smry, "summary")
   loc.name = list(row=row,col=col) |> {\(.) names(.)[!sapply(., is.null)]}()
   df =
-    summary_as_df(list(summary = smry), par)[[par]] |>
+    summary_as_df(proj, par)[[par]] |>
     {\(.) .[.[[loc.name]] == get(loc.name), ]}() |>
     dplyr::select(dplyr::all_of(c("row", "col", "hpd_min", "hpd_max", stat))) |>
     tidyr::pivot_longer(cols = dplyr::all_of(stat), names_to = "stat", values_to = "value")
 
-  # y_min = min(smry[[par]][,,"hpd_min"])
-  # y_max = max(smry[[par]][,,"hpd_max"])
+  if ((par == "alpha") & (omit.alpha0)) {
+    lim = fiat_groups_limits(proj$data$dim$group.sizes)
+    if (!proj$prior$semi.conf) {
+      df = df[lim[[1]][col]:lim[[2]][col],]
+    } else {
+      df1 = df[lim[[1]][col]:lim[[2]][col],]
+      df2 = df[utils::tail(lim[[1]],1):utils::tail(lim[[2]],1),]
+      y_min = min(rbind(df1, df2)$hpd_min)
+      y_max = max(rbind(df1, df2)$hpd_max)
+      p = list()
+      p[[1]] =
+        plot_hpd0(df1) +
+        theme(legend.position = "none")
+      p[[2]] =
+        plot_hpd0(df2) +
+        theme(
+          axis.text.y      = element_blank(),
+          axis.ticks.y     = element_blank(),
+          axis.title.y     = element_blank()
+        ) +
+        labs(
+          title = ""
+        )
+      return(gridExtra::grid.arrange(grobs=p, ncol=2))
+    }
+  }
 
-  ggplot(df, aes(x = if (loc.name == "row") col else row)) +
-    # ylim(y_min, y_max) +
-    geom_errorbar(aes(ymin = .data$hpd_min, ymax = .data$hpd_max, color = "hpd"), width = .6, linewidth = .6) +
-    geom_point(aes(y = .data$value, color = .data$stat, shape = .data$stat), size = 2) +
-    scale_color_manual(values = stat_plt("color")) +
-    scale_shape_manual(values = stat_plt("shape")) +
-    guides(color = guide_legend(override.aes = list(shape = c(list(hpd = 1), stat_plt("shape")[stat]))),
-           shape = "none") +
-    labs(
-      x = ifelse(loc.name == "row", "col", "row"),
-      y = "Values",
-      title = paste(par, "posterior", loc.name, c(row, col)),
-      color = "Legend"
-    ) +
-    theme_minimal() +
-    theme(legend.title = element_blank(),
-          axis.text.x = element_text(angle = 45, hjust = 1))
+  y_min = min(df$hpd_min)
+  y_max = max(df$hpd_max)
+  return(plot_hpd0(df))
 }
 
 

@@ -23,13 +23,11 @@ stan2 = function(proj, init = NULL, chains = 1, ...) {
     stop("prior type not accepted")
   }
 
-  data = interface2(proj)
+  pars = c("alpha", "lambda", "sigma2") |> {\(.) if (!is.null(proj$data$pred)) append(., "pred") else .}()
 
   rstan::stan(file   = file,
-              data   = data,
-              #pars   = c("alpha", "lambda", "sigma2", "alpha_") |> {\(.) if (!is.null(proj$data$pred)) append(., "pred") else .}(),
-              pars   = c("alpha", "lambda", "sigma2") |> {\(.) if (!is.null(proj$data$pred)) append(., "pred") else .}(),
-              #pars   = c("alpha", "lambda", "sigma2"),
+              data   = interface2(proj),
+              pars   = pars,
               init   = init,
               chains = chains,
               ...

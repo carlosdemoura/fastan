@@ -4,10 +4,10 @@
 \alias{plot_hpd}
 \title{Plot HPD interval & other stats}
 \usage{
-plot_hpd(smry, par, row = NULL, col = NULL, stat = "mean")
+plot_hpd(proj, par, row = NULL, col = NULL, stat = "mean", omit.alpha0 = T)
 }
 \arguments{
-\item{smry}{.}
+\item{proj}{.}
 
 \item{par}{.}
 
@@ -16,6 +16,8 @@ plot_hpd(smry, par, row = NULL, col = NULL, stat = "mean")
 \item{col}{.}
 
 \item{stat}{.}
+
+\item{omit.alpha0}{.}
 }
 \value{
 ggplot2 plot
