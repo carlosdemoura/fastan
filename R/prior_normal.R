@@ -15,10 +15,10 @@ prior_normal = function(data, semi.conf, omit.alpha0 = T, ...) {
     l
   }
 
-  nfac = data$dim$group.n - as.integer(semi.conf)
+  nfac = length(data$dim$group.sizes) - as.integer(semi.conf)
   prior = list(alpha  = list(mean = list_vec(data$dim$row, nfac)),
                lambda = list(mean = list_vec(data$dim$col, nfac)),
-               sigma2 = list(shape=1, rate = .1),
+               sigma2 = list(shape = 1, rate = .1),
                semi.conf = semi.conf,
                type = "normal"
                )

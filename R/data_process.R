@@ -195,14 +195,11 @@ real_from_prior = function(proj) {
     as.matrix()
 
   real = list(
-    alpha  = alpha,
+    alpha  = alpha * proj$prior$alpha$in_group,
     lambda = lambda,
     sigma2 = sigma2,
     group.sizes = proj$data$dim$group.sizes
   )
-
-  alpha_var = alpha_cov_to_var(proj$prior)
-  real$alpha[alpha_var == min(alpha_var)] = 0
 
   real
 }

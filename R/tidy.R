@@ -104,23 +104,6 @@ set_space = function(proj, type = "real", seed = NULL, ...) {
 #'
 #' @inheritParams set_summary
 #' @param type .
-#' @param engine .
-#'
-#' @export
-set_prior = function(proj, type = "normal", engine = NULL, ...) {
-  if (type == "normal") {
-    proj$prior = prior_normal(proj$data, ...)
-  } else {
-    stop("prior type not accepted")
-  }
-  return(proj)
-}
-
-
-#' Title
-#'
-#' @inheritParams set_summary
-#' @param type .
 #' @param semi.conf .
 #' @param engine .
 #'
@@ -128,24 +111,45 @@ set_prior = function(proj, type = "normal", engine = NULL, ...) {
 set_prior = function(proj, type = "normal", semi.conf, engine = NULL, ...) {
   if (type == "normal") {
     prior_ = prior_normal(proj$data, semi.conf = semi.conf, ...)
+    proj_ = proj; proj_$prior = prior_
+    prior = list(alpha = list(), lambda = list())
+    for (par in c("alpha", "lambda", "sigma2")) {
+      if (!is.null(engine[[par]])) {
+        prior[[par]] = engine[[par]](proj_)
+      }
+      for (name in names(prior_[[par]])) {
+        if (is.null(prior[[par]][[name]])) { prior[[par]][[name]] = prior_[[par]][[name]]}
+      }
+    }
   } else {
     stop("prior type not accepted")
   }
 
-  proj_ = proj; proj_$prior = prior_
-  prior = list(alpha = list(), lambda = list())
-  for (par in c("alpha", "lambda", "sigma2")) {
-    if (!is.null(engine[[par]])) {
-      prior[[par]] = engine[[par]](proj_)
-    }
-    for (name in names(prior_[[par]])) {
-      if (is.null(prior[[par]][[name]])) { prior[[par]][[name]] = prior_[[par]][[name]]}
-    }
-  }
   prior[["semi.conf"]] = semi.conf
   prior[["type"]] = type
 
   proj$prior = prior
+  return(proj)
+}
+
+
+#' Title
+#'
+#' @param proj .
+#' @param set_summary .
+#' @param set_diagnostic .
+#' @param ... .
+#'
+#' @export
+set_fit = function(proj, set_summary = T, set_diagnostic = T, ...) {
+  proj$fit = stan(proj, ...)
+
+  if (set_diagnostic) {
+    proj = set_diagnostic(proj)
+  }
+  if (set_summary) {
+    proj = set_summary(proj)
+  }
   return(proj)
 }
 

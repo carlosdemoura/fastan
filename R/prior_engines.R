@@ -41,8 +41,21 @@ car_conditional = function(proj, neib, tau) {
 #' Title
 #'
 #' @param proj .
+#' @param tau .
 #'
 #' @export
-car_simple = function(proj) {
-  list(cov = lapply(1:n.fac(proj), function(x) car(neib_simple(proj$data$dim$col))))
+car_simple = function(proj, tau) {
+  list(cov = lapply(1:n.fac(proj), function(x) tau * car(neib_simple(proj$data$dim$col))))
+}
+
+
+#' Title
+#'
+#' @param proj .
+#' @param neib .
+#' @param tau .
+#'
+#' @export
+car_expl = function(proj, neib, tau) {
+  list(cov = list(tau * car(neib(proj$space))))
 }
