@@ -185,7 +185,7 @@ summary_matrix = function(proj, bias.stat = "mean") {
 #' @importFrom coda geweke.diag
 #' @import purrr
 #' @importFrom rstan extract
-#' @importFrom tidyr extract
+#' @importFrom tidyr separate
 diagnostic = function(fit) {
   fit = validate_proj_arg(fit, "fit")
 
@@ -207,9 +207,13 @@ diagnostic = function(fit) {
     {\(.) dplyr::mutate(., par = row.names(.))}() |>
     dplyr::select(dplyr::all_of(c("n_eff", "Rhat", "par"))) |>
     merge(get_geweke(fit), by = "par") |>
-    tidyr::extract("par", into = c("par", "row", "col"), regex = "([a-zA-Z0-9_]+)\\[(\\d+),(\\d+)\\]", convert = TRUE) |>
-    {\(.) {.[is.na(.$par),c("par", "row", "col")] = c("lp__", 1, 1); .}}() |>
-    dplyr::mutate(row = as.numeric(.data$row), col = as.numeric(.data$col)) |>
+    {\(.) {.[.$par=="lp__","par"] = "lp__[1,1]"; .}}() |>
+    tidyr::separate(.data$par, into = c("par", "index"), sep = "\\[") |>
+    tidyr::separate(.data$index, into = c("row", "col"), sep = ",") |>
+    dplyr::mutate(
+      col = as.numeric(gsub("]", "", .data$col)),
+      row = as.numeric(.data$row)
+    ) |>
     dplyr::as_tibble()
 }
 

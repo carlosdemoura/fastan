@@ -4,14 +4,14 @@
 \alias{prior_normal}
 \title{Title}
 \usage{
-prior_normal(data, semi.conf, alpha0 = F)
+prior_normal(data, semi.conf, omit.alpha0 = F)
 }
 \arguments{
 \item{data}{.}
 
 \item{semi.conf}{.}
 
-\item{alpha0}{.}
+\item{omit.alpha0}{.}
 }
 \description{
 Title

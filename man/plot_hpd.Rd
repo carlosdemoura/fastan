@@ -4,7 +4,15 @@
 \alias{plot_hpd}
 \title{Plot HPD interval & other stats}
 \usage{
-plot_hpd(proj, par, row = NULL, col = NULL, stat = "mean", omit.alpha0 = T)
+plot_hpd(
+  proj,
+  par,
+  row = NULL,
+  col = NULL,
+  stat = "mean",
+  omit.alpha0 = T,
+  omit.alpha0.list = F
+)
 }
 \arguments{
 \item{proj}{.}
@@ -18,6 +26,8 @@ plot_hpd(proj, par, row = NULL, col = NULL, stat = "mean", omit.alpha0 = T)
 \item{stat}{.}
 
 \item{omit.alpha0}{.}
+
+\item{omit.alpha0.list}{.}
 }
 \value{
 ggplot2 plot
