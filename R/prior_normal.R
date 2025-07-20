@@ -3,9 +3,18 @@
 #' @param data .
 #' @param semi.conf .
 #' @param omit.alpha0 .
+#' @param ... .
 #'
 #' @export
-prior_normal = function(data, semi.conf, omit.alpha0 = F) {
+prior_normal = function(data, semi.conf, omit.alpha0 = T, ...) {
+  list_vec = function(vec.len, list.len, mean = 0) {
+    l = list()
+    for (i in 1:list.len) {
+      l[[i]] = rep(mean, vec.len)
+    }
+    l
+  }
+
   nfac = data$dim$group.n - as.integer(semi.conf)
   prior = list(alpha  = list(mean = list_vec(data$dim$row, nfac)),
                lambda = list(mean = list_vec(data$dim$col, nfac)),
@@ -42,21 +51,6 @@ interface_normal = function(proj) {
     lambda_mean  = abind::abind(proj$prior$lambda$mean, along=2) |> aperm(c(2,1)),
     lambda_cov   = abind::abind(proj$prior$lambda$cov,  along=3) |> aperm(c(3,1,2))
   )
-}
-
-
-#' Title
-#'
-#' @param vec.len .
-#' @param list.len .
-#' @param mean .
-list_vec = function(vec.len, list.len, mean = 0) {
-  l = list()
-  for (i in 1:list.len) {
-    l[[i]] = rep(mean, vec.len)
-  }
-  l
-  # matrix(mean, nrow = sum(group.sizes), ncol = length(group.sizes) - as.numeric(semi.conf))
 }
 
 

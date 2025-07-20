@@ -27,29 +27,33 @@ functions {
       int size = group_lim[k, 2] - group_lim[k, 1] + 1;
       int out[size];
       int start = group_lim[k, 1];
-      for (i in 1:size)
+      for (i in 1:size) {
         out[i] = start + i - 1;
+      }
       return out;
-
+      //
     } else if ((omit_alpha0 == 1) && (semi_conf == 1)) {
       int size1 = group_lim[k, 2] - group_lim[k, 1] + 1;
       int size2 = group_lim[n_fac + 1, 2] - group_lim[n_fac + 1, 1] + 1;
       int out[size1 + size2];
-
+      //
       int start1 = group_lim[k, 1];
-      for (i in 1:size1)
+      for (i in 1:size1) {
         out[i] = start1 + i - 1;
-
+      }
+      //
       int start2 = group_lim[n_fac + 1, 1];
-      for (i in 1:size2)
+      for (i in 1:size2) {
         out[size1 + i] = start2 + i - 1;
-
+      }
+      //
       return out;
-
+      //
     } else {  // omit_alpha0 == 0
       int out[n_row];
-      for (i in 1:n_row)
+      for (i in 1:n_row) {
         out[i] = i;
+      }
       return out;
     }
   }

@@ -11,9 +11,16 @@ set_fit2 = function(proj, set_summary = T, set_diagnostic = T, ...) {
   return(proj)
 }
 
-stan2 = function(proj, init = NULL, chains = 1, ...) {
+stan2 = function(proj, init = NULL, chains = 1, pred = T, ...) {
   if (is.null(init)) {
     init = init(proj, chains)
+  }
+
+  pars = c("alpha", "lambda", "sigma2") |> {\(.) if (!is.null(proj$data$pred)) append(., "pred") else .}()
+  data = interface2(proj)
+  if (!pred & !is.null(proj$data$pred)) {
+    data[c("pred_coor", "n_pred")] = list(t(as.matrix(1:2)), 0)
+    pars = setdiff(pars, "pred")
   }
 
   type = proj$prior$type
@@ -23,10 +30,8 @@ stan2 = function(proj, init = NULL, chains = 1, ...) {
     stop("prior type not accepted")
   }
 
-  pars = c("alpha", "lambda", "sigma2") |> {\(.) if (!is.null(proj$data$pred)) append(., "pred") else .}()
-
   rstan::stan(file   = file,
-              data   = interface2(proj),
+              data   = data,
               pars   = pars,
               init   = init,
               chains = chains,

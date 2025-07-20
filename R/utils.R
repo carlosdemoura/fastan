@@ -208,8 +208,6 @@ validate_proj_arg = function(obj, class) {
 #'
 #' @param fit stan fit
 #'
-#' @export
-#'
 #' @importFrom rstan get_elapsed_time
 elapsed_time_table = function(fit) {
   fit = validate_proj_arg(fit, "fit")

@@ -147,12 +147,3 @@ neib_simple = function(n) {
   }
   W
 }
-
-
-#' Title
-#'
-#' @param W .
-#' @param rho .
-car = function(W, rho = .95) {
-  solve(diag(rowSums(W)) - rho * W)
-}
