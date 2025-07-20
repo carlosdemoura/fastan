@@ -4,15 +4,23 @@
 \alias{set_prior}
 \title{Title}
 \usage{
-set_prior(proj, type, ...)
+set_prior(proj, type = "normal", semi.conf, engine = NULL, ...)
+
+set_prior(proj, type = "normal", semi.conf, engine = NULL, ...)
 }
 \arguments{
 \item{proj}{.}
 
 \item{type}{.}
 
+\item{semi.conf}{.}
+
+\item{engine}{.}
+
 \item{...}{.}
 }
 \description{
+Title
+
 Title
 }

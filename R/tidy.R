@@ -125,7 +125,7 @@ set_prior = function(proj, type = "normal", engine = NULL, ...) {
 #' @param engine .
 #'
 #' @export
-set_prior2 = function(proj, type = "normal", semi.conf, engine = NULL, ...) {
+set_prior = function(proj, type = "normal", semi.conf, engine = NULL, ...) {
   if (type == "normal") {
     prior_ = prior_normal(proj$data, semi.conf = semi.conf, ...)
   } else {
