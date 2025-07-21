@@ -7,8 +7,6 @@
 <url><loc>/reference/accuracy.html</loc></url>
 <url><loc>/reference/alpha_cov_to_var.html</loc></url>
 <url><loc>/reference/alpha_in_group.html</loc></url>
-<url><loc>/reference/alpha_var.html</loc></url>
-<url><loc>/reference/blank_project.html</loc></url>
 <url><loc>/reference/car.html</loc></url>
 <url><loc>/reference/car_conditional.html</loc></url>
 <url><loc>/reference/car_expl.html</loc></url>
@@ -17,7 +15,6 @@
 <url><loc>/reference/distances.html</loc></url>
 <url><loc>/reference/elapsed_time_table.html</loc></url>
 <url><loc>/reference/export.html</loc></url>
-<url><loc>/reference/fastan_report.html</loc></url>
 <url><loc>/reference/fiat_groups_limits.html</loc></url>
 <url><loc>/reference/generate_data.html</loc></url>
 <url><loc>/reference/generate_space.html</loc></url>
@@ -28,7 +25,7 @@
 <url><loc>/reference/init.html</loc></url>
 <url><loc>/reference/interface.html</loc></url>
 <url><loc>/reference/interface_normal.html</loc></url>
-<url><loc>/reference/invert_signal_smry.html</loc></url>
+<url><loc>/reference/invert_signal.html</loc></url>
 <url><loc>/reference/loglik.html</loc></url>
 <url><loc>/reference/missing_validation.html</loc></url>
 <url><loc>/reference/missing_validation_selection.html</loc></url>
@@ -36,6 +33,7 @@
 <url><loc>/reference/neib_dist.html</loc></url>
 <url><loc>/reference/neib_simple.html</loc></url>
 <url><loc>/reference/neib_voronoi.html</loc></url>
+<url><loc>/reference/new_project.html</loc></url>
 <url><loc>/reference/param.dim.html</loc></url>
 <url><loc>/reference/plot_bias.html</loc></url>
 <url><loc>/reference/plot_contrast.html</loc></url>
@@ -58,7 +56,6 @@
 <url><loc>/reference/real_from_posterior.html</loc></url>
 <url><loc>/reference/real_from_prior.html</loc></url>
 <url><loc>/reference/remove.html</loc></url>
-<url><loc>/reference/server.html</loc></url>
 <url><loc>/reference/set_data.html</loc></url>
 <url><loc>/reference/set_diagnostic.html</loc></url>
 <url><loc>/reference/set_fit.html</loc></url>
@@ -67,12 +64,13 @@
 <url><loc>/reference/set_space.html</loc></url>
 <url><loc>/reference/set_summary.html</loc></url>
 <url><loc>/reference/shiny.html</loc></url>
+<url><loc>/reference/shiny_server.html</loc></url>
+<url><loc>/reference/shiny_ui.html</loc></url>
 <url><loc>/reference/space_process.html</loc></url>
 <url><loc>/reference/stan.html</loc></url>
 <url><loc>/reference/summary_as_df.html</loc></url>
 <url><loc>/reference/summary_matrix.html</loc></url>
 <url><loc>/reference/try_set.html</loc></url>
-<url><loc>/reference/ui.html</loc></url>
 <url><loc>/reference/validate_proj_arg.html</loc></url>
 </urlset>
 
