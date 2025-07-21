@@ -264,8 +264,8 @@ process_data = function(data, value, row, col, group = NULL) {
       x = data_fa,
       dim = list(row = max(data_fa$row),
                  col = max(data_fa$col),
-                 group.n = max(data_fa$group),
-                 group.sizes = group.sizes),
+                 group.sizes = group.sizes
+                 ),
       label = label
   )
 

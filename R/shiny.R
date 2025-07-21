@@ -561,7 +561,7 @@ server0 = function(input, output, session) {
     output$Model.info = renderUI({
       paste0(
         "<p>Info: ", project()$info, "</p>",
-        "<p>Number of groups:\t" , project()$data$dim$group.n, "</p>",
+        "<p>Number of groups:\t" , length(project()$data$dim$group.sizes), "</p>",
         "<p>Number of factors:\t", n.fac(project()), "</p>",
         "<p>Missing proportion:\t", prop.missing(project()), "</p>",
         "<p><br></p>",

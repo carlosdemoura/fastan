@@ -7,9 +7,9 @@
 #' @export
 n.fac = function(proj){
   if (is.null(proj$prior)) {
-    proj$data$dim$group.n
+    length(proj$data$dim$group.sizes)
   } else {
-    proj$data$dim$group.n - as.integer(proj$prior$semi.conf)
+    length(proj$data$dim$group.sizes) - as.integer(proj$prior$semi.conf)
   }
 }
 
@@ -178,7 +178,7 @@ fastan_report = function(proj) {
   paste0(
     "Fastan project report",
     "\n\ninfo\t\t"    , proj$info,
-    "\ndata dim.\t"   , proj$data$dim$row, " (row)   ", proj$data$dim$col, " (col)   ", n.fac(proj), " (fac)   ", proj$data$dim$group.n, " (grp)   ",
+    "\ndata dim.\t"   , proj$data$dim$row, " (row)   ", proj$data$dim$col, " (col)   ", n.fac(proj), " (fac)   ", length(proj$data$dim$group.sizes), " (grp)   ",
     "\n\nSTAN args"   ,
     "\nchains\t\t"    , length(proj$fit@stan_args),
     "\niter\t\t"      , proj$fit@stan_args[[1]]$iter,
