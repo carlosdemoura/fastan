@@ -66,6 +66,7 @@ data {
   // prior args
   real<lower=0> sigma2_shape;
   real<lower=0> sigma2_rate;
+  int<lower=0>  sigma2_only1;
   vector[n_row] alpha_mean[n_fac];
   matrix[n_row, n_row] alpha_cov[n_fac];
   vector[n_col] lambda_mean[n_fac];
@@ -87,7 +88,7 @@ data {
 parameters {
   vector[alpha_in_group[n_row,n_fac]] alpha_;
   matrix[n_fac, n_col] lambda;
-  matrix[n_row, 1] sigma2;
+  matrix<lower=0>[(sigma2_only1 + (1-sigma2_only1) * n_row), 1] sigma2_;
   matrix[n_pred, 1] pred;
 }
 transformed parameters {
@@ -99,6 +100,15 @@ transformed parameters {
       alpha[i,j] = alpha_[alpha_in_group[i,j]];
     }
   }}
+  //
+  matrix<lower=0>[n_row, 1] sigma2;
+  for (i in 1:n_row) {
+    if (sigma2_only1 == 1) {
+      sigma2[i,1] = sigma2_[1,1];
+    } else {
+      sigma2[i,1] = sigma2_[i,1];
+    }
+  }
 }
 model {
   matrix[n_row, n_col] alpha_lambda;
@@ -114,8 +124,10 @@ model {
     }
   }
   // Priors
-  for(i in 1:n_row) {
-    sigma2[i,1] ~ gamma(sigma2_shape, sigma2_rate);
+  if (sigma2_only1 == 1) {
+    sigma2_[1,1] ~ gamma(sigma2_shape, sigma2_rate);
+  } else {
+    for(i in 1:n_row) { sigma2[i,1] ~ gamma(sigma2_shape, sigma2_rate); }
   }
   for(k in 1:n_fac) {
     int rows_alpha[num_elements(rows_alpha_not_zero(k, omit_alpha0, semi_conf, group_lim, n_fac, n_row))];

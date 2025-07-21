@@ -20,7 +20,7 @@ prior_normal = function(data, semi.conf, omit.alpha0 = T, ...) {
   nfac = length(data$dim$group.sizes) - as.integer(semi.conf)
   prior = list(alpha  = list(mean = list_vec(data$dim$row, nfac)),
                lambda = list(mean = list_vec(data$dim$col, nfac)),
-               sigma2 = list(shape = 1, rate = .1),
+               sigma2 = list(shape = 1, rate = .1, only1 = F),
                semi.conf = semi.conf,
                type = "normal"
                )
@@ -50,6 +50,7 @@ interface_normal = function(proj) {
   list(
     sigma2_shape = proj$prior$sigma2$shape,
     sigma2_rate  = proj$prior$sigma2$rate,
+    sigma2_only1 = as.numeric(proj$prior$sigma2$only1),
     alpha_mean   = abind::abind(proj$prior$alpha$mean,  along=2) |> aperm(c(2,1)),
     alpha_cov    = abind::abind(proj$prior$alpha$cov,   along=3) |> aperm(c(3,1,2)),
     lambda_mean  = abind::abind(proj$prior$lambda$mean, along=2) |> aperm(c(2,1)),

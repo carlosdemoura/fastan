@@ -59,7 +59,7 @@ missing_validation_selection = function (proj) {
       {\(.) dplyr::filter(., .$row %in% rows_present) }() |>
       dplyr::mutate(
         row = proj$data$label$loading[.data$row],
-        col = proj$data$label$factor_level[.data$col],
+        col = proj$data$label$factor_score[.data$col],
         group = proj$data$label$group[.data$group]
       )
 
@@ -71,7 +71,7 @@ missing_validation_selection = function (proj) {
       `colnames<-`(c("value", "row", "col", "group")) |>
       dplyr::mutate(
         row   = proj$data$label$loading[.data$row],
-        col   = proj$data$label$factor_level[.data$col],
+        col   = proj$data$label$factor_score[.data$col],
         group = proj$data$label$group[.data$group]
       )
 
@@ -87,7 +87,7 @@ missing_validation_selection = function (proj) {
     {\(.) dplyr::filter(., !(.$row %in% proj$data$pred$row)) }() |>
     dplyr::mutate(
       row = proj$data$label$loading[.data$row],
-      col = proj$data$label$factor_level[.data$col],
+      col = proj$data$label$factor_score[.data$col],
       group = proj$data$label$group[.data$group]
     ) |>
     process_data("value", "row", "col", "group")
@@ -97,13 +97,13 @@ missing_validation_selection = function (proj) {
     {\(.)
       dplyr::mutate(.,
                     row   = lapply(.$row,   function(x){which(data_new$label$loading == x,      data_new$label$loading)})      |> unlist(),
-                    col   = lapply(.$col,   function(x){which(data_new$label$factor_level == x, data_new$label$factor_level)}) |> unlist(),
+                    col   = lapply(.$col,   function(x){which(data_new$label$factor_score == x, data_new$label$factor_score)}) |> unlist(),
                     group = lapply(.$group, function(x){which(data_new$label$group == x,        data_new$label$group)})        |> unlist()
       )
     }() |>
-    dplyr::arrange(dplyr::all_of("row"), dplyr::all_of("col"))
+    dplyr::arrange(.data$row, .data$col)
 
-  data_new$x = dplyr::anti_join(data_new$x, data_new$pred, by=c("row", "col"))
+  data_new$obs = dplyr::anti_join(data_new$obs, data_new$pred, by=c("row", "col"))
 
   data_new
 }

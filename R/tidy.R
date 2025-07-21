@@ -178,22 +178,15 @@ set_summary = function(proj, ...) {
 }
 
 
-#' Missing validation
+#' Try set attribute in project and catch errors
 #'
-#' @inheritParams set_summary
-#'
-#' @export
-#'
-#' @import dplyr
-missing_validation = function(proj, ...) {
-  proj$data = missing_validation_selection(proj)
-  space_rows =
-    proj$data$label$loading |>
-    lapply(function(x) which(x == proj$space$id, proj$space$id)) |>
-    unlist()
-  proj$space = proj$space[space_rows,]
-  proj = proj |> remove( setdiff(names(proj), c("info", "data", "space")) )
-  return(proj)
+#' @param expr expression.
+try_set = function(expr) {
+  tryCatch({
+    expr
+  }, error = function(e){
+    cat(paste("ERROR:", e))
+  })
 }
 
 
@@ -218,15 +211,23 @@ remove = function(proj, ...) {
 }
 
 
-#' Try set attribute in project and catch errors
+#' Missing validation
 #'
-#' @param expr expression.
-try_set = function(expr) {
-  tryCatch({
-    expr
-  }, error = function(e){
-    cat(paste("ERROR:", e))
-  })
+#' @inheritParams set_summary
+#'
+#' @export
+#'
+#' @import dplyr
+missing_validation = function(proj, ...) {
+  proj$data = missing_validation_selection(proj)
+  proj$space = dplyr::left_join(data.frame(id = proj$data$label$loading), proj$space)
+  # space_rows =
+  #   proj$data$label$loading |>
+  #   lapply(function(x) which(x == proj$space$id, proj$space$id)) |>
+  #   unlist()
+  # proj$space = proj$space[space_rows,]
+  proj = proj |> remove( setdiff(names(proj), c("info", "data", "space")) )
+  return(proj)
 }
 
 

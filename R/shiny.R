@@ -425,7 +425,7 @@ server0 = function(input, output, session) {
   })
 
   observeEvent(Inference.alpha_change(), {
-    if (input$Inference.alpha0 & (as.integer(input$Inference.alpha_col) < n.fac(project()))) {
+    if (input$Inference.alpha0 & (as.integer(input$Inference.alpha_col) < n.fac(project())) & project()$prior$semi.conf) {
       p = plot_hpd(project(), "alpha", stat = stat(), col = input$Inference.alpha_col |> as.integer(), omit.alpha0 = T, omit.alpha0.list = T)
       output$alpha_hpd = plotly::renderPlotly({
         plotly::subplot(p[[1]], p[[2]], nrows = 1)
