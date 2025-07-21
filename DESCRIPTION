@@ -34,3 +34,4 @@ Depends:
     ggplot2,
     shiny
 Config/testthat/edition: 3
+URL: https://carlosdemoura.github.io/fastan/
