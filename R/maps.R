@@ -46,7 +46,7 @@ plot_map_post = function(proj, par, col = 1, stat) {
   df = proj$space
   df$x = proj$summary[[par]][,col,stat]
   plot_map(proj) +
-    geom_point(data = df, aes(x = .data$lon, y = .data$lat, color = .data$obs), size = 1.5) +
+    geom_point(data = df, aes(x = .data$lon, y = .data$lat, color = .data$x), size = 1.5) +
     scale_color_viridis_c(option = "turbo") +
     labs(title = paste0(par, "[,",col,"]", " posterior ", stat))
 }

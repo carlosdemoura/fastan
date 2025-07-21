@@ -4,7 +4,6 @@
 -   General: tests
 -   Vignettes: generating data/space, prior engines & fit, plots & maps
 -   R/oop: better classes, data, prior, summary, project
--   R/missing_validation: space_rows from join
 -   R/space: columns space
 
 ## Maybe one day
