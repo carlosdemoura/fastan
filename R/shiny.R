@@ -420,33 +420,37 @@ server0 = function(input, output, session) {
 
   ### PanelInference - omit alpha0 ###
 
-  observeEvent(input$Inference.alpha0, {
-    if (input$Inference.alpha0) {
+  Inference.alpha_change = reactive({
+    list(input$Inference.alpha0, input$Inference.alpha_col)
+  })
+
+  observeEvent(Inference.alpha_change(), {
+    if (input$Inference.alpha0 & (as.integer(input$Inference.alpha_col) < n.fac(project()))) {
       p = plot_hpd(project(), "alpha", stat = stat(), col = input$Inference.alpha_col |> as.integer(), omit.alpha0 = T, omit.alpha0.list = T)
       output$alpha_hpd = plotly::renderPlotly({
         plotly::subplot(p[[1]], p[[2]], nrows = 1)
       })
     } else {
       output$alpha_hpd = plotly::renderPlotly({
-        plot_hpd(project(), "alpha", stat = stat(), col = input$Inference.alpha_col |> as.integer(), omit.alpha0 = F) |>
+        plot_hpd(project(), "alpha", stat = stat(), col = input$Inference.alpha_col |> as.integer(), omit.alpha0 = input$Inference.alpha0) |>
           plotly::ggplotly()
       })
     }
   })
 
-  observeEvent(input$Inference.alpha_col, {
-    if (input$Inference.alpha0) {
-      p = plot_hpd(project(), "alpha", stat = stat(), col = input$Inference.alpha_col |> as.integer(), omit.alpha0 = T, omit.alpha0.list = T)
-      output$alpha_hpd = plotly::renderPlotly({
-        plotly::subplot(p[[1]], p[[2]], nrows = 1)
-      })
-    } else {
-      output$alpha_hpd = plotly::renderPlotly({
-        plot_hpd(project(), "alpha", stat = stat(), col = input$Inference.alpha_col |> as.integer(), omit.alpha0 = F) |>
-          plotly::ggplotly()
-      })
-    }
-  })
+  # observeEvent(input$Inference.alpha_col, {
+  #   if (input$Inference.alpha0) {
+  #     p = plot_hpd(project(), "alpha", stat = stat(), col = input$Inference.alpha_col |> as.integer(), omit.alpha0 = T, omit.alpha0.list = T)
+  #     output$alpha_hpd = plotly::renderPlotly({
+  #       plotly::subplot(p[[1]], p[[2]], nrows = 1)
+  #     })
+  #   } else {
+  #     output$alpha_hpd = plotly::renderPlotly({
+  #       plot_hpd(project(), "alpha", stat = stat(), col = input$Inference.alpha_col |> as.integer(), omit.alpha0 = F) |>
+  #         plotly::ggplotly()
+  #     })
+  #   }
+  # })
 
   ### PanelInference - prediction ###
 

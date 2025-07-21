@@ -101,30 +101,36 @@ plot_hpd = function(proj, par, row = NULL, col = NULL, stat = "mean", omit.alpha
   if ((par == "alpha") & (omit.alpha0)) {
     lim = fiat_groups_limits(proj$data$dim$group.sizes)
     if (!proj$prior$semi.conf) {
-      df = df[lim[[1]][col]:lim[[2]][col],]
+      rows = lim[[1]][col]:lim[[2]][col]
+      df = dplyr::filter(df, df$row %in% rows)
     } else {
-      row1 = lim[[1]][col]:lim[[2]][col]
-      row2 = utils::tail(lim[[1]],1):utils::tail(lim[[2]],1)
-      df1 = dplyr::filter(df, df$row %in% row1)
-      df2 = dplyr::filter(df, df$row %in% row2)
-      y_min = min(rbind(df1, df2)$hpd_min)
-      y_max = max(rbind(df1, df2)$hpd_max)
-      p = list()
-      p[[1]] =
-        plot_hpd0(df1) +
-        theme(legend.position = "none")
-      p[[2]] =
-        plot_hpd0(df2) +
-        theme(
-          axis.text.y      = element_blank(),
-          axis.ticks.y     = element_blank(),
-          axis.title.y     = element_blank()
-        ) +
-        labs(
-          title = ""
-        )
-      if (omit.alpha0.list) {return(p)}
-      return(gridExtra::grid.arrange(grobs=p, ncol=2))
+      if (col == n.fac(proj)) {
+        rows = lim[[1]][col]:lim[[2]][col+1]
+        df = dplyr::filter(df, df$row %in% rows)
+      } else {
+        row1 = lim[[1]][col]:lim[[2]][col]
+        row2 = utils::tail(lim[[1]],1):utils::tail(lim[[2]],1)
+        df1 = dplyr::filter(df, df$row %in% row1)
+        df2 = dplyr::filter(df, df$row %in% row2)
+        y_min = min(rbind(df1, df2)$hpd_min)
+        y_max = max(rbind(df1, df2)$hpd_max)
+        p = list()
+        p[[1]] =
+          plot_hpd0(df1) +
+          theme(legend.position = "none")
+        p[[2]] =
+          plot_hpd0(df2) +
+          theme(
+            axis.text.y      = element_blank(),
+            axis.ticks.y     = element_blank(),
+            axis.title.y     = element_blank()
+          ) +
+          labs(
+            title = ""
+          )
+        if (omit.alpha0.list) {return(p)}
+        return(gridExtra::grid.arrange(grobs=p, ncol=2))
+      }
     }
   }
 

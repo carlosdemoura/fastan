@@ -4,7 +4,7 @@
 \alias{stan}
 \title{Run STAN MCMC}
 \usage{
-stan(proj, init = NULL, chains = 1, ...)
+stan(proj, init = NULL, chains = 1, pred = T, ...)
 }
 \arguments{
 \item{proj}{.}
@@ -12,6 +12,8 @@ stan(proj, init = NULL, chains = 1, ...)
 \item{init}{.}
 
 \item{chains}{.}
+
+\item{pred}{.}
 
 \item{...}{arguments that will be passed to \code{rstan::stan()}}
 }
