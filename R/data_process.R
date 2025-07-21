@@ -225,7 +225,7 @@ real_from_posterior = function(proj, stat = "mean") {
 #' @import purrr
 process_data = function(data, value, row, col, group = NULL) {
   if (is.null(group)) {
-    data$obsxx = 1
+    data$xxx = 1
     group = "xxx"
   }
 
