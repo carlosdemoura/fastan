@@ -2,15 +2,15 @@
 % Please edit documentation in R/tidy.R
 \name{set_info}
 \alias{set_info}
-\title{Title}
+\title{tidy: set information in project}
 \usage{
 set_info(proj, info)
 }
 \arguments{
-\item{proj}{.}
+\item{proj}{\code{fastan::project} object.}
 
-\item{info}{.}
+\item{info}{string with info}
 }
 \description{
-Title
+tidy: set information in project
 }

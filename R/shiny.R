@@ -1,9 +1,9 @@
 #' Shiny column with HTML header
 #'
-#' @param title .
-#' @param color .
-#' @param height .
-#' @param width .
+#' @param title string with title.
+#' @param color string with hexadecimal color.
+#' @param height numeric, height in vh.
+#' @param width numeric, width in pixels.
 #'
 #' @import shiny
 header_col = function(title, color, height, width) {
@@ -13,8 +13,8 @@ header_col = function(title, color, height, width) {
              "background-color:", color, ";",
              "color: #3e3e3e;
              font-size: 35px;
-             height: calc(",height," - 10px);",
-             "line-height: calc(", height," - 10px);",
+             height: calc(",height,"vh - 10px);",
+             "line-height: calc(", height,"vh - 10px);",
              "text-align: center;
              margin: 5px 2.5px;
              border-radius: 10px;
@@ -29,7 +29,7 @@ header_col = function(title, color, height, width) {
 #'
 #' @importFrom plotly ggplotly plotlyOutput renderPlotly
 #' @import shiny
-ui = function() {
+shiny_ui = function() {
 ####################
 ######  Model ######
 ####################
@@ -42,8 +42,8 @@ PanelModel = tabPanel(
     column(6,
       downloadButton("Model.export", "Export project")
     )),
-  fluidRow(header_col("Model", "#87C2CC", "12vh", 12)),
-  fluidRow(header_col("Likelihood", "#a8f2fe", "8vh", 6), header_col("Prior", "#a8f2fe", "8vh", 6)),
+  fluidRow(header_col("Model", "#87C2CC", 12, 12)),
+  fluidRow(header_col("Likelihood", "#a8f2fe", 8, 6), header_col("Prior", "#a8f2fe", 8, 6)),
   fluidRow(
     column(6,
       uiOutput("Model.like")
@@ -53,7 +53,7 @@ PanelModel = tabPanel(
     )
   ),
 
-  fluidRow(header_col("Info", "#a8f2fe", "8vh", 6), header_col("Labels", "#a8f2fe", "8vh", 6)),
+  fluidRow(header_col("Info", "#a8f2fe", 8, 6), header_col("Labels", "#a8f2fe", 8, 6)),
   fluidRow(
     column(6,
       uiOutput("Model.info"),
@@ -72,7 +72,7 @@ PanelModel = tabPanel(
 PanelConvergence = tabPanel(
   title = "Convergence Diagnose",
 
-  fluidRow(header_col("Convergence Diagnose", "#87C2CC", "12vh", 12)),
+  fluidRow(header_col("Convergence Diagnose", "#87C2CC", 12, 12)),
 
   fluidRow(
     column(6,
@@ -84,9 +84,9 @@ PanelConvergence = tabPanel(
   ),
 
   fluidRow(
-    header_col("Rhat",   "#a8f2fe", "8vh", 4),
-    header_col("n_eff",   "#a8f2fe", "8vh", 4),
-    header_col("Geweke", "#a8f2fe", "8vh", 4)
+    header_col("Rhat",   "#a8f2fe", 8, 4),
+    header_col("n_eff",  "#a8f2fe", 8, 4),
+    header_col("Geweke", "#a8f2fe", 8, 4)
     ),
   fluidRow(
     column(4,
@@ -158,9 +158,9 @@ PanelConvergence = tabPanel(
   ),
 
   fluidRow(
-    header_col("Gelman-Rubin", "#a8f2fe", "8vh", 4),
-    header_col("Rhat & n_eff", "#a8f2fe", "8vh", 4),
-    header_col("Geweke", "#a8f2fe", "8vh", 4)
+    header_col("Gelman-Rubin", "#a8f2fe", 8, 4),
+    header_col("Rhat & n_eff", "#a8f2fe", 8, 4),
+    header_col("Geweke",       "#a8f2fe", 8, 4)
   ),
 
   fluidRow(
@@ -190,7 +190,7 @@ PanelConvergence = tabPanel(
 PanelInference = tabPanel(
   title = "Bayesian Inference",
 
-  fluidRow(header_col("Posterior analysis", "#87C2CC", "12vh", 12)),
+  fluidRow(header_col("Posterior analysis", "#87C2CC", 12, 12)),
 
   fluidRow(
     column(12,
@@ -198,7 +198,7 @@ PanelInference = tabPanel(
     )
   ),
 
-  fluidRow(header_col("Alpha posterior", "#a8f2fe", "8vh", 12)),
+  fluidRow(header_col("Alpha posterior", "#a8f2fe", 8, 12)),
 
   fluidRow(
     column(7,
@@ -212,7 +212,7 @@ PanelInference = tabPanel(
     )
   ),
 
-  fluidRow(header_col("Lambda posterior", "#a8f2fe", "8vh", 12)),
+  fluidRow(header_col("Lambda posterior", "#a8f2fe", 8, 12)),
 
   fluidRow(
     column(10,
@@ -220,7 +220,7 @@ PanelInference = tabPanel(
     )
   ),
 
-  fluidRow(header_col("Sigma^2 posterior", "#a8f2fe", "8vh", 12)),
+  fluidRow(header_col("Sigma^2 posterior", "#a8f2fe", 8, 12)),
 
   fluidRow(
     column(12,
@@ -243,7 +243,7 @@ PanelInference = tabPanel(
 PanelMaps = tabPanel(
   title = "Maps",
 
-  fluidRow(header_col("Maps", "#87C2CC", "12vh", 12)),
+  fluidRow(header_col("Maps", "#87C2CC", 12, 12)),
 
   fluidRow(
     column(12,
@@ -262,10 +262,10 @@ navbarPage(
 
 #' Shiny server
 #'
-#' @param proj .
-#' @param input .
-#' @param output .
-#' @param session .
+#' @param proj `fastan::project` object, optional.
+#' @param input shiny input.
+#' @param output shiny output.
+#' @param session shiny server.
 #'
 #' @importFrom coda gelman.plot gelman.diag geweke.diag
 #' @import dplyr
@@ -276,7 +276,7 @@ navbarPage(
 #' @import shiny
 #' @importFrom stats median sd
 #' @importFrom zip zipr
-server = function(proj = NULL, input, output, session) {
+shiny_server = function(proj = NULL, input, output, session) {
 
 server0 = function(input, output, session) {
 
@@ -364,7 +364,7 @@ server0 = function(input, output, session) {
     if (real() | real_pred()) {
     output$Inference.accuracy = renderUI({
       tagList(
-        fluidRow(header_col("Accuracy", "#a8f2fe", "8vh", 12)),
+        fluidRow(header_col("Accuracy", "#a8f2fe", 8, 12)),
 
         fluidRow(
           column(6,
@@ -397,7 +397,7 @@ server0 = function(input, output, session) {
     if (!is.null(project()$data$pred)) {
     output$Inference.prediction = renderUI({
       tagList(
-        fluidRow(header_col("Predictions", "#a8f2fe", "8vh", 12)),
+        fluidRow(header_col("Predictions", "#a8f2fe", 8, 12)),
 
         fluidRow(
           column(6,
@@ -594,10 +594,10 @@ server0 = function(input, output, session) {
             selectInput("Model.loading_value", "label", choices = project()$data$label$loading, selected = project()$data$label$loading[1])
           ),
           column(2,
-            selectInput("Model.factor_index", "X Col", choices = seq_along(project()$data$label$factor_level), selected = 1)
+            selectInput("Model.factor_index", "X Col", choices = seq_along(project()$data$label$factor_score), selected = 1)
           ),
           column(4,
-            selectInput("Model.factor_value", "label", choices = project()$data$label$factor_level, selected = project()$data$label$loading[1])
+            selectInput("Model.factor_value", "label", choices = project()$data$label$factor_score, selected = project()$data$label$loading[1])
           )
         )
       )
@@ -679,7 +679,7 @@ server0 = function(input, output, session) {
 
   Convergence.div_par_name = reactiveVal("Select Parameter")
   output$Convergence.par_name = renderUI({
-    header_col(Convergence.div_par_name(), "#a8f2fe", "8vh", 12)
+    header_col(Convergence.div_par_name(), "#a8f2fe", 8, 12)
   })
 
 
@@ -850,10 +850,10 @@ server0 = function(input, output, session) {
   })
 
   observeEvent(input$Model.factor_index, {
-    updateSelectInput(session, "Model.factor_value", selected = proj$data$label$factor_level[as.integer(input$Model.factor_index)])
+    updateSelectInput(session, "Model.factor_value", selected = proj$data$label$factor_score[as.integer(input$Model.factor_index)])
   })
   observeEvent(input$Model.factor_value, {
-    updateSelectInput(session, "Model.factor_index", selected = which(proj$data$label$factor_level == input$Model.factor_value)[1])
+    updateSelectInput(session, "Model.factor_index", selected = which(proj$data$label$factor_score == input$Model.factor_value)[1])
   })
 
 
@@ -869,7 +869,7 @@ server0 = function(input, output, session) {
     } else {
       output$Maps.general = renderUI({
         tagList(
-          fluidRow(header_col("Data map", "#a8f2fe", "8vh", 12)),
+          fluidRow(header_col("Data map", "#a8f2fe", 8, 12)),
 
           fluidRow(
             column(10,
@@ -880,7 +880,7 @@ server0 = function(input, output, session) {
             )
           ),
 
-          fluidRow(header_col("Posterior map", "#a8f2fe", "8vh", 12)),
+          fluidRow(header_col("Posterior map", "#a8f2fe", 8, 12)),
 
           fluidRow(
             column(3,
@@ -915,7 +915,7 @@ server0 = function(input, output, session) {
       if (project()$prior$semi.conf) {
         output$Maps.map_sc = renderUI({
           tagList(
-            fluidRow(header_col("Posterior factor association", "#a8f2fe", "8vh", 12)),
+            fluidRow(header_col("Posterior factor association", "#a8f2fe", 8, 12)),
 
             fluidRow(
               column(10,
@@ -991,11 +991,13 @@ server0
 
 #' Shiny App
 #'
-#' @param proj .
-#' @param upload.size .
+#' @param proj `fastan::project` object, optional.
+#' @param upload.size numeric, default = 500, maximum upload size (in Mb).
+#'
+#' @return shinyApp
 #'
 #' @export
 shiny = function(proj = NULL, upload.size = 500) {
   options(shiny.maxRequestSize = upload.size*1024^2)
-  shinyApp(ui = ui(), server = server(proj))
+  shinyApp(ui = shiny_ui(), server = shiny_server(proj))
 }

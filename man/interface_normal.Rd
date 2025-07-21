@@ -2,13 +2,13 @@
 % Please edit documentation in R/prior_normal.R
 \name{interface_normal}
 \alias{interface_normal}
-\title{Adjust the data argument on \code{rstan::stan()}}
+\title{To be used with \code{fastan::interface}}
 \usage{
 interface_normal(proj)
 }
 \arguments{
-\item{proj}{fastan proj object.}
+\item{proj}{\code{fastan::project} object.}
 }
 \description{
-Adjust the data argument on \code{rstan::stan()}
+To be used with \code{fastan::interface}
 }

@@ -2,19 +2,22 @@
 % Please edit documentation in R/maps.R
 \name{plot_map_post}
 \alias{plot_map_post}
-\title{Title}
+\title{Plot map posterior statistics}
 \usage{
 plot_map_post(proj, par, col = 1, stat)
 }
 \arguments{
-\item{proj}{.}
+\item{proj}{\code{fastan::project} object.}
 
-\item{par}{.}
+\item{par}{string, parameter name.}
 
-\item{col}{.}
+\item{col}{integer, column number in parameter matrix.}
 
-\item{stat}{.}
+\item{stat}{string.}
+}
+\value{
+\code{ggplot2}/\code{gridExtra} object.
 }
 \description{
-Title
+Plot map posterior statistics
 }

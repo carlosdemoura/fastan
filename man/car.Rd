@@ -2,15 +2,18 @@
 % Please edit documentation in R/prior_engines.R
 \name{car}
 \alias{car}
-\title{Title}
+\title{CAR operation}
 \usage{
 car(W, rho = 0.95)
 }
 \arguments{
-\item{W}{.}
+\item{W}{matrix, neighborhood matrix.}
 
-\item{rho}{.}
+\item{rho}{numeric, default = 0.95, car parameter.}
+}
+\value{
+covariance matrix.
 }
 \description{
-Title
+CAR operation
 }

@@ -1,12 +1,14 @@
-#' Title
+#' Process spatial data associated with the project
 #'
-#' @param data .
-#' @param df .
-#' @param label .
-#' @param lat .
-#' @param lon .
-#' @param alt .
-#' @param position .
+#' @param data `fastan::data` object.
+#' @param df data.frame with spatial data.
+#' @param label string, column with id.
+#' @param lat string, column with latitude.
+#' @param lon string, column with longitude.
+#' @param alt string, column with altitude.
+#' @param position string, default = "row", if "row" data is associated with loadings, if "col" with factor scores.
+#'
+#' @return `tibble::tibble`.
 #'
 #' @export
 #'
@@ -28,10 +30,12 @@ space_process = function(data, df, label, lat, lon, alt, position = "row") {
 }
 
 
-#' Title
+#' Generate random points
 #'
-#' @param n .
-#' @param cont .
+#' @param n integer, number of points to be generated.
+#' @param cont logical, default = `FALSE`, if `TRUE` orders the random coordinates by longitude (returning contiguous groups), if `FALSE` does nothing.
+#'
+#' @return data.frame.
 #'
 #' @export
 #'
@@ -42,16 +46,20 @@ generate_space = function(n, cont = F) {
   geosphere::randomCoordinates(n) |>
     as.data.frame() |>
     {\(.) if (cont) dplyr::arrange(., .$lon) else .}() |>
-    cbind(data.frame(alt = round(runif(n, 0, 100), 2)))
+    cbind(data.frame(alt = round(stats::runif(n, 0, 100), 2)))
 }
 
 
-#' Title
+#' Get distances (in km) between points
 #'
-#' @param coor .
-#' @param lon .
-#' @param lat .
-#' @param pairs .
+#' (to be used in project space)
+#'
+#' @param coor data.frame with coordinates.
+#' @param lon string, default = "lon", column with longitude.
+#' @param lat string, default = "lat", column with latitude.
+#' @param pairs logical, default = `FALSE`, if `TRUE` returns data.frame with distances between each pair of point, if `FALSE` returns distance matrix
+#'
+#' @return matrix/data.frame with distances in km.
 #'
 #' @export
 #'
@@ -82,23 +90,23 @@ distances = function(coor, lon = "lon", lat = "lat", pairs = F) {
 }
 
 
-#' Title
+#' Calculate neighborhood matrix from maximum distance between points
 #'
-#' @param coor .
-#' @param dist in km
-#' @param lon .
-#' @param lat .
+#' @inheritParams distances
+#' @param dist numeric, maximum distance (in km) to consider two points as neighbors, default = NULL (calculates the minimum distance that guarantee every point will have at least one neighbor).
+#'
+#' @return neighborhood matrix.
 #'
 #' @export
 #'
 #' @importFrom tidyr pivot_longer
-#' @importFrom dplyr everything
+#' @importFrom dplyr everything group_by
 neib_dist = function(coor, dist = NULL, lon = "lon", lat = "lat") {
   if (is.null(dist)) {
     temp =
       distances(coor, pairs = T) |>
       {\(.) .[.$dist>0,]}() |>
-      group_by(.data$est1) |>
+      dplyr::group_by(.data$est1) |>
       summarise(
         dist = min(.data$dist)
       )
@@ -112,11 +120,11 @@ neib_dist = function(coor, dist = NULL, lon = "lon", lat = "lat") {
 }
 
 
-#' Title
+#' Calculate neighborhood matrix from Voronoi tessellation
 #'
-#' @param coor .
-#' @param lon .
-#' @param lat .
+#' @inheritParams distances
+#'
+#' @return neighborhood matrix.
 #'
 #' @export
 #'
@@ -135,9 +143,13 @@ neib_voronoi = function(coor, lon = "lon", lat = "lat") {
 }
 
 
-#' Title
+#' Generate simple neighborhood matrix for line spaces.
 #'
-#' @param n .
+#' @param n integer, number of elements in line.
+#'
+#' @return neighborhood matrix.
+#'
+#' @export
 neib_simple = function(n) {
   W = matrix(0, nrow = n, ncol = n)
   W[1,2] = 1

@@ -2,19 +2,22 @@
 % Please edit documentation in R/space.R
 \name{neib_dist}
 \alias{neib_dist}
-\title{Title}
+\title{Calculate neighborhood matrix from maximum distance between points}
 \usage{
 neib_dist(coor, dist = NULL, lon = "lon", lat = "lat")
 }
 \arguments{
-\item{coor}{.}
+\item{coor}{data.frame with coordinates.}
 
-\item{dist}{in km}
+\item{dist}{numeric, maximum distance (in km) to consider two points as neighbors, default = NULL (calculates the minimum distance that guarantee every point will have at least one neighbor).}
 
-\item{lon}{.}
+\item{lon}{string, default = "lon", column with longitude.}
 
-\item{lat}{.}
+\item{lat}{string, default = "lat", column with latitude.}
+}
+\value{
+neighborhood matrix.
 }
 \description{
-Title
+Calculate neighborhood matrix from maximum distance between points
 }

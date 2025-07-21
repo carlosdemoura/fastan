@@ -2,17 +2,20 @@
 % Please edit documentation in R/utils.R
 \name{loglik}
 \alias{loglik}
-\title{Title}
+\title{Calculate log-likelihood}
 \usage{
 loglik(proj, param = NULL, stat = "mean")
 }
 \arguments{
-\item{proj}{.}
+\item{proj}{\code{fastan::project}.}
 
-\item{param}{.}
+\item{param}{list of values where to which calculate de log-likelihood. default = NULL (will expect stat).}
 
-\item{stat}{.}
+\item{stat}{string, default = "mean", posterior Bayes estimator.}
+}
+\value{
+numeric
 }
 \description{
-Title
+the user can pass a posterior stat or a list of values.
 }

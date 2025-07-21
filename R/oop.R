@@ -1,7 +1,7 @@
-#' Title
+#' Generate new `fastan::project`
 #'
 #' @export
-blank_project = function() {
+new_project = function() {
   proj = list()
   class(proj) = "project"
   return(proj)

@@ -9,3 +9,6 @@
 -   R/missing_validation: space_rows from join
 -   R/space: columns space
 -   R/tidy: add translate like tidymodels
+-   Vignettes: generating data/space, prior engines & fit, plots & maps
+-   stan: implement constant sigma across lines
+-   oop: general options?

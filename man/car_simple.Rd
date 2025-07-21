@@ -2,15 +2,18 @@
 % Please edit documentation in R/prior_engines.R
 \name{car_simple}
 \alias{car_simple}
-\title{Title}
+\title{prior engine: CAR with simple neighborhood matrix}
 \usage{
 car_simple(proj, tau)
 }
 \arguments{
-\item{proj}{.}
+\item{proj}{\code{fastan::project} object.}
 
-\item{tau}{.}
+\item{tau}{numeric, to scale CAR matrix.}
+}
+\value{
+list of covariance matrices.
 }
 \description{
-Title
+(used only for time dependency on lambdas)
 }

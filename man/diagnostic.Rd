@@ -2,13 +2,16 @@
 % Please edit documentation in R/posterior.R
 \name{diagnostic}
 \alias{diagnostic}
-\title{Get diagnostic statistics from fit}
+\title{Get diagnostic statistics from \code{rstan::stanfit}}
 \usage{
 diagnostic(fit)
 }
 \arguments{
-\item{fit}{stanfit object}
+\item{fit}{\code{rstan::stanfit} object.}
+}
+\value{
+\code{tibble::tibble} containt diagnostic statistics.
 }
 \description{
-Get diagnostic statistics from fit
+Get diagnostic statistics from \code{rstan::stanfit}
 }

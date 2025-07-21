@@ -2,17 +2,20 @@
 % Please edit documentation in R/plots.R
 \name{plot_bias}
 \alias{plot_bias}
-\title{Title}
+\title{Plot bias of simdata}
 \usage{
 plot_bias(smry, par = "all", correct = T)
 }
 \arguments{
-\item{smry}{.}
+\item{smry}{\code{fastan::summary} object.}
 
-\item{par}{.}
+\item{par}{string, parameter name.}
 
 \item{correct}{.}
 }
+\value{
+\code{ggplot2}/\code{gridExtra} object.
+}
 \description{
-Title
+Plot bias of simdata
 }

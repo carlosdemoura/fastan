@@ -7,21 +7,21 @@
 plot_mock_doc(proj, fit, smry, data, par, row, col, stat)
 }
 \arguments{
-\item{proj}{.}
+\item{proj}{\code{fastan::project} object.}
 
-\item{fit}{.}
+\item{fit}{\code{rstan::stanfit} object.}
 
-\item{smry}{.}
+\item{smry}{\code{fastan::summary} object.}
 
-\item{data}{.}
+\item{data}{\code{fastan::data} object.}
 
-\item{par}{.}
+\item{par}{string, parameter name.}
 
-\item{row}{.}
+\item{row}{integer, row number in parameter matrix.}
 
-\item{col}{.}
+\item{col}{integer, column number in parameter matrix.}
 
-\item{stat}{.}
+\item{stat}{string.}
 }
 \description{
 Mock function for the sole purpose of documentation

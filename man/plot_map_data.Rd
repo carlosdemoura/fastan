@@ -2,15 +2,18 @@
 % Please edit documentation in R/maps.R
 \name{plot_map_data}
 \alias{plot_map_data}
-\title{Title}
+\title{Plot map data}
 \usage{
 plot_map_data(proj, stat)
 }
 \arguments{
-\item{proj}{.}
+\item{proj}{\code{fastan::project} object.}
 
-\item{stat}{.}
+\item{stat}{string.}
+}
+\value{
+\code{ggplot2}/\code{gridExtra} object.
 }
 \description{
-Title
+Plot map data
 }

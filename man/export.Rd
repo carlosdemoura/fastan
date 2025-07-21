@@ -2,19 +2,22 @@
 % Please edit documentation in R/utils.R
 \name{export}
 \alias{export}
-\title{Export most common plots of a project}
+\title{Export information and most common plots of a project}
 \usage{
 export(proj, path_dump = getwd(), rds = T, plot.extension = "png")
 }
 \arguments{
-\item{proj}{fastan project}
+\item{proj}{\code{fastan::project} object.}
 
-\item{path_dump}{.}
+\item{path_dump}{string, local path where the folder with export will be dumped.}
 
-\item{rds}{.}
+\item{rds}{logical, default = \code{TRUE}, if \code{TRUE} a \code{.rds} file with the \code{fastan::project} object is exported in the folder, if \code{FALSE} it's not.}
 
-\item{plot.extension}{.}
+\item{plot.extension}{string, default = "png", string with file extension for plots.}
+}
+\value{
+full path of the dump folder.
 }
 \description{
-Export most common plots of a project
+Export information and most common plots of a project
 }

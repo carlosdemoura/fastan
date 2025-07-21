@@ -2,19 +2,19 @@
 % Please edit documentation in R/tidy.R
 \name{set_space}
 \alias{set_space}
-\title{Title}
+\title{tidy: set space in project}
 \usage{
 set_space(proj, type = "real", seed = NULL, ...)
 }
 \arguments{
-\item{proj}{.}
+\item{proj}{\code{fastan::project} object.}
 
-\item{type}{.}
+\item{type}{string, default = "real", if "random" a random set of coordinates is generated, if "real" a data.frame with coordinates is expected.}
 
-\item{seed}{.}
+\item{seed}{numeric, seed in case of simdata (only makes sense if type = "random"), if NULL (default) no seed is set.}
 
-\item{...}{.}
+\item{...}{dot args.}
 }
 \description{
-Title
+tidy: set space in project
 }

@@ -2,25 +2,28 @@
 % Please edit documentation in R/space.R
 \name{space_process}
 \alias{space_process}
-\title{Title}
+\title{Process spatial data associated with the project}
 \usage{
 space_process(data, df, label, lat, lon, alt, position = "row")
 }
 \arguments{
-\item{data}{.}
+\item{data}{\code{fastan::data} object.}
 
-\item{df}{.}
+\item{df}{data.frame with spatial data.}
 
-\item{label}{.}
+\item{label}{string, column with id.}
 
-\item{lat}{.}
+\item{lat}{string, column with latitude.}
 
-\item{lon}{.}
+\item{lon}{string, column with longitude.}
 
-\item{alt}{.}
+\item{alt}{string, column with altitude.}
 
-\item{position}{.}
+\item{position}{string, default = "row", if "row" data is associated with loadings, if "col" with factor scores.}
+}
+\value{
+\code{tibble::tibble}.
 }
 \description{
-Title
+Process spatial data associated with the project
 }

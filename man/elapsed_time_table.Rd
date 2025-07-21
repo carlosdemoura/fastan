@@ -2,13 +2,13 @@
 % Please edit documentation in R/utils.R
 \name{elapsed_time_table}
 \alias{elapsed_time_table}
-\title{In hours}
+\title{Get table with elapsed time of \code{stan::stanfit} in hours}
 \usage{
 elapsed_time_table(fit)
 }
 \arguments{
-\item{fit}{stan fit}
+\item{fit}{\code{rstan::stanfit} object.}
 }
 \description{
-In hours
+(with margins)
 }

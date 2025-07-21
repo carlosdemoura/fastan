@@ -2,13 +2,16 @@
 % Please edit documentation in R/space.R
 \name{neib_simple}
 \alias{neib_simple}
-\title{Title}
+\title{Generate simple neighborhood matrix for line spaces.}
 \usage{
 neib_simple(n)
 }
 \arguments{
-\item{n}{.}
+\item{n}{integer, number of elements in line.}
+}
+\value{
+neighborhood matrix.
 }
 \description{
-Title
+Generate simple neighborhood matrix for line spaces.
 }

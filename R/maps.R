@@ -1,6 +1,8 @@
-#' Title
+#' Plot basic map structure
 #'
-#' @param proj .
+#' @param proj `fastan::project`
+#'
+#' @return `ggplot2`/`gridExtra` object.
 #'
 #' @export
 #'
@@ -16,7 +18,7 @@ plot_map = function(proj) {
     geom_polygon(data = map_data("world"),
                  aes(x = .data$long, y = .data$lat, group = .data$group),
                  fill = "lightblue", color = "black", lwd = .2) +
-    geom_point(data = df, aes(x = .data$lon, y = .data$lat), size = 1.5) +
+    #geom_point(data = df, aes(x = .data$lon, y = .data$lat), size = 1.5) +
     coord_fixed(xlim = xrange, ylim = yrange) +
     theme(
       axis.text.x      = element_blank(),
@@ -31,12 +33,11 @@ plot_map = function(proj) {
 }
 
 
-#' Title
+#' Plot map posterior statistics
 #'
-#' @param proj .
-#' @param par .
-#' @param col .
-#' @param stat .
+#' @inheritParams plot_mock_doc
+#'
+#' @return `ggplot2`/`gridExtra` object.
 #'
 #' @export
 #'
@@ -45,29 +46,37 @@ plot_map_post = function(proj, par, col = 1, stat) {
   df = proj$space
   df$x = proj$summary[[par]][,col,stat]
   plot_map(proj) +
-    geom_point(data = df, aes(x = .data$lon, y = .data$lat, color = .data$x), size = 1.5) +
+    geom_point(data = df, aes(x = .data$lon, y = .data$lat, color = .data$obs), size = 1.5) +
     scale_color_viridis_c(option = "turbo") +
     labs(title = paste0(par, "[,",col,"]", " posterior ", stat))
 }
 
 
-#' Title
+#' Plot map posterior association
 #'
-#' @param proj .
-#' @param extra.only .
-#' @param r .
+#' Useful for semi-confimatory models.
+#'
+#' @param proj `fastan::project`.
+#' @param extra.only logical, `TRUE` if only the entries from the extra group should be plotted, `FALSE` otherwise.
+#' @param r numeric, default = 1, radius of the dots.
+#'
+#' @return `ggplot2`/`gridExtra` object.
 #'
 #' @export
 #'
+#' @importFrom dplyr filter group_by_at mutate ungroup
 #' @import ggplot2
 #' @importFrom ggforce geom_arc_bar
+#' @importFrom tidyr pivot_longer
+#' @importFrom utils tail
 plot_map_post_factor = function(proj, extra.only = F, r = 1) {
+  rows.extra = utils::tail(fiat_groups_limits(proj$data$dim$group.sizes)[[1]], 1):utils::tail(fiat_groups_limits(proj$data$dim$group.sizes)[[2]], 1)
   df =
     (1 - proj$summary$alpha[,,"hpd_contains_0"]) |>
     as.data.frame() |>
     {\(.) `colnames<-`(., paste0("factor ", 1:ncol(.)))}() |>
     {\(.) cbind(proj$space, .)}() |>
-    {\(.) if (extra.only) .[tail(fiat_groups_limits(proj$data$dim$group.sizes)[[1]], 1):tail(fiat_groups_limits(proj$data$dim$group.sizes)[[2]], 1),] else .}() |>
+    {\(.) if (extra.only) .[rows.extra,] else .}() |>
     tidyr::pivot_longer(cols = starts_with("factor"), names_to = "factor", values_to = "value") |>
     dplyr::filter(.data$value == 1) |>
     dplyr::group_by_at("id") |>
@@ -99,10 +108,11 @@ plot_map_post_factor = function(proj, extra.only = F, r = 1) {
 }
 
 
-#' Title
+#' Plot map data
 #'
-#' @param proj .
-#' @param stat .
+#' @inheritParams plot_mock_doc
+#'
+#' @return `ggplot2`/`gridExtra` object.
 #'
 #' @import dplyr
 #' @import ggplot2
@@ -111,14 +121,14 @@ plot_map_post_factor = function(proj, extra.only = F, r = 1) {
 plot_map_data = function(proj, stat) {
   stopifnot("stat must be group, mean or var" = stat %in% c("group", "mean", "var"))
   df =
-    proj$data$x |>
+    proj$data$obs |>
     dplyr::group_by_at("row") |>
     dplyr::summarise(
       mean = mean(.data$value),
       var = stats::var(.data$value)
     ) |>
     dplyr::mutate(
-      group = unique(proj$data$x[,c("row", "group")]) |> {\(.) .$group}() |> factor()
+      group = unique(proj$data$obs[,c("row", "group")]) |> {\(.) .$group}() |> factor()
     ) |>
     dplyr::left_join(proj$space, by = "row")
 

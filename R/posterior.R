@@ -1,9 +1,9 @@
-#' Generate initial values for STAN MCMC
+#' Generate constant initial values for STAN MCMC
 #'
-#' @param proj fastan project object.
-#' @param chains integer; number of chains.
+#' @param proj `fastan::project` object.
+#' @param chains integer, number of chains.
 #'
-#' @return list; for each
+#' @return list compatible with STAN init.
 #'
 #' @export
 init = function(proj, chains) {
@@ -25,11 +25,11 @@ init = function(proj, chains) {
 }
 
 
-#' Adjust the data argument on `rstan::stan()`
+#' Adjust the data argument on `rstan::stan`
 #'
-#' @param proj fastan proj object.
+#' @param proj `fastan::proj` object.
 #'
-#' @return list that goes on the data argument in `rstan::stan()`.
+#' @return list that goes on the data argument in `rstan::stan`.
 #'
 #' @export
 #'
@@ -40,8 +40,8 @@ interface = function(proj) {
     n_row        = proj$data$dim$row,
     n_col        = proj$data$dim$col,
     n_fac        = n.fac(proj),
-    obs          = proj$data$x[,1] |> as.vector() |> unname() |> purrr::pluck(1),
-    obs_coor     = proj$data$x[,2:3] |> as.matrix() |> unname()
+    obs          = proj$data$obs[,1] |> as.vector() |> unname() |> purrr::pluck(1),
+    obs_coor     = proj$data$obs[,2:3] |> as.matrix() |> unname()
   ) |>
     {\(.) c(., list(n_obs = length(.$obs)))}()
 
@@ -78,13 +78,13 @@ interface = function(proj) {
 
 #' Run STAN MCMC
 #'
-#' @param proj .
-#' @param init .
-#' @param chains .
-#' @param pred .
-#' @param ... arguments that will be passed to `rstan::stan()`
+#' @param proj `fastan::project` object.
+#' @param init initial value, default = NULL, if NULL `fastan::init` is called.
+#' @param chains integer, default = 1, number of MCMC chains.
+#' @param pred logical, default = `TRUE`, `TRUE` if the predictions should be made, `FALSE` if otherwise.
+#' @param ... arguments that will be passed to `rstan::stan`.
 #'
-#' @return rstan::stanfit object.
+#' @return `rstan::stanfit` object.
 #'
 #' @export
 #'
@@ -118,10 +118,10 @@ stan = function(proj, init = NULL, chains = 1, pred = T, ...) {
 }
 
 
-#' Get summary from `rstan::stan()` fit object
+#' Get summary from `rstan::stanfit` object
 #'
-#' @param proj .
-#' @param bias.stat .
+#' @param proj `fastan::project` object.
+#' @param bias.stat string, default = "mean", Bayes estimator to be used to calculate bias if data is simdata.
 #'
 #' @return list of matrices.
 #'
@@ -191,9 +191,11 @@ summary_matrix = function(proj, bias.stat = "mean") {
 }
 
 
-#' Get diagnostic statistics from fit
+#' Get diagnostic statistics from `rstan::stanfit`
 #'
-#' @param fit stanfit object
+#' @param fit `rstan::stanfit` object.
+#'
+#' @return `tibble::tibble` containt diagnostic statistics.
 #'
 #' @export
 #'
@@ -234,12 +236,12 @@ diagnostic = function(fit) {
 }
 
 
-#' Transform `rstan` fit into `coda::mcmc.list()`
+#' Transform `rstan::stanfit` into `coda::mcmc.list`
 #'
-#' @param fit `rstan::stan()` object.
-#' @param param string; must be in rstan::stan fit format.
+#' @param fit `rstan::stanfit` object.
+#' @param param string, must be in the `rstan::stanfit` format.
 #'
-#' @return `coda::mcmc.list()`
+#' @return `coda::mcmc.list` object.
 #'
 #' @export
 #'
@@ -256,40 +258,12 @@ get_chains_mcmc = function(fit, param) {
 }
 
 
-#' Title
+#' Transform summary from list of 3D matrices to list of tibbles
 #'
-#' @param smry .
-#' @param fac .
-#' @param bias.stat .
+#' @param proj `fastan::project` object
+#' @param par string vector, parameters to be returnd, default = NULL returns all parameters.
 #'
-#' @export
-invert_signal_smry = function(smry, fac, bias.stat = "mean") {
-  smry = validate_proj_arg(smry, "summary")
-
-  stat = c("mean", "median")
-  for (loc in fac) {
-    smry$alpha[,loc,c(stat, "hpd_min", "hpd_max")]  = -smry$alpha[,loc,c(stat, "hpd_max", "hpd_min")]
-    smry$lambda[loc,,c(stat, "hpd_min", "hpd_max")] = -smry$lambda[loc,,c(stat, "hpd_max", "hpd_min")]
-  }
-
-  for (parameter in c("alpha", "lambda")) {
-    if ("real" %in% dimnames(smry[[parameter]])[[3]]) {
-      denom = smry[[parameter]][,,"real"]
-      denom[denom == 0] = 1
-      smry[[parameter]][,,"bias"] = (smry[[parameter]][,,bias.stat] - smry[[parameter]][,,"real"]) / abs(denom)
-    }
-  }
-
-  smry
-}
-
-
-#' Transform 3D matrix into elongated data frame
-#'
-#' @param proj .
-#' @param par .
-#'
-#' @return `data.frame()`
+#' @return list of `tibble:tibble`.
 #'
 #' @export
 #'

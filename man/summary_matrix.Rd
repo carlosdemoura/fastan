@@ -2,18 +2,18 @@
 % Please edit documentation in R/posterior.R
 \name{summary_matrix}
 \alias{summary_matrix}
-\title{Get summary from \code{rstan::stan()} fit object}
+\title{Get summary from \code{rstan::stanfit} object}
 \usage{
 summary_matrix(proj, bias.stat = "mean")
 }
 \arguments{
-\item{proj}{.}
+\item{proj}{\code{fastan::project} object.}
 
-\item{bias.stat}{.}
+\item{bias.stat}{string, default = "mean", Bayes estimator to be used to calculate bias if data is simdata.}
 }
 \value{
 list of matrices.
 }
 \description{
-Get summary from \code{rstan::stan()} fit object
+Get summary from \code{rstan::stanfit} object
 }

@@ -2,13 +2,16 @@
 % Please edit documentation in R/data_process.R
 \name{real_from_prior}
 \alias{real_from_prior}
-\title{Title}
+\title{Generate real value list from prior}
 \usage{
 real_from_prior(proj)
 }
 \arguments{
-\item{proj}{.}
+\item{proj}{\code{fastan::project}.}
+}
+\value{
+real value list.
 }
 \description{
-Title
+Used on \code{fastan::generate_data}
 }

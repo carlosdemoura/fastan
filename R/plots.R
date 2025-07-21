@@ -2,7 +2,7 @@
 #'
 #' @inheritParams plot_mock_doc
 #'
-#' @return ggplot2 plot
+#' @return `ggplot2`/`gridExtra` object.
 #'
 #' @export
 #'
@@ -48,10 +48,10 @@ plot_contrast = function(smry, par = "alpha", stat = "mean") {
 #' Plot HPD interval & other stats
 #'
 #' @inheritParams plot_mock_doc
-#' @param omit.alpha0 .
-#' @param omit.alpha0.list .
+#' @param omit.alpha0 logical, `TRUE` if the zeros in prior$alpha$in_group should be omitted, `FALSE` otherwise.
+#' @param omit.alpha0.list logical, default = `FALSE`, `TRUE` if just the list of ggplots should be returned, `FALSE` if the gridExtra plot, (makes sense only when omit.alpha0 = `TRUE`, used only for the shiny app).
 #'
-#' @return ggplot2 plot
+#' @return `ggplot2`/`gridExtra` object.
 #'
 #' @export
 #'
@@ -144,6 +144,8 @@ plot_hpd = function(proj, par, row = NULL, col = NULL, stat = "mean", omit.alpha
 #'
 #' @inheritParams plot_mock_doc
 #'
+#' @return `ggplot2`/`gridExtra` object.
+#'
 #' @export
 #'
 #' @importFrom dplyr all_of select
@@ -187,9 +189,9 @@ plot_lambda = function(smry, stat = "mean") {
 #' Plot posterior sample histogram and/or density
 #'
 #' @inheritParams plot_mock_doc
-#' @param type .
+#' @param type string, "hist" for just histogram, "dens" for only density, default is both.
 #'
-#' @return ggplot2 plot
+#' @return `ggplot2`/`gridExtra` object.
 #'
 #' @export
 #'
@@ -219,11 +221,11 @@ plot_posterior = function(fit, par, row = 1, col = 1, type = c("hist", "dens")) 
 }
 
 
-#' Posterior sample trace plot
+#' Plot Posterior sample trace plot
 #'
 #' @inheritParams plot_mock_doc
 #'
-#' @return ggplot2 plot
+#' @return `ggplot2`/`gridExtra` object.
 #'
 #' @export
 #'
@@ -262,7 +264,9 @@ plot_trace = function(fit, par, row = 1, col = 1) {
 #' Plot diagnostic stats
 #'
 #' @inheritParams plot_mock_doc
-#' @param list .
+#' @param list logical, default = `FALSE`, `TRUE` if just the list of ggplots should be returned, `FALSE` if the gridExtra plot.
+#'
+#' @return `ggplot2`/`gridExtra` object.
 #'
 #' @export
 #'
@@ -333,10 +337,12 @@ plot_diagnostic = function(proj, stat, list = F) {
 }
 
 
-#' Title
+#' Plot bias of simdata
 #'
 #' @inheritParams plot_mock_doc
 #' @param correct .
+#'
+#' @return `ggplot2`/`gridExtra` object.
 #'
 #' @export
 #'
@@ -379,6 +385,8 @@ plot_bias = function(smry, par = "all", correct = T) {
 #'
 #' @inheritParams plot_mock_doc
 #'
+#' @return `ggplot2`/`gridExtra` object.
+#'
 #' @export
 #'
 #' @import ggplot2
@@ -411,18 +419,22 @@ plot_missing = function(data) {
 }
 
 
-#' Title
+#' Plot prior hyperparameters
+#'
+#' (only here for shiny app and export function)
 #'
 #' @inheritParams plot_mock_doc
-#' @param loc .
+#' @param fac integer, factor number.
+#'
+#' @return `ggplot2`/`gridExtra` object.
 #'
 #' @import dplyr
 #' @import ggplot2
 #' @importFrom tidyr pivot_longer
 #' @importFrom grDevices colorRampPalette
-plot_normal_prior = function(proj, par, stat, loc = "all") {
+plot_normal_prior = function(proj, par, stat, fac = "all") {
   stopifnot("stat must be either mean or cov" = stat %in% c("mean", "cov"))
-  if (loc == "all") {
+  if (fac == "all") {
     mat =
       {\(.)
         if (stat == "mean") proj$prior[[par]]$mean
@@ -430,7 +442,7 @@ plot_normal_prior = function(proj, par, stat, loc = "all") {
       }() |>
       {\(.) do.call(cbind, .)}()
   } else {
-    mat = proj$prior[[par]][[stat]][[loc]] |> as.matrix()
+    mat = proj$prior[[par]][[stat]][[fac]] |> as.matrix()
   }
 
   df =
@@ -459,7 +471,7 @@ plot_normal_prior = function(proj, par, stat, loc = "all") {
     breaks.y = c(1, proj$data$dim$col)
   }
   if (stat == "cov") {
-    if (loc == "all") {
+    if (fac == "all") {
       breaks.x = 1:ncol(mat)
     } else {
       breaks.x = breaks.y
@@ -469,11 +481,11 @@ plot_normal_prior = function(proj, par, stat, loc = "all") {
   }
 
   ## title
-  if (loc == "all") {
+  if (fac == "all") {
     x = ifelse(stat == "cov", "var ", "mean ")
     title = bquote(.(x) * .(as.name(par)))
   } else {
-    title = bquote(.(paste0(stat, " ")) * .(as.name(par))[.(loc)])
+    title = bquote(.(paste0(stat, " ")) * .(as.name(par))[.(fac)])
   }
 
   ggplot(df, aes(x = .data$col, y = .data$row, fill = .data$value)) +
@@ -502,12 +514,12 @@ plot_normal_prior = function(proj, par, stat, loc = "all") {
 
 #' Mock function for the sole purpose of documentation
 #'
-#' @param proj .
-#' @param fit .
-#' @param smry .
-#' @param data .
-#' @param par .
-#' @param row .
-#' @param col .
-#' @param stat .
+#' @param proj `fastan::project` object.
+#' @param fit `rstan::stanfit` object.
+#' @param smry `fastan::summary` object.
+#' @param data `fastan::data` object.
+#' @param par string, parameter name.
+#' @param row integer, row number in parameter matrix.
+#' @param col integer, column number in parameter matrix.
+#' @param stat string.
 plot_mock_doc = function(proj, fit, smry, data, par, row, col, stat) {}

@@ -2,19 +2,22 @@
 % Please edit documentation in R/prior_normal.R
 \name{prior_normal}
 \alias{prior_normal}
-\title{Title}
+\title{Generate prior with independence between parameters}
 \usage{
 prior_normal(data, semi.conf, omit.alpha0 = T, ...)
 }
 \arguments{
-\item{data}{.}
+\item{data}{\code{fastan::data} object.}
 
-\item{semi.conf}{.}
+\item{semi.conf}{logical, \code{TRUE} if model is semi-confirmatory, \code{FALSE} otherwise.}
 
-\item{omit.alpha0}{.}
+\item{omit.alpha0}{logical, default = \code{TRUE}, \code{TRUE} if you want to force a constant prior for alphas not in group, \code{FALSE} otherwise.}
 
-\item{...}{.}
+\item{...}{dot args.}
+}
+\value{
+\code{fastan::prior} object.
 }
 \description{
-Title
+Generate prior with independence between parameters
 }

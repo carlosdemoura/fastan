@@ -7,18 +7,18 @@
 stan(proj, init = NULL, chains = 1, pred = T, ...)
 }
 \arguments{
-\item{proj}{.}
+\item{proj}{\code{fastan::project} object.}
 
-\item{init}{.}
+\item{init}{initial value, default = NULL, if NULL \code{fastan::init} is called.}
 
-\item{chains}{.}
+\item{chains}{integer, default = 1, number of MCMC chains.}
 
-\item{pred}{.}
+\item{pred}{logical, default = \code{TRUE}, \code{TRUE} if the predictions should be made, \code{FALSE} if otherwise.}
 
-\item{...}{arguments that will be passed to \code{rstan::stan()}}
+\item{...}{arguments that will be passed to \code{rstan::stan}.}
 }
 \value{
-rstan::stanfit object.
+\code{rstan::stanfit} object.
 }
 \description{
 Run STAN MCMC

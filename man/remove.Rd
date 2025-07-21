@@ -2,15 +2,15 @@
 % Please edit documentation in R/tidy.R
 \name{remove}
 \alias{remove}
-\title{Title}
+\title{Remove attributes from \code{fastan::project}}
 \usage{
 remove(proj, ...)
 }
 \arguments{
-\item{proj}{.}
+\item{proj}{\code{fastan::project} object.}
 
-\item{...}{.}
+\item{...}{dot args.}
 }
 \description{
-Title
+Remove attributes from \code{fastan::project}
 }

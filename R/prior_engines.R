@@ -1,17 +1,21 @@
-#' Title
+#' CAR operation
 #'
-#' @param W .
-#' @param rho .
+#' @param W matrix, neighborhood matrix.
+#' @param rho numeric, default = 0.95, car parameter.
+#'
+#' @return covariance matrix.
 car = function(W, rho = .95) {
   solve(diag(rowSums(W)) - rho * W)
 }
 
 
-#' Title
+#' prior engine: CAR conditional for alpha covariance in models with more than one group
 #'
-#' @param proj .
-#' @param neib .
-#' @param tau .
+#' @param proj `fastan::project` object.
+#' @param neib function that calculates the neighborhood matrix.
+#' @param tau numeric, to scale CAR matrix.
+#'
+#' @return list of covariance matrices.
 #'
 #' @export
 car_conditional = function(proj, neib, tau) {
@@ -38,10 +42,13 @@ car_conditional = function(proj, neib, tau) {
 }
 
 
-#' Title
+#' prior engine: CAR with simple neighborhood matrix
 #'
-#' @param proj .
-#' @param tau .
+#' (used only for time dependency on lambdas)
+#'
+#' @inheritParams car_conditional
+#'
+#' @return list of covariance matrices.
 #'
 #' @export
 car_simple = function(proj, tau) {
@@ -49,11 +56,11 @@ car_simple = function(proj, tau) {
 }
 
 
-#' Title
+#' prior engine: CAR for alpha exploratory model
 #'
-#' @param proj .
-#' @param neib .
-#' @param tau .
+#' @inheritParams car_conditional
+#'
+#' @return list of one covariance matrix.
 #'
 #' @export
 car_expl = function(proj, neib, tau) {

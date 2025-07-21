@@ -2,15 +2,18 @@
 % Please edit documentation in R/data_process.R
 \name{alpha_in_group}
 \alias{alpha_in_group}
-\title{Title}
+\title{Generate binary matrix to indicate where are the loadings related to groups.}
 \usage{
 alpha_in_group(group.sizes, semi.conf)
 }
 \arguments{
-\item{group.sizes}{.}
+\item{group.sizes}{integer vector with size of each group.}
 
-\item{semi.conf}{.}
+\item{semi.conf}{logical, \code{TRUE} if the model is semi-confirmatory, \code{FALSE} otherwise.}
+}
+\value{
+binary matrix.
 }
 \description{
-Title
+The loadings related to groups are the non-zero loadings a priori.
 }

@@ -2,16 +2,16 @@
 % Please edit documentation in R/posterior.R
 \name{interface}
 \alias{interface}
-\title{Adjust the data argument on \code{rstan::stan()}}
+\title{Adjust the data argument on \code{rstan::stan}}
 \usage{
 interface(proj)
 }
 \arguments{
-\item{proj}{fastan proj object.}
+\item{proj}{\code{fastan::proj} object.}
 }
 \value{
-list that goes on the data argument in \code{rstan::stan()}.
+list that goes on the data argument in \code{rstan::stan}.
 }
 \description{
-Adjust the data argument on \code{rstan::stan()}
+Adjust the data argument on \code{rstan::stan}
 }

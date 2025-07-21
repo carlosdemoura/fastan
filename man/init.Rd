@@ -2,18 +2,18 @@
 % Please edit documentation in R/posterior.R
 \name{init}
 \alias{init}
-\title{Generate initial values for STAN MCMC}
+\title{Generate constant initial values for STAN MCMC}
 \usage{
 init(proj, chains)
 }
 \arguments{
-\item{proj}{fastan project object.}
+\item{proj}{\code{fastan::project} object.}
 
-\item{chains}{integer; number of chains.}
+\item{chains}{integer, number of chains.}
 }
 \value{
-list; for each
+list compatible with STAN init.
 }
 \description{
-Generate initial values for STAN MCMC
+Generate constant initial values for STAN MCMC
 }

@@ -2,23 +2,23 @@
 % Please edit documentation in R/tidy.R
 \name{set_data}
 \alias{set_data}
-\title{Title}
+\title{tidy: set data in project}
 \usage{
 set_data(proj, simdata = "", pred = NULL, cicles = 1, seed = NULL, ...)
 }
 \arguments{
-\item{proj}{.}
+\item{proj}{\code{fastan::project} object.}
 
-\item{simdata}{.}
+\item{simdata}{logical/string, simdata type.}
 
-\item{pred}{.}
+\item{pred}{numeric/NULL, if data is simdata.}
 
-\item{cicles}{.}
+\item{cicles}{numeric.}
 
-\item{seed}{.}
+\item{seed}{numeric.}
 
-\item{...}{.}
+\item{...}{dot args.}
 }
 \description{
-Title
+tidy: set data in project
 }

@@ -15,22 +15,22 @@ plot_hpd(
 )
 }
 \arguments{
-\item{proj}{.}
+\item{proj}{\code{fastan::project} object.}
 
-\item{par}{.}
+\item{par}{string, parameter name.}
 
-\item{row}{.}
+\item{row}{integer, row number in parameter matrix.}
 
-\item{col}{.}
+\item{col}{integer, column number in parameter matrix.}
 
-\item{stat}{.}
+\item{stat}{string.}
 
-\item{omit.alpha0}{.}
+\item{omit.alpha0}{logical, \code{TRUE} if the zeros in prior$alpha$in_group should be omitted, \code{FALSE} otherwise.}
 
-\item{omit.alpha0.list}{.}
+\item{omit.alpha0.list}{logical, default = \code{FALSE}, \code{TRUE} if just the list of ggplots should be returned, \code{FALSE} if the gridExtra plot, (makes sense only when omit.alpha0 = \code{TRUE}, used only for the shiny app).}
 }
 \value{
-ggplot2 plot
+\code{ggplot2}/\code{gridExtra} object.
 }
 \description{
 Plot HPD interval & other stats

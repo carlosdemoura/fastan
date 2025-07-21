@@ -2,18 +2,18 @@
 % Please edit documentation in R/posterior.R
 \name{summary_as_df}
 \alias{summary_as_df}
-\title{Transform 3D matrix into elongated data frame}
+\title{Transform summary from list of 3D matrices to list of tibbles}
 \usage{
 summary_as_df(proj, par = NULL)
 }
 \arguments{
-\item{proj}{.}
+\item{proj}{\code{fastan::project} object}
 
-\item{par}{.}
+\item{par}{string vector, parameters to be returnd, default = NULL returns all parameters.}
 }
 \value{
-\code{data.frame()}
+list of \code{tibble:tibble}.
 }
 \description{
-Transform 3D matrix into elongated data frame
+Transform summary from list of 3D matrices to list of tibbles
 }

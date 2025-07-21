@@ -2,17 +2,20 @@
 % Please edit documentation in R/space.R
 \name{neib_voronoi}
 \alias{neib_voronoi}
-\title{Title}
+\title{Calculate neighborhood matrix from Voronoi tessellation}
 \usage{
 neib_voronoi(coor, lon = "lon", lat = "lat")
 }
 \arguments{
-\item{coor}{.}
+\item{coor}{data.frame with coordinates.}
 
-\item{lon}{.}
+\item{lon}{string, default = "lon", column with longitude.}
 
-\item{lat}{.}
+\item{lat}{string, default = "lat", column with latitude.}
+}
+\value{
+neighborhood matrix.
 }
 \description{
-Title
+Calculate neighborhood matrix from Voronoi tessellation
 }

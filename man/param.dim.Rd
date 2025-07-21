@@ -2,13 +2,16 @@
 % Please edit documentation in R/utils.R
 \name{param.dim}
 \alias{param.dim}
-\title{Title}
+\title{Get dimension of parameters}
 \usage{
 param.dim(proj)
 }
 \arguments{
-\item{proj}{fastan project}
+\item{proj}{\code{fastan::project}}
+}
+\value{
+data.frame
 }
 \description{
-Title
+Get dimension of parameters
 }

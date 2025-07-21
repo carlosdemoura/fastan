@@ -7,14 +7,14 @@
 plot_contrast(smry, par = "alpha", stat = "mean")
 }
 \arguments{
-\item{smry}{.}
+\item{smry}{\code{fastan::summary} object.}
 
-\item{par}{.}
+\item{par}{string, parameter name.}
 
-\item{stat}{.}
+\item{stat}{string.}
 }
 \value{
-ggplot2 plot
+\code{ggplot2}/\code{gridExtra} object.
 }
 \description{
 Plot contrast matrix

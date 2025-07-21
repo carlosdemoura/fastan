@@ -7,9 +7,12 @@
 shiny(proj = NULL, upload.size = 500)
 }
 \arguments{
-\item{proj}{.}
+\item{proj}{\code{fastan::project} object, optional.}
 
-\item{upload.size}{.}
+\item{upload.size}{numeric, default = 500, maximum upload size (in Mb).}
+}
+\value{
+shinyApp
 }
 \description{
 Shiny App

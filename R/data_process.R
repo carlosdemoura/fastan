@@ -1,16 +1,18 @@
-#' Generate data (confirmatory or semi-confirmatory models)
+#' Generate simulated data
 #'
-#' @param real .
-#' @param cicles .
+#' (exploratory, confirmatory or semi-confirmatory models)
 #'
-#' @return fastan model object
+#' @param real list containing real values of the parameters and group sizes.
+#' @param cicles integer, default 1, number of cicles.
+#'
+#' @return `fasta::data` object.
 #'
 #' @export
 #'
 #' @import dplyr
 #' @import purrr
 #' @importFrom tidyr pivot_longer
-#' @import utils
+#' @importFrom utils head tail
 generate_data = function(real, cicles = 1) {
   group.sizes = real$group.sizes
   real$group.sizes = NULL
@@ -33,12 +35,6 @@ generate_data = function(real, cicles = 1) {
     {\(.) dist_multivariate_normal(lapply(., function(x) rep(0, nrow(x))) , .)}() |>
     generate(1) |>
     {\(.) do.call(rbind, .)}()
-
-  # epsilon = matrix(
-  #   stats::rnorm(sum(group.sizes)*columns*cicles, 0, sqrt(real$sigma2)) ,
-  #   ncol = columns*cicles,
-  #   byrow = F
-  # )
 
   x =
     (alpha_lambda + epsilon) |>
@@ -75,12 +71,16 @@ generate_data = function(real, cicles = 1) {
 }
 
 
-#' Title
+#' Generate real value list from distributions
 #'
-#' @param group.sizes .
-#' @param columns .
-#' @param semi.conf .
-#' @param dist .
+#' Used on `fastan::generate_data`
+#'
+#' @param group.sizes integer vector with size of each group.
+#' @param columns integer, number of columns.
+#' @param semi.conf logical, `TRUE` if the model is semi-confirmatory, `FALSE` otherwise.
+#' @param dist list of distributions from `distributional` from which the parameters will be sampled.
+#'
+#' @return real value list.
 #'
 #' @import distributional
 #' @importFrom stats rbeta
@@ -143,25 +143,13 @@ real_from_dist = function(group.sizes, columns, semi.conf, dist = list()) {
 }
 
 
-#' Title
+#' Generate real value list from prior
 #'
-#' @param proj .
-#' @param stat .
-real_from_posterior = function(proj, stat = "mean") {
-  stopifnot("project must have summary" = !is.null(proj$summary))
-  smry = proj$summary
-  real = list(
-    alpha  = smry$alpha[,,stat, drop=F],
-    lambda = smry$lambda[,,stat, drop=F],
-    sigma2 = smry$sigma2[,,stat, drop=F],
-    rows.by.broup = proj$data$dim$group.sizes
-  )
-}
-
-
-#' Title
+#' Used on `fastan::generate_data`
 #'
-#' @param proj .
+#' @param proj `fastan::project`.
+#'
+#' @return real value list.
 #'
 #' @import distributional
 #' @import purrr
@@ -170,13 +158,6 @@ real_from_prior = function(proj) {
   prior = proj$prior
   n.fac = length(prior$alpha$mean)
   nrow = length(prior$alpha$mean[[1]])
-
-  # alpha = matrix(0,
-  #                nrow = nrow,
-  #                ncol = n.fac)
-  # lambda = matrix(0,
-  #                 ncol = length(prior$lambda$mean[[1]]),
-  #                 nrow = n.fac)
 
   alpha =
     dist_multivariate_normal(prior$alpha$mean, prior$alpha$cov) |>
@@ -189,7 +170,6 @@ real_from_prior = function(proj) {
     {\(.) do.call(rbind, .)}()
   sigma2 =
     dist_gamma(shape = prior$sigma2$shape, rate = prior$sigma2$rate) |>
-    #dist_uniform(.1, 4) |>
     generate(nrow) |>
     purrr::pluck(1) |>
     as.matrix()
@@ -205,29 +185,52 @@ real_from_prior = function(proj) {
 }
 
 
-#' Process data in `fastan` model format (confirmatory or semi-confirmatory models)
+#' Generate real value list from posterior
 #'
-#' @param data data.frame in the longer format. ### obs já arranjado já com grupos como fatores, já com último fator como grupo semi.conf se for o caso
-#' @param value string; name of the column containing values.
-#' @param group string; name of the column containing groups.
-#' @param row string; name of the column containing rows/loadings.
-#' @param col string; name of the column containing columns/factor-levels.
+#' Used on `fastan::generate_data`
 #'
-#' @return `fastan` model object
+#' @param proj `fastan::project`.
+#' @param stat string with pontual Bayes estimator on project summary.
+#'
+#' @return real value list.
+#'
+#' @export
+real_from_posterior = function(proj, stat = "mean") {
+  stopifnot("project must have summary" = !is.null(proj$summary))
+  smry = proj$summary
+  real = list(
+    alpha  = smry$alpha[,,stat, drop=F],
+    lambda = smry$lambda[,,stat, drop=F],
+    sigma2 = smry$sigma2[,,stat, drop=F],
+    rows.by.broup = proj$data$dim$group.sizes
+  )
+}
+
+
+#' Process data in `fastan::data` format
+#'
+#' (exploratory, confirmatory or semi-confirmatory models)
+#'
+#' @param data data.frame in the longer format containing data.
+#' @param value string, name of the column containing values.
+#' @param row string, name of the column containing rows/loadings.
+#' @param col string, name of the column containing columns/factor-levels.
+#' @param group string, default NULL considers the model as exploratory (i.e., only one factor), name of the column containing groups.
+#'
+#' @return `fastan` model object.
 #'
 #' @export
 #'
 #' @import dplyr
 #' @import purrr
-#' @import utils
 process_data = function(data, value, row, col, group = NULL) {
   if (is.null(group)) {
-    data$xxx = 1
+    data$obsxx = 1
     group = "xxx"
   }
 
   label = list(
-    factor_level = unique(data[[col]])  ,
+    factor_score = unique(data[[col]])  ,
     group        = unique(data[[group]]),
     loading      = unique(data[[row]])
   )
@@ -243,7 +246,7 @@ process_data = function(data, value, row, col, group = NULL) {
     {\(.)
     dplyr::mutate(.,
       row    = .$row   |> factor(label$loading)      |> as.numeric(),
-      col    = .$col   |> factor(label$factor_level) |> as.numeric(),
+      col    = .$col   |> factor(label$factor_score) |> as.numeric(),
       group  = .$group |> factor(label$group)        |> as.numeric()
     )}()
 
@@ -261,7 +264,7 @@ process_data = function(data, value, row, col, group = NULL) {
 
   data =
     list(
-      x = data_fa,
+      obs = data_fa,
       dim = list(row = max(data_fa$row),
                  col = max(data_fa$col),
                  group.sizes = group.sizes
@@ -269,13 +272,13 @@ process_data = function(data, value, row, col, group = NULL) {
       label = label
   )
 
-  if(any(is.na(data$x$value))) {
+  if(any(is.na(data$obs$value))) {
     data$pred =
-      data$x |>
+      data$obs |>
       {\(.) dplyr::filter(., is.na(.$value))}()
 
-    data$x =
-      data$x |>
+    data$obs =
+      data$obs |>
       {\(.) dplyr::filter(., !is.na(.$value))}()
   }
 
@@ -283,10 +286,14 @@ process_data = function(data, value, row, col, group = NULL) {
 }
 
 
-#' Title
+#' Generate binary matrix to indicate where are the loadings related to groups.
 #'
-#' @param group.sizes .
-#' @param semi.conf .
+#' The loadings related to groups are the non-zero loadings a priori.
+#'
+#' @param group.sizes integer vector with size of each group.
+#' @param semi.conf logical, `TRUE` if the model is semi-confirmatory, `FALSE` otherwise.
+#'
+#' @return binary matrix.
 #'
 #' @export
 alpha_in_group = function(group.sizes, semi.conf) {
@@ -302,4 +309,3 @@ alpha_in_group = function(group.sizes, semi.conf) {
   }
   alpha
 }
-

@@ -2,18 +2,18 @@
 % Please edit documentation in R/data_process.R
 \name{generate_data}
 \alias{generate_data}
-\title{Generate data (confirmatory or semi-confirmatory models)}
+\title{Generate simulated data}
 \usage{
 generate_data(real, cicles = 1)
 }
 \arguments{
-\item{real}{.}
+\item{real}{list containing real values of the parameters and group sizes.}
 
-\item{cicles}{.}
+\item{cicles}{integer, default 1, number of cicles.}
 }
 \value{
-fastan model object
+\code{fasta::data} object.
 }
 \description{
-Generate data (confirmatory or semi-confirmatory models)
+(exploratory, confirmatory or semi-confirmatory models)
 }

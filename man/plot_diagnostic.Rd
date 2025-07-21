@@ -7,11 +7,14 @@
 plot_diagnostic(proj, stat, list = F)
 }
 \arguments{
-\item{proj}{.}
+\item{proj}{\code{fastan::project} object.}
 
-\item{stat}{.}
+\item{stat}{string.}
 
-\item{list}{.}
+\item{list}{logical, default = \code{FALSE}, \code{TRUE} if just the list of ggplots should be returned, \code{FALSE} if the gridExtra plot.}
+}
+\value{
+\code{ggplot2}/\code{gridExtra} object.
 }
 \description{
 Plot diagnostic stats

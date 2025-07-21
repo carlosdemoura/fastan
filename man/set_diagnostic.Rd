@@ -2,15 +2,15 @@
 % Please edit documentation in R/tidy.R
 \name{set_diagnostic}
 \alias{set_diagnostic}
-\title{Title}
+\title{tidy: set diagnostic in project}
 \usage{
 set_diagnostic(proj, ...)
 }
 \arguments{
-\item{proj}{.}
+\item{proj}{\code{fastan::project} object.}
 
-\item{...}{.}
+\item{...}{dot args.}
 }
 \description{
-Title
+tidy: set diagnostic in project
 }

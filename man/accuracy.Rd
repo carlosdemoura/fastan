@@ -2,15 +2,18 @@
 % Please edit documentation in R/utils.R
 \name{accuracy}
 \alias{accuracy}
-\title{Get percentage of parameters that are in HPD & mean relative bias from simdata}
+\title{Get accuracy report from simdata}
 \usage{
-accuracy(smry, correct = F)
+accuracy(smry, correct = T)
 }
 \arguments{
-\item{smry}{fastan summary}
+\item{smry}{\code{fastan::summary}/\code{fastan::project} object.}
 
-\item{correct}{.}
+\item{correct}{logical, default = \code{TRUE}, if \code{TRUE} the alphas not in group will be ignored when calculating the metrics, if \code{FALSE} they will be considered.}
+}
+\value{
+data.frame
 }
 \description{
-Get percentage of parameters that are in HPD & mean relative bias from simdata
+contains percentage of parameters that are in HPD, mean relative bias, HPD mean amplitude
 }

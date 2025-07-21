@@ -1,16 +1,17 @@
-#' Title
+#' Use LSAP algorithm to select nearest points
 #'
-#' @param small .
-#' @param big .
-#' @param id .
-#' @param lon .
-#' @param lat .
+#' @param small data.frame (with rows without missings).
+#' @param big data.frame (with rows with missings).
+#' @param id string with id column.
+#' @param lon string with longitude column.
+#' @param lat string with latitude column.
 #'
-#' @export
+#' @return data.frame with relations by id.
 #'
+#' @importFrom clue solve_LSAP
 #' @import dplyr
 #' @importFrom geosphere distm
-#' @import clue
+#' @import purrr
 get_nearest_row = function(small, big, id, lon = "lon", lat = "lat") {
   dist_mat =
     geosphere::distm(
@@ -28,18 +29,18 @@ get_nearest_row = function(small, big, id, lon = "lon", lat = "lat") {
 }
 
 
-#' Title
+#' Missing validation algorithm
 #'
-#' @param proj .
+#' @param proj `fastan::project` object.
 #'
-#' @export
+#' @return `fastan::data` object.
 #'
 #' @import dplyr
 #' @import purrr
 missing_validation_selection = function (proj) {
   pred_new = proj$data$pred[NULL,]
   for (group_ in 1:length(proj$data$label$group)) {
-    rows_group   = dplyr::filter(proj$data$x, proj$data$x$group == group_) |> {\(.) .$row}() |> unique()
+    rows_group   = dplyr::filter(proj$data$obs, proj$data$obs$group == group_) |> {\(.) .$row}() |> unique()
     rows_missing = dplyr::filter(proj$data$pred, proj$data$pred$group == group_) |> {\(.) .$row}() |> unique()
     rows_present = setdiff(rows_group, rows_missing)
 
@@ -54,7 +55,7 @@ missing_validation_selection = function (proj) {
     result = get_nearest_row(small, big, "row")
 
     df_x =
-      proj$data$x |>
+      proj$data$obs |>
       {\(.) dplyr::filter(., .$row %in% rows_present) }() |>
       dplyr::mutate(
         row = proj$data$label$loading[.data$row],
@@ -82,7 +83,7 @@ missing_validation_selection = function (proj) {
   }
 
   data_new =
-    proj$data$x |>
+    proj$data$obs |>
     {\(.) dplyr::filter(., !(.$row %in% proj$data$pred$row)) }() |>
     dplyr::mutate(
       row = proj$data$label$loading[.data$row],

@@ -2,15 +2,15 @@
 % Please edit documentation in R/tidy.R
 \name{set_summary}
 \alias{set_summary}
-\title{Title}
+\title{tidy: set summary in project}
 \usage{
 set_summary(proj, ...)
 }
 \arguments{
-\item{proj}{.}
+\item{proj}{\code{fastan::project} object.}
 
-\item{...}{.}
+\item{...}{dot args.}
 }
 \description{
-Title
+tidy: set summary in project
 }

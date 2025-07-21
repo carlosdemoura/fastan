@@ -2,15 +2,15 @@
 % Please edit documentation in R/tidy.R
 \name{missing_validation}
 \alias{missing_validation}
-\title{Title}
+\title{Missing validation}
 \usage{
 missing_validation(proj, ...)
 }
 \arguments{
-\item{proj}{.}
+\item{proj}{\code{fastan::project} object.}
 
-\item{...}{.}
+\item{...}{dot args.}
 }
 \description{
-Title
+Missing validation
 }

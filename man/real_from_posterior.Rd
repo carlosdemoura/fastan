@@ -2,15 +2,18 @@
 % Please edit documentation in R/data_process.R
 \name{real_from_posterior}
 \alias{real_from_posterior}
-\title{Title}
+\title{Generate real value list from posterior}
 \usage{
 real_from_posterior(proj, stat = "mean")
 }
 \arguments{
-\item{proj}{.}
+\item{proj}{\code{fastan::project}.}
 
-\item{stat}{.}
+\item{stat}{string with pontual Bayes estimator on project summary.}
+}
+\value{
+real value list.
 }
 \description{
-Title
+Used on \code{fastan::generate_data}
 }

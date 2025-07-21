@@ -1,22 +1,26 @@
 #' Get number of factors of a model
 #'
-#' @param proj fastan project
+#' @param proj `fastan::project` object.
 #'
-#' @return A integer.
+#' @return A integer, number of factor in the model.
 #'
 #' @export
 n.fac = function(proj){
   if (is.null(proj$prior)) {
-    length(proj$data$dim$group.sizes)
+    stop("project must have prior")
   } else {
     length(proj$data$dim$group.sizes) - as.integer(proj$prior$semi.conf)
   }
 }
 
 
-#' Title
+#' Create list with row limit of each group
 #'
-#' @param x .
+#' (to be used with `data$group.sizes`)
+#'
+#' @param x integer vector.
+#'
+#' @return list of limits (`[[1]]` for inferior, `[[2]]` for superior) of each group.
 fiat_groups_limits = function(x) {
   list(
     c(1, (cumsum(x) + 1)[1:(length(x)-1)])[1:length(x)],
@@ -25,30 +29,51 @@ fiat_groups_limits = function(x) {
 }
 
 
-#' Title
+#' Calculate proportion of missing values in data
 #'
-#' @param data .
+#' @param data `fastan::data` object.
+#'
+#' @return a number between 0 and 1.
 #'
 #' @export
 prop.missing = function(data) {
   data = validate_proj_arg(data, "data")
   mis = ifelse(!is.null(data$pred), nrow(data$pred), 0)
-  mis / (nrow(data$x) + mis)
+  mis / (nrow(data$obs) + mis)
 }
 
 
-#' Export most common plots of a project
+#' Export information and most common plots of a project
 #'
-#' @param proj fastan project
-#' @param path_dump .
-#' @param rds .
-#' @param plot.extension .
+#' @param proj `fastan::project` object.
+#' @param path_dump string, local path where the folder with export will be dumped.
+#' @param rds logical, default = `TRUE`, if `TRUE` a `.rds` file with the `fastan::project` object is exported in the folder, if `FALSE` it's not.
+#' @param plot.extension string, default = "png", string with file extension for plots.
+#'
+#' @return full path of the dump folder.
 #'
 #' @export
 #'
 #' @import ggplot2
 #' @importFrom gridExtra arrangeGrob
+#' @importFrom utils capture.output
 export = function(proj, path_dump = getwd(), rds = T, plot.extension = "png") {
+  fastan_report = function(proj) {
+    paste0(
+      "Fastan project report",
+      "\n\ninfo\t\t"    , proj$info,
+      "\ndata dim.\t"   , proj$data$dim$row, " (row)   ", proj$data$dim$col, " (col)   ", n.fac(proj), " (fac)   ", length(proj$data$dim$group.sizes), " (grp)   ",
+      "\n\nSTAN args"   ,
+      "\nchains\t\t"    , length(proj$fit@stan_args),
+      "\niter\t\t"      , proj$fit@stan_args[[1]]$iter,
+      "\nwarmup\t\t"    , proj$fit@stan_args[[1]]$warmup,
+      "\nthinning\t"    , proj$fit@stan_args[[1]]$thin,
+      "\nseed\t\t"      , proj$fit@stan_args[[1]]$seed,
+      "\n\nSTAN elapsed time (mins.)\n"
+    ) |>
+      paste0(paste0(utils::capture.output(print(elapsed_time_table(proj$fit))), collapse = "\n"))
+  }
+
   real = !is.null(proj$data$real)
   path = paste0(path_dump, "/fastanExport-", format(Sys.time(), "%Y_%m_%d-%Hh%Mm%Ss"))
 
@@ -169,32 +194,10 @@ export = function(proj, path_dump = getwd(), rds = T, plot.extension = "png") {
 }
 
 
-#' Title
+#' Validates argument in functions that accepct either the whole `fastan::project` or one of its attributes
 #'
-#' @param proj .
-#'
-#' @export
-fastan_report = function(proj) {
-  paste0(
-    "Fastan project report",
-    "\n\ninfo\t\t"    , proj$info,
-    "\ndata dim.\t"   , proj$data$dim$row, " (row)   ", proj$data$dim$col, " (col)   ", n.fac(proj), " (fac)   ", length(proj$data$dim$group.sizes), " (grp)   ",
-    "\n\nSTAN args"   ,
-    "\nchains\t\t"    , length(proj$fit@stan_args),
-    "\niter\t\t"      , proj$fit@stan_args[[1]]$iter,
-    "\nwarmup\t\t"    , proj$fit@stan_args[[1]]$warmup,
-    "\nthinning\t"    , proj$fit@stan_args[[1]]$thin,
-    "\nseed\t\t"      , proj$fit@stan_args[[1]]$seed,
-    "\n\nSTAN elapsed time (mins.)\n"
-  ) |>
-    paste0(paste0(capture.output(print(elapsed_time_table(proj$fit))), collapse = "\n"))
-}
-
-
-#' Title
-#'
-#' @param obj .
-#' @param class .
+#' @param obj `fatan::project` object.
+#' @param class string, `fatan::project` attribute.
 validate_proj_arg = function(obj, class) {
   if (inherits(obj, "project")) {
     return(obj[[class]])
@@ -204,9 +207,11 @@ validate_proj_arg = function(obj, class) {
 }
 
 
-#' In hours
+#' Get table with elapsed time of `stan::stanfit` in hours
 #'
-#' @param fit stan fit
+#' (with margins)
+#'
+#' @param fit `rstan::stanfit` object.
 #'
 #' @importFrom rstan get_elapsed_time
 elapsed_time_table = function(fit) {
@@ -220,11 +225,15 @@ elapsed_time_table = function(fit) {
 }
 
 
-#' Title
+#' Calculate log-likelihood
 #'
-#' @param proj .
-#' @param param .
-#' @param stat .
+#' the user can pass a posterior stat or a list of values.
+#'
+#' @param proj `fastan::project`.
+#' @param param list of values where to which calculate de log-likelihood. default = NULL (will expect stat).
+#' @param stat string, default = "mean", posterior Bayes estimator.
+#'
+#' @return numeric
 #'
 #' @export
 #'
@@ -250,10 +259,10 @@ loglik = function(proj, param = NULL, stat = "mean") {
 
   loglik = 0
 
-  for (row_ in unique(proj$data$x$row)) {
+  for (row_ in unique(proj$data$obs$row)) {
     df =
-      proj$data$x |>
-      dplyr::filter(proj$data$x$row == row_)
+      proj$data$obs |>
+      dplyr::filter(proj$data$obs$row == row_)
 
     x = df$value
     cols = df$col
@@ -271,9 +280,11 @@ loglik = function(proj, param = NULL, stat = "mean") {
 }
 
 
-#' Title
+#' Get dimension of parameters
 #'
-#' @param proj fastan project
+#' @param proj `fastan::project`
+#'
+#' @return data.frame
 #'
 #' @export
 param.dim = function(proj) {
@@ -313,15 +324,19 @@ param.dim = function(proj) {
 }
 
 
-#' Get percentage of parameters that are in HPD & mean relative bias from simdata
+#' Get accuracy report from simdata
 #'
-#' @param smry fastan summary
-#' @param correct .
+#' contains percentage of parameters that are in HPD, mean relative bias, HPD mean amplitude
+#'
+#' @param smry `fastan::summary`/`fastan::project` object.
+#' @param correct logical, default = `TRUE`, if `TRUE` the alphas not in group will be ignored when calculating the metrics, if `FALSE` they will be considered.
+#'
+#' @return data.frame
 #'
 #' @export
 #'
 #' @importFrom stats weighted.mean
-accuracy = function(smry, correct = F) {
+accuracy = function(smry, correct = T) {
   smry = validate_proj_arg(smry, "summary")
   stopifnot("data must be simdata" = "real" %in% ( lapply(smry, function(x) dimnames(x)[[3]]) |> unlist() |> unname()) )
 

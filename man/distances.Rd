@@ -2,19 +2,22 @@
 % Please edit documentation in R/space.R
 \name{distances}
 \alias{distances}
-\title{Title}
+\title{Get distances (in km) between points}
 \usage{
 distances(coor, lon = "lon", lat = "lat", pairs = F)
 }
 \arguments{
-\item{coor}{.}
+\item{coor}{data.frame with coordinates.}
 
-\item{lon}{.}
+\item{lon}{string, default = "lon", column with longitude.}
 
-\item{lat}{.}
+\item{lat}{string, default = "lat", column with latitude.}
 
-\item{pairs}{.}
+\item{pairs}{logical, default = \code{FALSE}, if \code{TRUE} returns data.frame with distances between each pair of point, if \code{FALSE} returns distance matrix}
+}
+\value{
+matrix/data.frame with distances in km.
 }
 \description{
-Title
+(to be used in project space)
 }

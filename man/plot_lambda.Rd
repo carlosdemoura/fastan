@@ -7,9 +7,12 @@
 plot_lambda(smry, stat = "mean")
 }
 \arguments{
-\item{smry}{.}
+\item{smry}{\code{fastan::summary} object.}
 
-\item{stat}{.}
+\item{stat}{string.}
+}
+\value{
+\code{ggplot2}/\code{gridExtra} object.
 }
 \description{
 Plot lambdas

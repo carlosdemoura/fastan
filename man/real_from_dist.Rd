@@ -2,19 +2,22 @@
 % Please edit documentation in R/data_process.R
 \name{real_from_dist}
 \alias{real_from_dist}
-\title{Title}
+\title{Generate real value list from distributions}
 \usage{
 real_from_dist(group.sizes, columns, semi.conf, dist = list())
 }
 \arguments{
-\item{group.sizes}{.}
+\item{group.sizes}{integer vector with size of each group.}
 
-\item{columns}{.}
+\item{columns}{integer, number of columns.}
 
-\item{semi.conf}{.}
+\item{semi.conf}{logical, \code{TRUE} if the model is semi-confirmatory, \code{FALSE} otherwise.}
 
-\item{dist}{.}
+\item{dist}{list of distributions from \code{distributional} from which the parameters will be sampled.}
+}
+\value{
+real value list.
 }
 \description{
-Title
+Used on \code{fastan::generate_data}
 }

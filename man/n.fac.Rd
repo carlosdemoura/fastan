@@ -7,10 +7,10 @@
 n.fac(proj)
 }
 \arguments{
-\item{proj}{fastan project}
+\item{proj}{\code{fastan::project} object.}
 }
 \value{
-A integer.
+A integer, number of factor in the model.
 }
 \description{
 Get number of factors of a model

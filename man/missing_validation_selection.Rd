@@ -2,13 +2,16 @@
 % Please edit documentation in R/prediction.R
 \name{missing_validation_selection}
 \alias{missing_validation_selection}
-\title{Title}
+\title{Missing validation algorithm}
 \usage{
 missing_validation_selection(proj)
 }
 \arguments{
-\item{proj}{.}
+\item{proj}{\code{fastan::project} object.}
+}
+\value{
+\code{fastan::data} object.
 }
 \description{
-Title
+Missing validation algorithm
 }

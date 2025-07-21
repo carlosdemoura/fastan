@@ -2,7 +2,7 @@
 % Please edit documentation in R/prior_normal.R
 \name{alpha_cov_to_var}
 \alias{alpha_cov_to_var}
-\title{Title}
+\title{Create matrix var(alpha) from covariances on prior}
 \usage{
 alpha_cov_to_var(prior)
 }
@@ -10,5 +10,5 @@ alpha_cov_to_var(prior)
 \item{prior}{.}
 }
 \description{
-Title
+Create matrix var(alpha) from covariances on prior
 }

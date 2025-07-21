@@ -2,19 +2,22 @@
 % Please edit documentation in R/plots.R
 \name{plot_normal_prior}
 \alias{plot_normal_prior}
-\title{Title}
+\title{Plot prior hyperparameters}
 \usage{
-plot_normal_prior(proj, par, stat, loc = "all")
+plot_normal_prior(proj, par, stat, fac = "all")
 }
 \arguments{
-\item{proj}{.}
+\item{proj}{\code{fastan::project} object.}
 
-\item{par}{.}
+\item{par}{string, parameter name.}
 
-\item{stat}{.}
+\item{stat}{string.}
 
-\item{loc}{.}
+\item{fac}{integer, factor number.}
+}
+\value{
+\code{ggplot2}/\code{gridExtra} object.
 }
 \description{
-Title
+(only here for shiny app and export function)
 }

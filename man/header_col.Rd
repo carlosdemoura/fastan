@@ -7,13 +7,13 @@
 header_col(title, color, height, width)
 }
 \arguments{
-\item{title}{.}
+\item{title}{string with title.}
 
-\item{color}{.}
+\item{color}{string with hexadecimal color.}
 
-\item{height}{.}
+\item{height}{numeric, height in vh.}
 
-\item{width}{.}
+\item{width}{numeric, width in pixels.}
 }
 \description{
 Shiny column with HTML header

@@ -2,24 +2,24 @@
 % Please edit documentation in R/data_process.R
 \name{process_data}
 \alias{process_data}
-\title{Process data in \code{fastan} model format (confirmatory or semi-confirmatory models)}
+\title{Process data in \code{fastan::data} format}
 \usage{
 process_data(data, value, row, col, group = NULL)
 }
 \arguments{
-\item{data}{data.frame in the longer format. ### obs já arranjado já com grupos como fatores, já com último fator como grupo semi.conf se for o caso}
+\item{data}{data.frame in the longer format containing data.}
 
-\item{value}{string; name of the column containing values.}
+\item{value}{string, name of the column containing values.}
 
-\item{row}{string; name of the column containing rows/loadings.}
+\item{row}{string, name of the column containing rows/loadings.}
 
-\item{col}{string; name of the column containing columns/factor-levels.}
+\item{col}{string, name of the column containing columns/factor-levels.}
 
-\item{group}{string; name of the column containing groups.}
+\item{group}{string, default NULL considers the model as exploratory (i.e., only one factor), name of the column containing groups.}
 }
 \value{
-\code{fastan} model object
+\code{fastan} model object.
 }
 \description{
-Process data in \code{fastan} model format (confirmatory or semi-confirmatory models)
+(exploratory, confirmatory or semi-confirmatory models)
 }

@@ -1,7 +1,7 @@
-#' Title
+#' tidy: set information in project
 #'
-#' @param proj .
-#' @param info .
+#' @inheritParams set_summary
+#' @param info string with info
 #'
 #' @export
 set_info = function(proj, info) {
@@ -10,14 +10,13 @@ set_info = function(proj, info) {
 }
 
 
-#' Title
+#' tidy: set data in project
 #'
-#' @param proj .
-#' @param simdata .
-#' @param pred .
-#' @param cicles .
-#' @param seed .
-#' @param ... .
+#' @inheritParams set_summary
+#' @param simdata logical/string, simdata type.
+#' @param pred numeric/NULL, if data is simdata.
+#' @param cicles numeric.
+#' @param seed numeric.
 #'
 #' @export
 #'
@@ -50,14 +49,14 @@ set_data = function(proj, simdata = "", pred = NULL, cicles = 1, seed = NULL, ..
     data = generate_data(real = real, cicles = cicles)
 
     if (!is.null(proj$data$pred)) {
-      data$pred = dplyr::left_join(proj$data$pred[c("row", "col")], data$x, by = c("row", "col")) |> dplyr::relocate(dplyr::all_of("value"))
-      data$x = dplyr::right_join(data$x, proj$data$x[c("row", "col")], by = c("row", "col"))
+      data$pred = dplyr::left_join(proj$data$pred[c("row", "col")], data$obs, by = c("row", "col")) |> dplyr::relocate(dplyr::all_of("value"))
+      data$obs = dplyr::right_join(data$obs, proj$data$obs[c("row", "col")], by = c("row", "col"))
     } else if (is.null(proj$data$pred) & !is.null(pred)) {
       stopifnot("it's necessary 0 <= pred < 1 " = (0 <= pred) & (pred < 1))
       if (pred > 0) {
-        index = 1:nrow(data$x) |> sample(size = floor(pred * nrow(data$x)), replace = F) |> sort()
-        data$pred = data$x[index, ]
-        data$x = data$x[-index, ]
+        index = 1:nrow(data$obs) |> sample(size = floor(pred * nrow(data$obs)), replace = F) |> sort()
+        data$pred = data$obs[index, ]
+        data$obs = data$obs[-index, ]
       }
     }
 
@@ -70,12 +69,11 @@ set_data = function(proj, simdata = "", pred = NULL, cicles = 1, seed = NULL, ..
 }
 
 
-#' Title
+#' tidy: set space in project
 #'
-#' @param proj .
-#' @param type .
-#' @param seed .
-#' @param ... .
+#' @inheritParams set_summary
+#' @param type string, default = "real", if "random" a random set of coordinates is generated, if "real" a data.frame with coordinates is expected.
+#' @param seed numeric, seed in case of simdata (only makes sense if type = "random"), if NULL (default) no seed is set.
 #'
 #' @export
 set_space = function(proj, type = "real", seed = NULL, ...) {
@@ -100,12 +98,12 @@ set_space = function(proj, type = "real", seed = NULL, ...) {
 }
 
 
-#' Title
+#' tidy: set prior in project
 #'
 #' @inheritParams set_summary
-#' @param type .
-#' @param semi.conf .
-#' @param engine .
+#' @param type string, prior type.
+#' @param semi.conf logical, `TRUE` if model is semi-confirmatory, `FALSE` otherwise.
+#' @param engine list of engines to generate prior hyperparameters, if NULL (default) then prior is independent.
 #'
 #' @export
 set_prior = function(proj, type = "normal", semi.conf, engine = NULL, ...) {
@@ -133,12 +131,11 @@ set_prior = function(proj, type = "normal", semi.conf, engine = NULL, ...) {
 }
 
 
-#' Title
+#' tidy: set fit in project
 #'
-#' @param proj .
-#' @param set_summary .
-#' @param set_diagnostic .
-#' @param ... .
+#' @inheritParams set_summary
+#' @param set_summary logical, `TRUE` (default) for try to set summary, `FALSE` otherwise.
+#' @param set_diagnostic logical, `TRUE` (default) for try to set diagnostic, `FALSE` otherwise.
 #'
 #' @export
 set_fit = function(proj, set_summary = T, set_diagnostic = T, ...) {
@@ -154,7 +151,7 @@ set_fit = function(proj, set_summary = T, set_diagnostic = T, ...) {
 }
 
 
-#' Title
+#' tidy: set diagnostic in project
 #'
 #' @inheritParams set_summary
 #'
@@ -167,10 +164,10 @@ set_diagnostic = function(proj, ...) {
 }
 
 
-#' Title
+#' tidy: set summary in project
 #'
-#' @param proj .
-#' @param ... .
+#' @param proj `fastan::project` object.
+#' @param ... dot args.
 #'
 #' @export
 set_summary = function(proj, ...) {
@@ -181,7 +178,7 @@ set_summary = function(proj, ...) {
 }
 
 
-#' Title
+#' Missing validation
 #'
 #' @inheritParams set_summary
 #'
@@ -200,10 +197,9 @@ missing_validation = function(proj, ...) {
 }
 
 
-#' Title
+#' Remove attributes from `fastan::project`
 #'
-#' @param proj .
-#' @param ... .
+#' @inheritParams set_summary
 #'
 #' @export
 remove = function(proj, ...) {
@@ -222,13 +218,43 @@ remove = function(proj, ...) {
 }
 
 
-#' Title
+#' Try set attribute in project and catch errors
 #'
-#' @param expr .
+#' @param expr expression.
 try_set = function(expr) {
   tryCatch({
     expr
   }, error = function(e){
     cat(paste("ERROR:", e))
   })
+}
+
+
+#' Inver signal in factor
+#'
+#' @param proj `fastan::project` object.
+#' @param fac integer vector with number the of factors to invert.
+#' @param bias.stat sting, default = "mean", Bayes estimator to use to calculate bias, if data is simdata.
+#'
+#' @export
+invert_signal = function(proj, fac, bias.stat = "mean") {
+  smry = proj$summary
+
+  stat = c("mean", "median")
+  for (loc in fac) {
+    smry$alpha[,loc,c(stat, "hpd_min", "hpd_max")]  = -smry$alpha[,loc,c(stat, "hpd_max", "hpd_min")]
+    smry$lambda[loc,,c(stat, "hpd_min", "hpd_max")] = -smry$lambda[loc,,c(stat, "hpd_max", "hpd_min")]
+  }
+
+  for (parameter in c("alpha", "lambda")) {
+    if ("real" %in% dimnames(smry[[parameter]])[[3]]) {
+      denom = smry[[parameter]][,,"real"]
+      denom[denom == 0] = 1
+      smry[[parameter]][,,"bias"] = (smry[[parameter]][,,bias.stat] - smry[[parameter]][,,"real"]) / abs(denom)
+    }
+  }
+
+  proj$summary = smry
+
+  proj
 }

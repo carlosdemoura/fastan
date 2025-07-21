@@ -2,13 +2,13 @@
 % Please edit documentation in R/tidy.R
 \name{try_set}
 \alias{try_set}
-\title{Title}
+\title{Try set attribute in project and catch errors}
 \usage{
 try_set(expr)
 }
 \arguments{
-\item{expr}{.}
+\item{expr}{expression.}
 }
 \description{
-Title
+Try set attribute in project and catch errors
 }

@@ -2,21 +2,21 @@
 % Please edit documentation in R/tidy.R
 \name{set_prior}
 \alias{set_prior}
-\title{Title}
+\title{tidy: set prior in project}
 \usage{
 set_prior(proj, type = "normal", semi.conf, engine = NULL, ...)
 }
 \arguments{
-\item{proj}{.}
+\item{proj}{\code{fastan::project} object.}
 
-\item{type}{.}
+\item{type}{string, prior type.}
 
-\item{semi.conf}{.}
+\item{semi.conf}{logical, \code{TRUE} if model is semi-confirmatory, \code{FALSE} otherwise.}
 
-\item{engine}{.}
+\item{engine}{list of engines to generate prior hyperparameters, if NULL (default) then prior is independent.}
 
-\item{...}{.}
+\item{...}{dot args.}
 }
 \description{
-Title
+tidy: set prior in project
 }

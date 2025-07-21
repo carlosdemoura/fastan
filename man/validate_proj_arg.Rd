@@ -2,15 +2,15 @@
 % Please edit documentation in R/utils.R
 \name{validate_proj_arg}
 \alias{validate_proj_arg}
-\title{Title}
+\title{Validates argument in functions that accepct either the whole \code{fastan::project} or one of its attributes}
 \usage{
 validate_proj_arg(obj, class)
 }
 \arguments{
-\item{obj}{.}
+\item{obj}{\code{fatan::project} object.}
 
-\item{class}{.}
+\item{class}{string, \code{fatan::project} attribute.}
 }
 \description{
-Title
+Validates argument in functions that accepct either the whole \code{fastan::project} or one of its attributes
 }

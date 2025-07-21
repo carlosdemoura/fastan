@@ -7,7 +7,10 @@
 plot_missing(data)
 }
 \arguments{
-\item{data}{.}
+\item{data}{\code{fastan::data} object.}
+}
+\value{
+\code{ggplot2}/\code{gridExtra} object.
 }
 \description{
 Plot missing values pattern

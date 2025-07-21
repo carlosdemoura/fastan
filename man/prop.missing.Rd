@@ -2,13 +2,16 @@
 % Please edit documentation in R/utils.R
 \name{prop.missing}
 \alias{prop.missing}
-\title{Title}
+\title{Calculate proportion of missing values in data}
 \usage{
 prop.missing(data)
 }
 \arguments{
-\item{data}{.}
+\item{data}{\code{fastan::data} object.}
+}
+\value{
+a number between 0 and 1.
 }
 \description{
-Title
+Calculate proportion of missing values in data
 }

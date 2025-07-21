@@ -1,9 +1,11 @@
-#' Title
+#' Generate prior with independence between parameters
 #'
-#' @param data .
-#' @param semi.conf .
-#' @param omit.alpha0 .
-#' @param ... .
+#' @param data `fastan::data` object.
+#' @param semi.conf logical, `TRUE` if model is semi-confirmatory, `FALSE` otherwise.
+#' @param omit.alpha0 logical, default = `TRUE`, `TRUE` if you want to force a constant prior for alphas not in group, `FALSE` otherwise.
+#' @param ... dot args.
+#'
+#' @return `fastan::prior` object.
 #'
 #' @export
 prior_normal = function(data, semi.conf, omit.alpha0 = T, ...) {
@@ -24,7 +26,9 @@ prior_normal = function(data, semi.conf, omit.alpha0 = T, ...) {
                )
 
   lambda_cov = diag(rep(1, data$dim$col))
-  alpha_var = alpha_var(data$dim$group.sizes, semi.conf)
+  alpha_var =
+    alpha_in_group(data$dim$group.sizes, semi.conf) |>
+    {\(.) {.[.==0] = 0.1; .[.==1] = 10; .}}()
   for (i in 1:nfac) {
     prior[["lambda"]][["cov"]][[i]] = lambda_cov
     prior[["alpha"]][["cov"]][[i]] = diag(alpha_var[,i])
@@ -37,9 +41,9 @@ prior_normal = function(data, semi.conf, omit.alpha0 = T, ...) {
 }
 
 
-#' Adjust the data argument on `rstan::stan()`
+#' To be used with `fastan::interface`
 #'
-#' @param proj fastan proj object.
+#' @param proj `fastan::project` object.
 #'
 #' @import abind
 interface_normal = function(proj) {
@@ -54,28 +58,7 @@ interface_normal = function(proj) {
 }
 
 
-#' Title
-#'
-#' @param group.sizes .
-#' @param semi.conf .
-alpha_var = function(group.sizes, semi.conf) {
-  alpha_v = matrix(1e-2, nrow = sum(group.sizes), ncol = length(group.sizes) - as.numeric(semi.conf))
-  limits = fiat_groups_limits(group.sizes)
-
-  for (i in 1:(length(group.sizes) - as.numeric(semi.conf))) {
-    alpha_v[limits[[1]][i]:limits[[2]][i], i] = 10
-  }
-
-  if (semi.conf) {
-    i = i + 1
-    alpha_v[limits[[1]][i]:limits[[2]][i],] = 10
-  }
-
-  alpha_v
-}
-
-
-#' Title
+#' Create matrix var(alpha) from covariances on prior
 #'
 #' @param prior .
 alpha_cov_to_var = function(prior) {

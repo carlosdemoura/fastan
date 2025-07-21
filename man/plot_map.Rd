@@ -2,13 +2,16 @@
 % Please edit documentation in R/maps.R
 \name{plot_map}
 \alias{plot_map}
-\title{Title}
+\title{Plot basic map structure}
 \usage{
 plot_map(proj)
 }
 \arguments{
-\item{proj}{.}
+\item{proj}{\code{fastan::project}}
+}
+\value{
+\code{ggplot2}/\code{gridExtra} object.
 }
 \description{
-Title
+Plot basic map structure
 }

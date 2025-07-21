@@ -2,13 +2,16 @@
 % Please edit documentation in R/utils.R
 \name{fiat_groups_limits}
 \alias{fiat_groups_limits}
-\title{Title}
+\title{Create list with row limit of each group}
 \usage{
 fiat_groups_limits(x)
 }
 \arguments{
-\item{x}{.}
+\item{x}{integer vector.}
+}
+\value{
+list of limits (\verb{[[1]]} for inferior, \verb{[[2]]} for superior) of each group.
 }
 \description{
-Title
+(to be used with \code{data$group.sizes})
 }

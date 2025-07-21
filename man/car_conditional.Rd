@@ -2,17 +2,20 @@
 % Please edit documentation in R/prior_engines.R
 \name{car_conditional}
 \alias{car_conditional}
-\title{Title}
+\title{prior engine: CAR conditional for alpha covariance in models with more than one group}
 \usage{
 car_conditional(proj, neib, tau)
 }
 \arguments{
-\item{proj}{.}
+\item{proj}{\code{fastan::project} object.}
 
-\item{neib}{.}
+\item{neib}{function that calculates the neighborhood matrix.}
 
-\item{tau}{.}
+\item{tau}{numeric, to scale CAR matrix.}
+}
+\value{
+list of covariance matrices.
 }
 \description{
-Title
+prior engine: CAR conditional for alpha covariance in models with more than one group
 }

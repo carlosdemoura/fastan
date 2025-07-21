@@ -2,22 +2,22 @@
 % Please edit documentation in R/plots.R
 \name{plot_trace}
 \alias{plot_trace}
-\title{Posterior sample trace plot}
+\title{Plot Posterior sample trace plot}
 \usage{
 plot_trace(fit, par, row = 1, col = 1)
 }
 \arguments{
-\item{fit}{.}
+\item{fit}{\code{rstan::stanfit} object.}
 
-\item{par}{.}
+\item{par}{string, parameter name.}
 
-\item{row}{.}
+\item{row}{integer, row number in parameter matrix.}
 
-\item{col}{.}
+\item{col}{integer, column number in parameter matrix.}
 }
 \value{
-ggplot2 plot
+\code{ggplot2}/\code{gridExtra} object.
 }
 \description{
-Posterior sample trace plot
+Plot Posterior sample trace plot
 }

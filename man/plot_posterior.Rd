@@ -7,18 +7,18 @@
 plot_posterior(fit, par, row = 1, col = 1, type = c("hist", "dens"))
 }
 \arguments{
-\item{fit}{.}
+\item{fit}{\code{rstan::stanfit} object.}
 
-\item{par}{.}
+\item{par}{string, parameter name.}
 
-\item{row}{.}
+\item{row}{integer, row number in parameter matrix.}
 
-\item{col}{.}
+\item{col}{integer, column number in parameter matrix.}
 
-\item{type}{.}
+\item{type}{string, "hist" for just histogram, "dens" for only density, default is both.}
 }
 \value{
-ggplot2 plot
+\code{ggplot2}/\code{gridExtra} object.
 }
 \description{
 Plot posterior sample histogram and/or density

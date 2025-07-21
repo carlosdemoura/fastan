@@ -2,21 +2,24 @@
 % Please edit documentation in R/prediction.R
 \name{get_nearest_row}
 \alias{get_nearest_row}
-\title{Title}
+\title{Use LSAP algorithm to select nearest points}
 \usage{
 get_nearest_row(small, big, id, lon = "lon", lat = "lat")
 }
 \arguments{
-\item{small}{.}
+\item{small}{data.frame (with rows without missings).}
 
-\item{big}{.}
+\item{big}{data.frame (with rows with missings).}
 
-\item{id}{.}
+\item{id}{string with id column.}
 
-\item{lon}{.}
+\item{lon}{string with longitude column.}
 
-\item{lat}{.}
+\item{lat}{string with latitude column.}
+}
+\value{
+data.frame with relations by id.
 }
 \description{
-Title
+Use LSAP algorithm to select nearest points
 }
