@@ -19,7 +19,8 @@ c(
   "testthat",
   "distributional",
   "ggplot2",
-  "shiny"
+  "shiny",
+  "devtools"
   ) |>
   setdiff(installed.packages()) |>
   install.packages()
