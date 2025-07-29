@@ -198,11 +198,11 @@ real_from_prior = function(proj) {
 real_from_posterior = function(proj, stat = "mean") {
   stopifnot("project must have summary" = !is.null(proj$summary))
   smry = proj$summary
-  real = list(
-    alpha  = smry$alpha[,,stat, drop=F],
-    lambda = smry$lambda[,,stat, drop=F],
-    sigma2 = smry$sigma2[,,stat, drop=F],
-    rows.by.broup = proj$data$dim$group.sizes
+  list(
+    alpha  = smry$alpha[,,stat, drop=T]  |> as.matrix(),
+    lambda = smry$lambda[,,stat, drop=T] |> as.matrix() |> {\(.) if (ncol(.) == 1) t(.) else .}(),
+    sigma2 = smry$sigma2[,,stat, drop=T] |> as.matrix(),
+    group.sizes = proj$data$dim$group.sizes
   )
 }
 

@@ -103,7 +103,7 @@ stan = function(proj, init = NULL, chains = 1, pred = T, ...) {
 
   type = proj$prior$type
   if (type == "normal") {
-    file = system.file("stan", "interface_fa_normal.stan", package = "fastan")
+    file = system.file("stan", "model.stan", package = "fastan")
   } else {
     stop("prior type not accepted")
   }
@@ -122,6 +122,7 @@ stan = function(proj, init = NULL, chains = 1, pred = T, ...) {
 #'
 #' @param proj `fastan::project` object.
 #' @param bias.stat string, default = "mean", Bayes estimator to be used to calculate bias if data is simdata.
+#' @param samp list, if its's NULL (default), then the sample is extracted from `proj$fit`, if not, pass the sample here.
 #'
 #' @return list of matrices.
 #'
@@ -132,17 +133,19 @@ stan = function(proj, init = NULL, chains = 1, pred = T, ...) {
 #' @import purrr
 #' @importFrom rstan extract
 #' @importFrom stats density median sd
-summary_matrix = function(proj, bias.stat = "mean") {
+summary_matrix = function(proj, bias.stat = "mean", samp = NULL) {
   get_mode = function(x) {
     d = stats::density(x)
     d$x[which.max(d$y)]
   }
-
+  
   fit = proj$fit
   data = proj$data
-  samp = rstan::extract(fit)
+  if (is.null(samp)) {
+    samp = rstan::extract(fit)
+  }
   matrices = list()
-
+  
   for (parameter in setdiff(names(samp), "lp__") ) {
     hpd_temp = apply( samp[parameter][[1]], c(2,3),
                       function(x) {
@@ -150,7 +153,7 @@ summary_matrix = function(proj, bias.stat = "mean") {
                           as.numeric() |>
                           list()
                       })
-
+    
     matrices[[parameter]] = list(
       "mean"    = apply( samp[parameter][[1]], c(2,3), mean          )                   ,
       "median"  = apply( samp[parameter][[1]], c(2,3), stats::median )                   ,
@@ -160,12 +163,12 @@ summary_matrix = function(proj, bias.stat = "mean") {
       "hpd_max" = apply( hpd_temp, c(1,2), function(x) { unlist(x) |> purrr::pluck(2) }) ,
       "hpd_amp" = apply( hpd_temp, c(1,2), function(x) { unlist(x) |> diff() })
     )
-
+    
     if (parameter == "alpha") {
       matrices[[parameter]][["hpd_contains_0"]] = ifelse((matrices[[parameter]][["hpd_max"]] >= 0) & (matrices[[parameter]][["hpd_min"]] <= 0), T, F)
       matrices[[parameter]][["in_group"]] = alpha_in_group(data$dim$group.sizes, proj$prior$semi.conf)
     }
-
+    
     if ((parameter == "pred") & !is.null(data)) {
       matrices[[parameter]][["row_"]] = data$pred$row |> as.matrix()
       matrices[[parameter]][["col_"]] = data$pred$col |> as.matrix()
@@ -173,18 +176,18 @@ summary_matrix = function(proj, bias.stat = "mean") {
         matrices[[parameter]][["real"]] = data$pred$value |> as.matrix()
       }
     }
-
+    
     if (!is.null(data) & !is.null(data$real) & (parameter != "pred")) {
       matrices[[parameter]][["real"]] = data[["real"]][[parameter]]
     }
-
+    
     if (!is.null(matrices[[parameter]][["real"]])) {
       denom = matrices[[parameter]][["real"]]
       denom[denom == 0] = 1
       matrices[[parameter]][["bias"]] = (matrices[[parameter]][[bias.stat]] - matrices[[parameter]][["real"]]) / abs(denom)
     }
   }
-
+  
   matrices = sapply(matrices, function(x) { abind::abind(x, along = 3) })
   class(matrices) = "summary"
   return(matrices)

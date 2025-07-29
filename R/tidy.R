@@ -40,7 +40,7 @@ set_data = function(proj, simdata = "", pred = NULL, cicles = 1, seed = NULL, ..
     } else if (simdata == "prior") {
       real = real_from_prior(proj)
     } else if (simdata == "posterior") {
-      real = real_from_posterior(proj, ...)
+      real = real_from_posterior(proj)
     } else if (simdata == "real") {
       real = dots$real
     } else {
