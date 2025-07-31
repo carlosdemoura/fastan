@@ -67,7 +67,7 @@ interface = function(proj) {
   data_alpha = list(
     omit_alpha0    = as.numeric(proj$prior$alpha$omit.alpha0),
     n_groups       = length(proj$data$dim$group.sizes),
-    group_lim      = fiat_groups_limits(proj$data$dim$group.sizes) |> {\(.) do.call(cbind, .)}(),
+    group_lim      = group_limits(proj$data$dim$group.sizes) |> {\(.) do.call(cbind, .)}(),
     semi_conf      = as.numeric(proj$prior$semi.conf),
     alpha_in_group = proj$prior$alpha$in_group |> {\(.) if (proj$prior$alpha$omit.alpha0) . else . + 1}() |> {\(.) {.[.>0] = 1:length(.[.>0]); .}}()
   )
@@ -138,14 +138,14 @@ summary_matrix = function(proj, bias.stat = "mean", samp = NULL) {
     d = stats::density(x)
     d$x[which.max(d$y)]
   }
-  
+
   fit = proj$fit
   data = proj$data
   if (is.null(samp)) {
     samp = rstan::extract(fit)
   }
   matrices = list()
-  
+
   for (parameter in setdiff(names(samp), "lp__") ) {
     hpd_temp = apply( samp[parameter][[1]], c(2,3),
                       function(x) {
@@ -153,7 +153,7 @@ summary_matrix = function(proj, bias.stat = "mean", samp = NULL) {
                           as.numeric() |>
                           list()
                       })
-    
+
     matrices[[parameter]] = list(
       "mean"    = apply( samp[parameter][[1]], c(2,3), mean          )                   ,
       "median"  = apply( samp[parameter][[1]], c(2,3), stats::median )                   ,
@@ -163,12 +163,12 @@ summary_matrix = function(proj, bias.stat = "mean", samp = NULL) {
       "hpd_max" = apply( hpd_temp, c(1,2), function(x) { unlist(x) |> purrr::pluck(2) }) ,
       "hpd_amp" = apply( hpd_temp, c(1,2), function(x) { unlist(x) |> diff() })
     )
-    
+
     if (parameter == "alpha") {
       matrices[[parameter]][["hpd_contains_0"]] = ifelse((matrices[[parameter]][["hpd_max"]] >= 0) & (matrices[[parameter]][["hpd_min"]] <= 0), T, F)
       matrices[[parameter]][["in_group"]] = alpha_in_group(data$dim$group.sizes, proj$prior$semi.conf)
     }
-    
+
     if ((parameter == "pred") & !is.null(data)) {
       matrices[[parameter]][["row_"]] = data$pred$row |> as.matrix()
       matrices[[parameter]][["col_"]] = data$pred$col |> as.matrix()
@@ -176,18 +176,18 @@ summary_matrix = function(proj, bias.stat = "mean", samp = NULL) {
         matrices[[parameter]][["real"]] = data$pred$value |> as.matrix()
       }
     }
-    
+
     if (!is.null(data) & !is.null(data$real) & (parameter != "pred")) {
       matrices[[parameter]][["real"]] = data[["real"]][[parameter]]
     }
-    
+
     if (!is.null(matrices[[parameter]][["real"]])) {
       denom = matrices[[parameter]][["real"]]
       denom[denom == 0] = 1
       matrices[[parameter]][["bias"]] = (matrices[[parameter]][[bias.stat]] - matrices[[parameter]][["real"]]) / abs(denom)
     }
   }
-  
+
   matrices = sapply(matrices, function(x) { abind::abind(x, along = 3) })
   class(matrices) = "summary"
   return(matrices)

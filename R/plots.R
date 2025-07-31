@@ -99,7 +99,7 @@ plot_hpd = function(proj, par, row = NULL, col = NULL, stat = "mean", omit.alpha
     tidyr::pivot_longer(cols = dplyr::all_of(stat), names_to = "stat", values_to = "value")
 
   if ((par == "alpha") & (omit.alpha0)) {
-    lim = fiat_groups_limits(proj$data$dim$group.sizes)
+    lim = group_limits(proj$data$dim$group.sizes)
     if (!proj$prior$semi.conf) {
       rows = lim[[1]][col]:lim[[2]][col]
       df = dplyr::filter(df, df$row %in% rows)
@@ -466,7 +466,7 @@ plot_normal_prior = function(proj, par, stat, fac = "all") {
   if (par == "alpha") {
     breaks.y =
       proj$data$dim$group.sizes |>
-      {\(.) fiat_groups_limits(.)[[1]] |> c(sum(.))}()
+      {\(.) group_limits(.)[[1]] |> c(sum(.))}()
   } else {
     breaks.y = c(1, proj$data$dim$col)
   }

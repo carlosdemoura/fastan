@@ -1,6 +1,6 @@
 car_by_groups = function(proj, tau, neib.by.group = T) {
   cov = list()
-  lim = proj$data$dim$group.sizes |> fiat_groups_limits()
+  lim = proj$data$dim$group.sizes |> group_limits()
   for (fac in 1:n.fac(proj)) {
     rows = lim[[1]][fac]:lim[[2]][fac]
     if (proj$prior$semi.conf) {
@@ -28,7 +28,7 @@ car_by_groups = function(proj, tau, neib.by.group = T) {
 car_alpha_local = function(proj, tau) {
   cov = list()
   for (fac in 1:n.fac(proj)) {
-    lim = proj$data$dim$group.sizes |> fiat_groups_limits()
+    lim = proj$data$dim$group.sizes |> group_limits()
     rows = lim[[1]][fac]:lim[[2]][fac]
     # if (proj$prior$semi.conf) {
     #   rows =

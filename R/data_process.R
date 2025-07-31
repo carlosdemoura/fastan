@@ -98,7 +98,7 @@ real_from_dist = function(group.sizes, columns, semi.conf, dist = list()) {
   }
 
   n.fac = length(group.sizes) - as.integer(semi.conf)
-  groups_limits = fiat_groups_limits(group.sizes)
+  group_limits = group_limits(group.sizes)
 
   alpha = matrix(0,
                  nrow = sum(group.sizes),
@@ -109,13 +109,13 @@ real_from_dist = function(group.sizes, columns, semi.conf, dist = list()) {
                   nrow = n.fac)
 
   for (i in 1:n.fac) {
-    alpha[groups_limits[[1]][i] : groups_limits[[2]][i], i] = rep(1, group.sizes[i])
+    alpha[group_limits[[1]][i] : group_limits[[2]][i], i] = rep(1, group.sizes[i])
     lambda[i,] = generate(dist$lambda, columns)[[1]] |> matrix(ncol = columns) |> {\(.) .[1,]}()
   }
 
   if (semi.conf) {
     i = i + 1
-    alpha[groups_limits[[1]][i] : groups_limits[[2]][i], ] =
+    alpha[group_limits[[1]][i] : group_limits[[2]][i], ] =
       replicate(
         group.sizes[i],
         stats::rbeta(n.fac, 0.1, 0.2) |> {\(.) ./sum(.)}()
@@ -297,15 +297,15 @@ process_data = function(data, value, row, col, group = NULL) {
 #'
 #' @export
 alpha_in_group = function(group.sizes, semi.conf) {
-  groups_limits = fiat_groups_limits(group.sizes)
+  group_limits = group_limits(group.sizes)
   n.fac = length(group.sizes) - as.numeric(semi.conf)
   alpha = matrix(0, nrow = sum(group.sizes), ncol = n.fac)
   for (i in 1:n.fac) {
-    alpha[groups_limits[[1]][i] : groups_limits[[2]][i], i] = rep(1, group.sizes[i])
+    alpha[group_limits[[1]][i] : group_limits[[2]][i], i] = rep(1, group.sizes[i])
   }
   if (semi.conf) {
     i = i +1
-    alpha[groups_limits[[1]][i] : groups_limits[[2]][i],] = 1
+    alpha[group_limits[[1]][i] : group_limits[[2]][i],] = 1
   }
   alpha
 }

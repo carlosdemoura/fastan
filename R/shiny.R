@@ -509,8 +509,8 @@ server0 = function(input, output, session) {
       ) |>
       {\(.)
         dplyr::mutate(.,
-                      starts = fiat_groups_limits(.$size)[[1]] |> as.integer(),
-                      ends   = fiat_groups_limits(.$size)[[2]] |> as.integer()
+                      starts = group_limits(.$size)[[1]] |> as.integer(),
+                      ends   = group_limits(.$size)[[2]] |> as.integer()
         )
       }()
 

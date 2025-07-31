@@ -23,7 +23,7 @@ car_conditional = function(proj, neib, tau) {
   cov =
     1:n.fac(proj) |>
     lapply(function(x) matrix(0, proj$data$dim$row, proj$data$dim$row))
-  lim = proj$data$dim$group.sizes |> fiat_groups_limits()
+  lim = proj$data$dim$group.sizes |> group_limits()
   for (k in 1:n.fac(proj)) {
     rows = lim[[1]][k]:lim[[2]][k]
     if (proj$prior$semi.conf) {

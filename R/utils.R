@@ -21,7 +21,7 @@ n.fac = function(proj){
 #' @param x integer vector.
 #'
 #' @return list of limits (`[[1]]` for inferior, `[[2]]` for superior) of each group.
-fiat_groups_limits = function(x) {
+group_limits = function(x) {
   list(
     c(1, (cumsum(x) + 1)[1:(length(x)-1)])[1:length(x)],
     cumsum(x)
@@ -301,7 +301,7 @@ param.dim = function(proj) {
     for (par in c("alpha", "lambda", "sigma2", "pred")) {
       df[par, ] =
         smry[[par]] |>
-        {\(.) if (!is.null(.)) .[,,"mean"] |> as.matrix()
+        {\(.) if (!is.null(.)) .[,,"mean"] |> as.matrix() |> {\(.) if ((ncol(.) == 1) & (par == "lambda")) t(.) else .}()
           else .}() |>
         {\(.) c(nrow(.), ncol(.), nrow(.) * ncol(.))}() |>
         {\(.) if (length(.)) .
