@@ -58,7 +58,7 @@ test_that("param.dim have an adequate output in different contexts", {
 
 
 test_that("n.fac requires priors", {
-  experct_error(n.fac(new_project()))
+  expect_error(n.fac(new_project()))
 })
 
 

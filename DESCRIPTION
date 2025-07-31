@@ -32,6 +32,7 @@ Depends:
     R (>= 4.1.0),
     distributional,
     ggplot2,
+    mvtnorm,
     shiny
 Config/testthat/edition: 3
 URL: https://carlosdemoura.github.io/fastan/

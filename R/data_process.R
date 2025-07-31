@@ -83,12 +83,15 @@ generate_data = function(real, cicles = 1) {
 #' @return real value list.
 #'
 #' @import distributional
+#' @import mvtnorm
 #' @importFrom stats rbeta
 real_from_dist = function(group.sizes, columns, semi.conf, dist = list()) {
   stopifnot(
     "if the model is semi.conf there
     must be at least three groups" = ifelse(semi.conf, length(group.sizes) >= 3, T)
   )
+
+  if (F) { mvtnorm::is.chol(1) }  # just for import mvtnorm, i did that bc distributional relies on mvtnorm for multivariate normal draws
 
   dist_ = list( alpha = dist_uniform(-6,6), lambda = dist_normal(0,1), sigma2 = dist_uniform(.1,3) )
   for (par in c("alpha", "lambda", "sigma2")) {
