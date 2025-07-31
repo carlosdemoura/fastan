@@ -4,12 +4,14 @@
 \alias{summary_matrix}
 \title{Get summary from \code{rstan::stanfit} object}
 \usage{
-summary_matrix(proj, bias.stat = "mean")
+summary_matrix(proj, bias.stat = "mean", samp = NULL)
 }
 \arguments{
 \item{proj}{\code{fastan::project} object.}
 
 \item{bias.stat}{string, default = "mean", Bayes estimator to be used to calculate bias if data is simdata.}
+
+\item{samp}{list, if its's NULL (default), then the sample is extracted from \code{proj$fit}, if not, pass the sample here.}
 }
 \value{
 list of matrices.
