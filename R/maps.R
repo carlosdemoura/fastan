@@ -70,7 +70,7 @@ plot_map_post = function(proj, par, col = 1, stat) {
 #' @importFrom tidyr pivot_longer
 #' @importFrom utils tail
 plot_map_post_factor = function(proj, extra.only = F, r = 1) {
-  rows.extra = utils::tail(group_limits(proj$data$dim$group.sizes)[[1]], 1):utils::tail(fiat_groups_limits(proj$data$dim$group.sizes)[[2]], 1)
+  rows.extra = utils::tail(group_limits(proj$data$dim$group.sizes)[[1]], 1):utils::tail(group_limits(proj$data$dim$group.sizes)[[2]], 1)
   df =
     (1 - proj$summary$alpha[,,"hpd_contains_0"]) |>
     as.data.frame() |>

@@ -55,3 +55,28 @@ test_that("param.dim have an adequate output in different contexts", {
     `dimnames<-`(NULL) |>
     expect_equal(matrix(c(30,5,5,14,30,1), ncol = 2, byrow = T))
 })
+
+
+test_that("n.fac requires priors", {
+  experct_error(n.fac(new_project()))
+})
+
+
+test_that("n.fac works", {
+  new_project() |>
+    set_data(simdata = T, group.sizes = rep(10, 6), columns = 14, semi.conf = T) |>
+    set_prior(semi.conf = T) |>
+    n.fac() |>
+    expect_equal(5)
+})
+
+
+test_that("prop.missing works", {
+  new_project() |>
+    set_data(simdata = T, pred = .1, group.sizes = 10, columns = 10, semi.conf = F) |>
+    prop.missing() |>
+    expect_equal(.1)
+})
+
+
+#### FALTAM: export; elapsed_time_table; loglik; accuracy
