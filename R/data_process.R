@@ -77,19 +77,28 @@ generate_data = function(real, cicles = 1) {
 #'
 #' @param group.sizes integer vector with size of each group.
 #' @param columns integer, number of columns.
-#' @param semi.conf logical, `TRUE` if the model is semi-confirmatory, `FALSE` otherwise.
+#' @param semi.conf logical, `TRUE` if the model is semi-confirmatory, `FALSE` otherwise, NULL (default) means the code will infer the model is not semi.conf if the number of groups is <= 2
 #' @param dist list of distributions from `distributional` from which the parameters will be sampled.
 #'
 #' @return real value list.
 #'
 #' @import distributional
-#' @import mvtnorm
+#' @importFrom mvtnorm is.chol
 #' @importFrom stats rbeta
-real_from_dist = function(group.sizes, columns, semi.conf, dist = list()) {
-  stopifnot(
-    "if the model is semi.conf there
-    must be at least three groups" = ifelse(semi.conf, length(group.sizes) >= 3, T)
-  )
+real_from_dist = function(group.sizes, columns, semi.conf = NULL, dist = list()) {
+
+  if (is.null(semi.conf)) {
+    if (length(group.sizes) %in% 1:2) {
+      semi.conf = F
+    } else {
+      stop("semi.conf must be specified if the number of groups is greater than 2")
+    }
+  } else {
+    stopifnot(
+      "if the model is semi.conf there
+      must be at least three groups" = ifelse(semi.conf, length(group.sizes) >= 3, T)
+    )
+  }
 
   if (F) { mvtnorm::is.chol(1) }  # just for import mvtnorm, i did that bc distributional relies on mvtnorm for multivariate normal draws
 

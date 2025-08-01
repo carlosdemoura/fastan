@@ -143,8 +143,8 @@ test_that("set_prior validates args", {
 })
 
 
-test_that("set_data works", {
+test_that("set_data pred works", {
   expect_true(T)
 })
 
-## FALTA set_fit missing_validation set_space
+## FALTA set_fit missing_validation set_space set_data

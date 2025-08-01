@@ -4,14 +4,14 @@
 \alias{real_from_dist}
 \title{Generate real value list from distributions}
 \usage{
-real_from_dist(group.sizes, columns, semi.conf, dist = list())
+real_from_dist(group.sizes, columns, semi.conf = NULL, dist = list())
 }
 \arguments{
 \item{group.sizes}{integer vector with size of each group.}
 
 \item{columns}{integer, number of columns.}
 
-\item{semi.conf}{logical, \code{TRUE} if the model is semi-confirmatory, \code{FALSE} otherwise.}
+\item{semi.conf}{logical, \code{TRUE} if the model is semi-confirmatory, \code{FALSE} otherwise, NULL (default) means the code will infer the model is not semi.conf if the number of groups is <= 2}
 
 \item{dist}{list of distributions from \code{distributional} from which the parameters will be sampled.}
 }
