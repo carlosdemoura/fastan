@@ -185,22 +185,19 @@ try_set = function(expr) {
   tryCatch({
     expr
   }, error = function(e){
-    cat(paste("ERROR:", e))
+    warning(paste("ERROR:", e))
   })
 }
 
 
 #' Remove attributes from `fastan::project`
 #'
-#' @inheritParams set_summary
+#' @param proj fastan project object
+#' @param ... strings, attributes to be removed
 #'
 #' @export
-remove = function(proj, ...) {
-  if (lapply(list(...), is.character) |> unlist() |> all()) {
-    attr = unlist(list(...))
-  } else {
-    attr = sapply(substitute(list(...))[-1], deparse)
-  }
+delete = function(proj, ...) {
+  attr = unlist(list(...))
 
   if (length(attr)) {
     for (x in attr) {
