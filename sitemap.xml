@@ -34,7 +34,6 @@
 <url><loc>/reference/neib_dist.html</loc></url>
 <url><loc>/reference/neib_simple.html</loc></url>
 <url><loc>/reference/neib_voronoi.html</loc></url>
-<url><loc>/reference/new_project.html</loc></url>
 <url><loc>/reference/param.dim.html</loc></url>
 <url><loc>/reference/plot_bias.html</loc></url>
 <url><loc>/reference/plot_contrast.html</loc></url>
@@ -52,6 +51,7 @@
 <url><loc>/reference/plot_trace.html</loc></url>
 <url><loc>/reference/prior_normal.html</loc></url>
 <url><loc>/reference/process_data.html</loc></url>
+<url><loc>/reference/project.html</loc></url>
 <url><loc>/reference/prop.missing.html</loc></url>
 <url><loc>/reference/real_from_dist.html</loc></url>
 <url><loc>/reference/real_from_posterior.html</loc></url>
@@ -71,6 +71,9 @@
 <url><loc>/reference/stan.html</loc></url>
 <url><loc>/reference/summary_as_df.html</loc></url>
 <url><loc>/reference/summary_matrix.html</loc></url>
+<url><loc>/reference/to_data.html</loc></url>
+<url><loc>/reference/to_prior.html</loc></url>
+<url><loc>/reference/to_summary.html</loc></url>
 <url><loc>/reference/try_set.html</loc></url>
 <url><loc>/reference/validate_proj_arg.html</loc></url>
 </urlset>
