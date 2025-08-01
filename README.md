@@ -2,6 +2,7 @@
 
 <!-- badges: start -->
 [![R-CMD-check](https://github.com/carlosdemoura/fastan/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/carlosdemoura/fastan/actions/workflows/R-CMD-check.yaml)
+[![Codecov test coverage](https://codecov.io/gh/carlosdemoura/fastan/graph/badge.svg)](https://app.codecov.io/gh/carlosdemoura/fastan)
 <!-- badges: end -->
 
 The goal of fastan is to make Bayesian factor analysis easier.

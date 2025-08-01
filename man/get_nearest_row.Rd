@@ -7,9 +7,9 @@
 get_nearest_row(small, big, id, lon = "lon", lat = "lat")
 }
 \arguments{
-\item{small}{data.frame (with rows without missings).}
+\item{small}{data.frame (for rows without missings).}
 
-\item{big}{data.frame (with rows with missings).}
+\item{big}{data.frame (for rows with missings).}
 
 \item{id}{string with id column.}
 
