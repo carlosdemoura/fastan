@@ -2,9 +2,7 @@
 
 export(accuracy)
 export(alpha_in_group)
-export(car_conditional)
-export(car_expl)
-export(car_simple)
+export(car_engine)
 export(delete)
 export(diagnostic)
 export(distances)

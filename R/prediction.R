@@ -1,7 +1,7 @@
 #' Use LSAP algorithm to select nearest points
 #'
-#' @param small data.frame (with rows without missings).
-#' @param big data.frame (with rows with missings).
+#' @param small data.frame (for rows without missings).
+#' @param big data.frame (for rows with missings).
 #' @param id string with id column.
 #' @param lon string with longitude column.
 #' @param lat string with latitude column.
