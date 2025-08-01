@@ -285,7 +285,7 @@ process_data = function(data, value, row, col, group = NULL) {
       {\(.) dplyr::filter(., !is.na(.$value))}()
   }
 
-  data
+  to_data(data)
 }
 
 

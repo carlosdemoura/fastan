@@ -36,8 +36,7 @@ prior_normal = function(data, semi.conf, omit.alpha0 = T, ...) {
   prior$alpha[["in_group"]] = alpha_in_group(data$dim$group.sizes, semi.conf)
   prior$alpha[["omit.alpha0"]] = omit.alpha0
 
-  class(prior) = "prior"
-  prior
+  to_prior(prior)
 }
 
 

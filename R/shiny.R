@@ -300,18 +300,18 @@ server0 = function(input, output, session) {
 
     project_rv(proj)
   })
-  project = reactive({
+  projeto = reactive({
     req(project_rv())
   })
 
-  #real = reactive(!is.null(project()$data$real))
+  #real = reactive(!is.null(projeto()$data$real))
   real = reactive(
-    lapply( c("alpha", "lambda", "sigma2"), function(x) ("real" %in% dimnames(project()$summary[[x]])[[3]]) ) |>
+    lapply( c("alpha", "lambda", "sigma2"), function(x) ("real" %in% dimnames(projeto()$summary[[x]])[[3]]) ) |>
       unlist() |>
       all()
   )
 
-  real_pred = reactive("real" %in% dimnames(project()$summary$pred)[[3]])
+  real_pred = reactive("real" %in% dimnames(projeto()$summary$pred)[[3]])
   stat = reactive(c("mean") |> {\(.) if (real()) c(., "real") else .}())
 
   output$Model.export = downloadHandler(
@@ -321,7 +321,7 @@ server0 = function(input, output, session) {
     content = function(file) {
       dir_temp = tempfile("fastanExport")
       dir.create(dir_temp)
-      x = export(project(), path_dump = dir_temp)
+      x = export(projeto(), path_dump = dir_temp)
       zip::zipr(zipfile = file, files = list.files(x, full.names = TRUE))
     },
     contentType = "application/zip"
@@ -330,29 +330,29 @@ server0 = function(input, output, session) {
 
   ### PanelInference ###
 
-  observeEvent(project(), {
+  observeEvent(projeto(), {
     updateSelectInput(
       session, "Inference.alpha_col",
-      choices = 1:n.fac(project())
+      choices = 1:n.fac(projeto())
       )
 
     output$lambdas = plotly::renderPlotly({
-      plot_lambda(project()$summary, stat = ifelse("real" %in% stat(), "real", "mean")) |>
+      plot_lambda(projeto()$summary, stat = ifelse("real" %in% stat(), "real", "mean")) |>
         plotly::ggplotly()
     })
 
     output$alpha_hpd = plotly::renderPlotly({
-      plot_hpd(project(), "alpha", stat = stat(), col = input$Inference.alpha_col |> as.integer(), omit.alpha0 = F) |>
+      plot_hpd(projeto(), "alpha", stat = stat(), col = input$Inference.alpha_col |> as.integer(), omit.alpha0 = F) |>
         plotly::ggplotly()
     })
 
     output$contrast = plotly::renderPlotly({
-      plot_contrast(project()$summary, "alpha", stat = input$Inference.contrast_type) |>
+      plot_contrast(projeto()$summary, "alpha", stat = input$Inference.contrast_type) |>
         plotly::ggplotly()
     })
 
     output$sigma2 = plotly::renderPlotly({
-      plot_hpd(project(), "sigma2", stat = stat(), col = 1) |>
+      plot_hpd(projeto(), "sigma2", stat = stat(), col = 1) |>
         plotly::ggplotly()
     })
 
@@ -379,22 +379,22 @@ server0 = function(input, output, session) {
       )
     })
 
-    output$Inference.accuracy_table = renderTable(accuracy(project()$summary, correct = T) |> round(4), rownames = T)
+    output$Inference.accuracy_table = renderTable(accuracy(projeto()$summary, correct = T) |> round(4), rownames = T)
 
     output$Inference.bias = renderPlot({
       if (real()) {
         bias = list()
-        for (param in c("all", names(project()$summary))) {
-          bias[[param]] = plot_bias(project(), param)
+        for (param in c("all", names(projeto()$summary))) {
+          bias[[param]] = plot_bias(projeto(), param)
         }
         gridExtra::grid.arrange(grobs = bias, ncol=2)
       } else if (real_pred()) {
-        plot_bias(project(), "pred")
+        plot_bias(projeto(), "pred")
       }
     })
     }
 
-    if (!is.null(project()$data$pred)) {
+    if (!is.null(projeto()$data$pred)) {
     output$Inference.prediction = renderUI({
       tagList(
         fluidRow(header_col("Predictions", "#a8f2fe", 8, 12)),
@@ -412,7 +412,7 @@ server0 = function(input, output, session) {
     })
 
     output$Inference.pred_contrast = plotly::renderPlotly({
-      (plot_missing(project()$data) + theme(axis.text.y = element_blank())) |>
+      (plot_missing(projeto()$data) + theme(axis.text.y = element_blank())) |>
         plotly::ggplotly(tooltip = "text", source = "Inference.pred_contrast_source")
     })
     }
@@ -425,14 +425,14 @@ server0 = function(input, output, session) {
   })
 
   observeEvent(Inference.alpha_change(), {
-    if (input$Inference.alpha0 & (as.integer(input$Inference.alpha_col) < n.fac(project())) & project()$prior$semi.conf) {
-      p = plot_hpd(project(), "alpha", stat = stat(), col = input$Inference.alpha_col |> as.integer(), omit.alpha0 = T, omit.alpha0.list = T)
+    if (input$Inference.alpha0 & (as.integer(input$Inference.alpha_col) < n.fac(projeto())) & projeto()$prior$semi.conf) {
+      p = plot_hpd(projeto(), "alpha", stat = stat(), col = input$Inference.alpha_col |> as.integer(), omit.alpha0 = T, omit.alpha0.list = T)
       output$alpha_hpd = plotly::renderPlotly({
         plotly::subplot(p[[1]], p[[2]], nrows = 1)
       })
     } else {
       output$alpha_hpd = plotly::renderPlotly({
-        plot_hpd(project(), "alpha", stat = stat(), col = input$Inference.alpha_col |> as.integer(), omit.alpha0 = input$Inference.alpha0) |>
+        plot_hpd(projeto(), "alpha", stat = stat(), col = input$Inference.alpha_col |> as.integer(), omit.alpha0 = input$Inference.alpha0) |>
           plotly::ggplotly()
       })
     }
@@ -440,13 +440,13 @@ server0 = function(input, output, session) {
 
   # observeEvent(input$Inference.alpha_col, {
   #   if (input$Inference.alpha0) {
-  #     p = plot_hpd(project(), "alpha", stat = stat(), col = input$Inference.alpha_col |> as.integer(), omit.alpha0 = T, omit.alpha0.list = T)
+  #     p = plot_hpd(projeto(), "alpha", stat = stat(), col = input$Inference.alpha_col |> as.integer(), omit.alpha0 = T, omit.alpha0.list = T)
   #     output$alpha_hpd = plotly::renderPlotly({
   #       plotly::subplot(p[[1]], p[[2]], nrows = 1)
   #     })
   #   } else {
   #     output$alpha_hpd = plotly::renderPlotly({
-  #       plot_hpd(project(), "alpha", stat = stat(), col = input$Inference.alpha_col |> as.integer(), omit.alpha0 = F) |>
+  #       plot_hpd(projeto(), "alpha", stat = stat(), col = input$Inference.alpha_col |> as.integer(), omit.alpha0 = F) |>
   #         plotly::ggplotly()
   #     })
   #   }
@@ -459,8 +459,8 @@ server0 = function(input, output, session) {
     if (is.null(coor)) return(NULL)
     row_clicked =
       coor$y |>
-      {\(.) rev(1:length(unique(project()$data$pred$row)))[.]}() |>
-      {\(.) unique(project()$data$pred$row)[.]}()
+      {\(.) rev(1:length(unique(projeto()$data$pred$row)))[.]}() |>
+      {\(.) unique(projeto()$data$pred$row)[.]}()
     col_clicked = coor$x
     return(list(row = row_clicked, col = col_clicked))
   })
@@ -470,7 +470,7 @@ server0 = function(input, output, session) {
     if (is.null(coor)) return(cat("Click on the black squares."))
 
     df =
-      summary_as_df(project(), "pred")[["pred"]] |>
+      summary_as_df(projeto(), "pred")[["pred"]] |>
       {\(.) dplyr::filter(., .$row_ == coor$row, .$col_ == coor$col)}()
 
     cat("Row:", coor$row, "  Col.:", coor$col, "\tRow param.:", df$row,"\n")
@@ -489,23 +489,23 @@ server0 = function(input, output, session) {
     if (is.null(coor)) return(ggplot()+annotate("text", x=0, y=0, label="posterior predictive plot")+theme_void())
 
     row =
-      summary_as_df(project(), "pred")[["pred"]] |>
+      summary_as_df(projeto(), "pred")[["pred"]] |>
       {\(.) dplyr::filter(., .$row_ == coor$row, .$col_ == coor$col)}() |>
       dplyr::select(dplyr::all_of("row")) |>
       purrr::pluck(1)
-    plot_posterior(project(), "pred", row = row)
+    plot_posterior(projeto(), "pred", row = row)
   })
 
 
   ### PanelModel ###
 
-  observeEvent(project(), {
-    dim = c(project()$data$dim, list(fac = n.fac(project())))
+  observeEvent(projeto(), {
+    dim = c(projeto()$data$dim, list(fac = n.fac(projeto())))
 
     df.groups =
       data.frame(
-        group = project()$data$label$group |> as.character(),
-        size = project()$data$dim$group.sizes
+        group = projeto()$data$label$group |> as.character(),
+        size = projeto()$data$dim$group.sizes
       ) |>
       {\(.)
         dplyr::mutate(.,
@@ -514,7 +514,7 @@ server0 = function(input, output, session) {
         )
       }()
 
-    if (!is.null(project()$prior)) { if (project()$prior$semi.conf) {
+    if (!is.null(projeto()$prior)) { if (projeto()$prior$semi.conf) {
       df.groups[nrow(df.groups),1] = paste(df.groups[nrow(df.groups),1], "(group extra)")
     }}
 
@@ -533,7 +533,7 @@ server0 = function(input, output, session) {
         withMathJax()
     })
 
-    if (is.null(project()$prior)) {
+    if (is.null(projeto()$prior)) {
       output$Model.prior = renderUI({
         "No prior on project."
       })
@@ -543,7 +543,7 @@ server0 = function(input, output, session) {
           paste0(
             "<p>\\[ \\alpha_{\\bullet, j} \\sim N_{", dim$row, "}(mean\\ \\alpha_j, cov\\ \\alpha_j); \\]</p>",
             "<p>\\[ \\lambda_{i, \\bullet} \\sim N_{", dim$col, "}(mean\\ \\lambda_i, cov\\ \\lambda_i); \\]</p>",
-            "<p>\\[ \\sigma^2 \\sim Gama_{", dim$row, "}( shape = ", project()$prior$sigma2$shape, ",\\ rate = ", project()$prior$sigma2$rate, "); \\]</p>",
+            "<p>\\[ \\sigma^2 \\sim Gama_{", dim$row, "}( shape = ", projeto()$prior$sigma2$shape, ",\\ rate = ", projeto()$prior$sigma2$rate, "); \\]</p>",
             "<p>\\[ var\\ Y = \\bigr( var(Y_{i,j}) \\bigr)_{i,j}\\ , \\ Y = \\alpha, \\lambda; \\]</p>",
             "<p>\\[ mean\\ Y = \\bigr( mean(Y_{i,j}) \\bigr)_{i,j}\\ , \\ Y = \\alpha, \\lambda. \\]</p>"
           ) |>
@@ -560,10 +560,10 @@ server0 = function(input, output, session) {
 
     output$Model.info = renderUI({
       paste0(
-        "<p>Info: ", project()$info, "</p>",
-        "<p>Number of groups:\t" , length(project()$data$dim$group.sizes), "</p>",
-        "<p>Number of factors:\t", n.fac(project()), "</p>",
-        "<p>Missing proportion:\t", prop.missing(project()), "</p>",
+        "<p>Info: ", projeto()$info, "</p>",
+        "<p>Number of groups:\t" , length(projeto()$data$dim$group.sizes), "</p>",
+        "<p>Number of factors:\t", n.fac(projeto()), "</p>",
+        "<p>Missing proportion:\t", prop.missing(projeto()), "</p>",
         "<p><br></p>",
         "<p>Group sizes</p>"
       ) |>
@@ -588,16 +588,16 @@ server0 = function(input, output, session) {
         # ),
         fluidRow(
           column(2,
-            selectInput("Model.loading_index", "X Row", choices = seq_along(project()$data$label$loading), selected = 1)
+            selectInput("Model.loading_index", "X Row", choices = seq_along(projeto()$data$label$loading), selected = 1)
           ),
           column(4,
-            selectInput("Model.loading_value", "label", choices = project()$data$label$loading, selected = project()$data$label$loading[1])
+            selectInput("Model.loading_value", "label", choices = projeto()$data$label$loading, selected = projeto()$data$label$loading[1])
           ),
           column(2,
-            selectInput("Model.factor_index", "X Col", choices = seq_along(project()$data$label$factor_score), selected = 1)
+            selectInput("Model.factor_index", "X Col", choices = seq_along(projeto()$data$label$factor_score), selected = 1)
           ),
           column(4,
-            selectInput("Model.factor_value", "label", choices = project()$data$label$factor_score, selected = project()$data$label$loading[1])
+            selectInput("Model.factor_value", "label", choices = projeto()$data$label$factor_score, selected = projeto()$data$label$loading[1])
           )
         )
       )
@@ -607,17 +607,17 @@ server0 = function(input, output, session) {
 
   ### PanelConvergence - General ###
 
-  observeEvent(project(), {
+  observeEvent(projeto(), {
     output$Convergence.general_info_time = renderPrint({
       cat("STAN elapsed time (h.)\n")
-      elapsed_time_table(project()$fit) |> round(2)
+      elapsed_time_table(projeto()$fit) |> round(2)
     })
 
     output$Convergence.general_info_args = renderPrint({
-      project()$fit@stan_args[[1]] |>
+      projeto()$fit@stan_args[[1]] |>
         {\(.) cat(
           "STAN arguments",
-          "\nChains\t", length(project()$fit@stan_args),
+          "\nChains\t", length(projeto()$fit@stan_args),
           "\nThin\t", .$thin,
           "\nIter\t"  , .$iter,
           "\nWarmup\t", .$warmup
@@ -625,23 +625,23 @@ server0 = function(input, output, session) {
     })
 
     output$Convergence.general_rhat = renderPlot({
-      plot_diagnostic(project()$fit, "Rhat")
+      plot_diagnostic(projeto()$fit, "Rhat")
     })
 
     output$Convergence.general_neff = renderPlot({
-      plot_diagnostic(project()$fit, "n_eff")
+      plot_diagnostic(projeto()$fit, "n_eff")
     })
 
     output$Convergence.general_geweke = renderPlot({
-      plot_diagnostic(project()$fit, "geweke")
+      plot_diagnostic(projeto()$fit, "geweke")
     })
   })
 
 
   ### PanelConvergence - Specific - Options ###
 
-  observeEvent(project(), {
-    if (!is.null(project()$data$pred)) {
+  observeEvent(projeto(), {
+    if (!is.null(projeto()$data$pred)) {
       updateSelectInput(
         session, "Convergence.par",
         choices = c("lp__", "alpha", "lambda", "sigma2", "pred")
@@ -653,16 +653,16 @@ server0 = function(input, output, session) {
     if        (input$Convergence.par == "lp__")   {
       row = col = 1
     } else if (input$Convergence.par == "alpha")  {
-      row = project()$data$dim$row
-      col = n.fac(project())
+      row = projeto()$data$dim$row
+      col = n.fac(projeto())
     } else if (input$Convergence.par == "lambda") {
-      row = n.fac(project())
-      col = project()$data$dim$col
+      row = n.fac(projeto())
+      col = projeto()$data$dim$col
     } else if (input$Convergence.par == "sigma2") {
-      row = project()$data$dim$row
+      row = projeto()$data$dim$row
       col = 1
     } else if (input$Convergence.par == "pred")   {
-      row = dim(project()$summary$pred)[1]
+      row = dim(projeto()$summary$pred)[1]
       col = 1
     }
 
@@ -695,25 +695,25 @@ server0 = function(input, output, session) {
     par = input$Convergence.par
     par_name = ifelse(par == "lp__",
                       "lp__", paste0(par, "[", row, ",", col, "]"))
-    combinedchains = get_chains_mcmc(project()$fit, par_name)
+    combinedchains = get_chains_mcmc(projeto()$fit, par_name)
 
     Convergence.div_par_name(paste0("Selected parameter: ", par_name))
 
     output$Convergence.traceplot = renderPlot({
       plot_trace(
-        project()$fit,
+        projeto()$fit,
         par, row, col
       )
     })
 
     output$Convergence.gr_plot = renderPlot({
-      if (length(project()$fit@stan_args) > 1) {
+      if (length(projeto()$fit@stan_args) > 1) {
         coda::gelman.plot(combinedchains)
       }
     })
 
     output$Convergence.gr_print = renderPrint({
-      if (length(project()$fit@stan_args) > 1) {
+      if (length(projeto()$fit@stan_args) > 1) {
         coda::gelman.diag(combinedchains)
       } else {
         cat("At least two chains are necessary for this diagnose.")
@@ -726,13 +726,13 @@ server0 = function(input, output, session) {
 
     output$Convergence.stats = renderTable({
       if (par == "lp__") {
-        rstan::extract(project()$fit, par = "lp__") |>
+        rstan::extract(projeto()$fit, par = "lp__") |>
           purrr::pluck(1) |>
-          {\(.) data.frame(mean = mean(.), median = stats::median(.), sd = stats::sd(.), real = loglik(project(), stat = "real"), est_by_mean = loglik(project(), stat = "mean"))}() |>
+          {\(.) data.frame(mean = mean(.), median = stats::median(.), sd = stats::sd(.), real = loglik(projeto(), stat = "real"), est_by_mean = loglik(projeto(), stat = "mean"))}() |>
           round(2) |>
           `row.names<-`("")
       } else {
-        project()$summary[[par]][row, col, ] |>
+        projeto()$summary[[par]][row, col, ] |>
           as.matrix() |>
           as.data.frame() |>
           {\(.) dplyr::mutate(., V1 = .$V1 |> round(2))}() |>
@@ -745,11 +745,11 @@ server0 = function(input, output, session) {
     density_type = input$Convergence.density_type |> as.vector()
 
     output$Convergence.density = renderPlot({
-      plot_posterior(project()$fit, par, row, col, density_type)
+      plot_posterior(projeto()$fit, par, row, col, density_type)
     })
 
     output$Convergence.rhat_neff = renderPrint({
-      diagnostic(project()$fit) |>
+      diagnostic(projeto()$fit) |>
         dplyr::filter(par == !!par,
                       row == !!row,
                       col == !!col) |>
@@ -771,7 +771,7 @@ server0 = function(input, output, session) {
 
     if (Convergence.select.clicks()) {
       output$Convergence.density = renderPlot({
-        plot_posterior(project()$fit, par, row, col, type)
+        plot_posterior(projeto()$fit, par, row, col, type)
       })
     }
   })
@@ -783,13 +783,13 @@ server0 = function(input, output, session) {
     req(input$Model.prior_loc)
     req(input$Model.prior_par)
     col = ifelse(input$Model.prior_loc == "all", "all", as.integer(input$Model.prior_loc))
-    plot_normal_prior(project(), input$Model.prior_par, "mean", col)
+    plot_normal_prior(projeto(), input$Model.prior_par, "mean", col)
   })
   output$Model.par_cov = renderPlot({
     req(input$Model.prior_loc)
     req(input$Model.prior_par)
     col = ifelse(input$Model.prior_loc == "all", "all", as.integer(input$Model.prior_loc))
-    plot_normal_prior(project(), input$Model.prior_par, "cov", col)
+    plot_normal_prior(projeto(), input$Model.prior_par, "cov", col)
   })
 
   observeEvent(input$Model.prior_hyp, {
@@ -809,7 +809,7 @@ server0 = function(input, output, session) {
               ),
               column(4,
                 selectInput("Model.prior_loc", "Column",
-                            choices = c("all", 1:length(project()$prior$alpha$mean)),
+                            choices = c("all", 1:length(projeto()$prior$alpha$mean)),
                             selected = "all")
               )),
             fluidRow(
@@ -834,7 +834,7 @@ server0 = function(input, output, session) {
     updateSelectInput(
       inputId = "Model.prior_loc",
       label = label,
-      choices = c("all", 1:length(project()$prior[[input$Model.prior_par]]$mean)),
+      choices = c("all", 1:length(projeto()$prior[[input$Model.prior_par]]$mean)),
       selected = input$Model.prior_loc
     )
   })
@@ -859,8 +859,8 @@ server0 = function(input, output, session) {
 
   ###  PanelMaps - UI  ###
 
-  observeEvent(project(), {
-    if (is.null(project()$space)) {
+  observeEvent(projeto(), {
+    if (is.null(projeto()$space)) {
       output$Maps.general = renderUI({
         tagList(
           "No spatial data in project."
@@ -912,7 +912,7 @@ server0 = function(input, output, session) {
         )
       })
 
-      if (project()$prior$semi.conf) {
+      if (projeto()$prior$semi.conf) {
         output$Maps.map_sc = renderUI({
           tagList(
             fluidRow(header_col("Posterior factor association", "#a8f2fe", 8, 12)),
@@ -967,18 +967,18 @@ server0 = function(input, output, session) {
   ###  PanelMaps - maps  ###
 
   output$Maps.map_data = plotly::renderPlotly({
-    plot_map_data(project(), input$Maps.data_type) |>
+    plot_map_data(projeto(), input$Maps.data_type) |>
       plotly::ggplotly()
   })
 
   output$Maps.map_post = plotly::renderPlotly({
-    plot_map_post(project(), input$Maps.post_par, as.numeric(input$Maps.post_col), input$Maps.post_stat) |>
+    plot_map_post(projeto(), input$Maps.post_par, as.numeric(input$Maps.post_col), input$Maps.post_stat) |>
       plotly::ggplotly()
   })
 
   observeEvent(input$Maps.map_sc_extra, {
     output$Maps.map_sc_plot = renderPlot({
-      plot_map_post_factor(project(), input$Maps.map_sc_extra, 2)
+      plot_map_post_factor(projeto(), input$Maps.map_sc_extra, 2)
     })
   })
 

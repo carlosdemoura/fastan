@@ -28,7 +28,7 @@ test_that("real_from_prior generate data in correct dimension", {
 
 
 test_that("real_from_prior generate data in correct dimension", {
-  new_project() |>
+  project() |>
     set_data(simdata = T, group.sizes = 10, columns = 5, semi.conf = F) |>
     set_prior(semi.conf = F) |>
     real_from_prior() |>
@@ -36,7 +36,7 @@ test_that("real_from_prior generate data in correct dimension", {
     lapply(dim) |>
     expect_equal(list(alpha = c(10, 1), lambda = c(1, 5), sigma2 = c(10, 1)))
 
-  new_project() |>
+  project() |>
     set_data(simdata = T, group.sizes = rep(10, 3), columns = 5, semi.conf = F) |>
     set_prior(semi.conf = F) |>
     real_from_prior() |>
@@ -44,7 +44,7 @@ test_that("real_from_prior generate data in correct dimension", {
     lapply(dim) |>
     expect_equal(list(alpha = c(30, 3), lambda = c(3, 5), sigma2 = c(30, 1)))
 
-  new_project() |>
+  project() |>
     set_data(simdata = T, group.sizes = rep(10, 3), columns = 5, semi.conf = T) |>
     set_prior(semi.conf = T) |>
     real_from_prior() |>

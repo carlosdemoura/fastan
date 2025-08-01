@@ -189,8 +189,8 @@ summary_matrix = function(proj, bias.stat = "mean", samp = NULL) {
   }
 
   matrices = sapply(matrices, function(x) { abind::abind(x, along = 3) })
-  class(matrices) = "summary"
-  return(matrices)
+
+  to_summary(matrices)
 }
 
 
@@ -319,5 +319,5 @@ summary_as_df = function(proj, par = NULL) {
   ans = lapply(par, as_df)
   names(ans) = par
 
-  ans
+  to_summary(ans)
 }

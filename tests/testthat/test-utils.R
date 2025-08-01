@@ -11,7 +11,7 @@ test_that("group_limits works", {
 
 test_that("param.dim throws error if proj has no summary or prior", {
   proj =
-    new_project() |>
+    project() |>
     set_data(simdata = T, group.sizes = 10, columns = 10, semi.conf = F)
 
   expect_error(param.dim(proj))
@@ -29,7 +29,7 @@ test_that("param.dim has the same output if proj have or not summary", {
 
 test_that("param.dim have an adequate output in different contexts", {
   # exploratory
-  new_project() |>
+  project() |>
     set_data(simdata = T, group.sizes = 5, columns = 14, semi.conf = F) |>
     set_prior(semi.conf = F) |>
     param.dim() |>
@@ -38,7 +38,7 @@ test_that("param.dim have an adequate output in different contexts", {
     expect_equal(matrix(c(5,1,1,14,5,1), ncol = 2, byrow = T))
 
   # confirmatory
-  new_project() |>
+  project() |>
     set_data(simdata = T, group.sizes = rep(5, 6), columns = 14, semi.conf = F) |>
     set_prior(semi.conf = F) |>
     param.dim() |>
@@ -47,7 +47,7 @@ test_that("param.dim have an adequate output in different contexts", {
     expect_equal(matrix(c(30,6,6,14,30,1), ncol = 2, byrow = T))
 
   # semi-confirmatory
-  new_project() |>
+  project() |>
     set_data(simdata = T, group.sizes = rep(5, 6), columns = 14, semi.conf = T) |>
     set_prior(semi.conf = T) |>
     param.dim() |>
@@ -58,12 +58,12 @@ test_that("param.dim have an adequate output in different contexts", {
 
 
 test_that("n.fac requires priors", {
-  expect_error(n.fac(new_project()))
+  expect_error(n.fac(project()))
 })
 
 
 test_that("n.fac works", {
-  new_project() |>
+  project() |>
     set_data(simdata = T, group.sizes = rep(10, 6), columns = 14, semi.conf = T) |>
     set_prior(semi.conf = T) |>
     n.fac() |>
@@ -72,7 +72,7 @@ test_that("n.fac works", {
 
 
 test_that("prop.missing works", {
-  new_project() |>
+  project() |>
     set_data(simdata = T, pred = .1, group.sizes = 10, columns = 10, semi.conf = F) |>
     prop.missing() |>
     expect_equal(.1)

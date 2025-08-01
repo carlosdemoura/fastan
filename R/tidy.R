@@ -126,7 +126,7 @@ set_prior = function(proj, type = "normal", semi.conf, engine = NULL, ...) {
   prior[["semi.conf"]] = semi.conf
   prior[["type"]] = type
 
-  proj$prior = prior
+  proj$prior = to_prior(prior)
   return(proj)
 }
 
