@@ -79,4 +79,29 @@ test_that("prop.missing works", {
 })
 
 
-#### FALTAM: export; elapsed_time_table; loglik; accuracy
+test_that("export works", {  # should be an snapshot
+  temp = tempdir()
+  expect_error(export(project(), temp))
+  expect_error(export(set_info(project(), "teste"), temp))
+
+  skip_on_cran()
+
+  proj = readRDS(testthat::test_path("testdata", "proj_expl.rds"))
+  path = export(proj, temp) |> suppressWarnings()
+
+  expect_true(
+      c(
+        "accuracy.txt", "alpha_contrast_0.png", "alpha_contrast_mean.png",
+        "alpha_contrast_real.png", "alpha_hpd.png", "bias.png",
+        "diganostic.png", "lambda_contrast_mean.png", "lambda_contrast_real.png",
+        "lambda_hpd.png", "prior.png", "proj.rds",
+        "report.txt", "sigma2_hpd.png", "traceplot_lp.png"
+      ) %in% list.files(path) |>
+        all()
+  )
+
+  unlink(temp, recursive = T)
+})
+
+
+#### FALTA: loglik; accuracy

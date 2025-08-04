@@ -58,7 +58,9 @@ prop.missing = function(data) {
 #' @importFrom gridExtra arrangeGrob
 #' @importFrom utils capture.output
 export = function(proj, path_dump = getwd(), rds = T, plot.extension = "png") {
-  fastan_report = function(proj) {
+  stopifnot( "project must have data and prior to be exported" = !(lapply(proj[c("data", "prior")], is.null) |> unlist() |> all()) )
+
+  fit_report = function(proj) {
     paste0(
       "Fastan project report",
       "\n\ninfo\t\t"    , proj$info,
@@ -74,6 +76,10 @@ export = function(proj, path_dump = getwd(), rds = T, plot.extension = "png") {
       paste0(paste0(utils::capture.output(print(elapsed_time_table(proj$fit))), collapse = "\n"))
   }
 
+  img = function(file) {
+    file.path(path, paste0(file, ".", plot.extension))
+  }
+
   real = !is.null(proj$data$real)
   path = paste0(path_dump, "/fastanExport-", format(Sys.time(), "%Y_%m_%d-%Hh%Mm%Ss"))
 
@@ -83,83 +89,7 @@ export = function(proj, path_dump = getwd(), rds = T, plot.extension = "png") {
     dir.create(path, recursive = T)
   }
 
-  img = function(file) {
-    file.path(path, paste0(file, ".", plot.extension))
-  }
-  alpha_hpd = list()
-  for (fac in 1:n.fac(proj)) {
-    if (real) {
-      alpha_hpd[[fac]] = plot_hpd(proj, "alpha", col = fac, stat = c("mean", "real"))
-    } else {
-      alpha_hpd[[fac]] = plot_hpd(proj, "alpha", col = fac, stat = c("mean"))
-    }
-  }
-  ggsave(plot = gridExtra::arrangeGrob(grobs = alpha_hpd, ncol = 1), filename = img("alpha_hpd"), width = 15, height = 5*fac, dpi = 300, bg = "white")
-
-  if (real) {
-    lambda = plot_lambda(proj, stat = "real") |> invisible()
-    sigma2 = plot_hpd(proj, "sigma2", col = 1, stat = c("mean", "real")) |> invisible()
-  } else {
-    lambda = plot_lambda(proj) |> invisible()
-    sigma2 = plot_hpd(proj, "sigma2", col = 1, stat = "mean") |> invisible()
-  }
-  ggsave(plot = lambda, filename = img("lambda_hpd"), width = 15, height = 5, dpi = 300, bg = "white")
-  ggsave(plot = sigma2, filename = img("sigma2_hpd"), width = 15, height = 5, dpi = 300, bg = "white")
-
-  plot_contrast(proj, par = "alpha") |> invisible()
-  ggsave(img("alpha_contrast_mean"), width = 8, height = 8, dpi = 300, bg = "white")
-  plot_contrast(proj, par = "alpha", stat = "hpd_contains_0") |> invisible()
-  ggsave(img("alpha_contrast_0"), width = 8, height = 8, dpi = 300, bg = "white")
-  plot_contrast(proj, par = "lambda") |> invisible()
-  ggsave(img("lambda_contrast_mean"), width = 15, height = 5, dpi = 300, bg = "white")
-  if (real) {
-    plot_contrast(proj, par = "alpha", stat = "real") |> invisible()
-    ggsave(img("alpha_contrast_real"), width = 8, height = 8, dpi = 300, bg = "white")
-    plot_contrast(proj, par = "lambda", stat = "real") |> invisible()
-    ggsave(img("lambda_contrast_real"), width = 15, height = 5, dpi = 300, bg = "white")
-  }
-
-  plot_trace(proj, par = "lp__") |> invisible()
-  ggsave(img("traceplot_lp"), width = 15, height = 5, dpi = 300, bg = "white")
-
-  diag = list()
-  for (stat in c("Rhat", "n_eff", "geweke")) {
-    diag[[stat]] = gridExtra::arrangeGrob(grobs = plot_diagnostic(proj, stat, T), ncol = 2)
-  }
-  ggsave(plot = gridExtra::arrangeGrob(grobs = diag, ncol = 1), filename = img("diganostic"), width = 7, height = 15, dpi = 300, bg = "white")
-
-  if (!is.null(proj$summary$pred)) {
-    plot_missing(proj) |> suppressWarnings() |> invisible()
-    ggsave(img("missing_pattern"), width = 8, height = 6, dpi = 300, bg = "white")
-  }
-
-  sink(file.path(path, "report.txt"))
-  fastan_report(proj) |> cat()
-  sink()
-
-  if (real) {
-    sink(file.path(path, "accuracy.txt"))
-    accuracy(proj) |> print()
-    sink()
-
-    bias = list()
-    for (param in c("all", names(proj$summary))) {
-      bias[[param]] = plot_bias(proj, param)
-    }
-    p_bias = gridExtra::arrangeGrob(grobs = bias, ncol = 2)
-    ggsave(plot = p_bias, filename = img("bias"), width = 7, height = 5, dpi = 300, bg = "white")
-  }
-
-  if (!real & ("real" %in% dimnames(proj$summary$pred)[[3]])) {
-    sink(file.path(path, "accuracy.txt"))
-    accuracy(proj) |> print()
-    sink()
-    plot_bias(proj, "pred")
-    ggsave(img("bias"), width = 7, height = 5, dpi = 300, bg = "white")
-  }
-
   prior = list(alpha = list(), lambda = list(), sigma2 = NA)
-
   for (i in 1:n.fac(proj)) {
     for (par in c("alpha", "lambda")) {
       for (stat in c("mean", "cov")) {
@@ -169,15 +99,102 @@ export = function(proj, path_dump = getwd(), rds = T, plot.extension = "png") {
       }
     }
   }
-
   p_prior = list()
   p_prior[["alpha"]] =
     gridExtra::arrangeGrob(grobs = prior$alpha, ncol = 2,
-                            widths=c(3, 10), heights=rep(12, times = i))
+                           widths=c(3, 10), heights=rep(12, times = i))
   p_prior[["lambda"]] =
     gridExtra::arrangeGrob(grobs = prior$lambda, ncol = 2,
-                            widths=c(3, 10), heights=rep(12, times = i))
+                           widths=c(3, 10), heights=rep(12, times = i))
   ggsave(plot = gridExtra::arrangeGrob(grobs = p_prior, ncol=2), filename = img("prior"), width = 16, height = 6 * i, dpi = 300, bg = "white")
+
+
+  if (!is.null(proj$summary)) {
+
+    ###  posterior plots  ###
+
+    alpha_hpd = list()
+    for (fac in 1:n.fac(proj)) {
+      if (real) {
+        alpha_hpd[[fac]] = plot_hpd(proj, "alpha", col = fac, stat = c("mean", "real"))
+      } else {
+        alpha_hpd[[fac]] = plot_hpd(proj, "alpha", col = fac, stat = c("mean"))
+      }
+    }
+    ggsave(plot = gridExtra::arrangeGrob(grobs = alpha_hpd, ncol = 1), filename = img("alpha_hpd"), width = 15, height = 5*fac, dpi = 300, bg = "white")
+
+    if (real) {
+      lambda = plot_lambda(proj, stat = "real") |> invisible()
+      sigma2 = plot_hpd(proj, "sigma2", col = 1, stat = c("mean", "real")) |> invisible()
+    } else {
+      lambda = plot_lambda(proj) |> invisible()
+      sigma2 = plot_hpd(proj, "sigma2", col = 1, stat = "mean") |> invisible()
+    }
+    ggsave(plot = lambda, filename = img("lambda_hpd"), width = 15, height = 5, dpi = 300, bg = "white")
+    ggsave(plot = sigma2, filename = img("sigma2_hpd"), width = 15, height = 5, dpi = 300, bg = "white")
+
+    plot_contrast(proj, par = "alpha") |> invisible()
+    ggsave(img("alpha_contrast_mean"), width = 8, height = 8, dpi = 300, bg = "white")
+    plot_contrast(proj, par = "alpha", stat = "hpd_contains_0") |> invisible()
+    ggsave(img("alpha_contrast_0"), width = 8, height = 8, dpi = 300, bg = "white")
+    plot_contrast(proj, par = "lambda") |> invisible()
+    ggsave(img("lambda_contrast_mean"), width = 15, height = 5, dpi = 300, bg = "white")
+    if (real) {
+      plot_contrast(proj, par = "alpha", stat = "real") |> invisible()
+      ggsave(img("alpha_contrast_real"), width = 8, height = 8, dpi = 300, bg = "white")
+      plot_contrast(proj, par = "lambda", stat = "real") |> invisible()
+      ggsave(img("lambda_contrast_real"), width = 15, height = 5, dpi = 300, bg = "white")
+    }
+
+
+    ###  accuracy  ###
+
+    if (real) {
+      sink(file.path(path, "accuracy.txt"))
+      accuracy(proj) |> print()
+      sink()
+
+      bias = list()
+      for (param in c("all", names(proj$summary))) {
+        bias[[param]] = plot_bias(proj, param)
+      }
+      p_bias = gridExtra::arrangeGrob(grobs = bias, ncol = 2)
+      ggsave(plot = p_bias, filename = img("bias"), width = 7, height = 5, dpi = 300, bg = "white")
+    }
+
+    if (!real & ("real" %in% dimnames(proj$summary$pred)[[3]])) {
+      sink(file.path(path, "accuracy.txt"))
+      accuracy(proj) |> print()
+      sink()
+      plot_bias(proj, "pred")
+      ggsave(img("bias"), width = 7, height = 5, dpi = 300, bg = "white")
+    }
+
+  }
+
+
+  if (!is.null(proj$fit)) {
+    plot_trace(proj, par = "lp__") |> invisible()
+    ggsave(img("traceplot_lp"), width = 15, height = 5, dpi = 300, bg = "white")
+
+    sink(file.path(path, "report.txt"))
+    fit_report(proj) |> cat()
+    sink()
+  }
+
+
+  if (!is.null(proj$diagnostic)) {
+    diag = list()
+    for (stat in c("Rhat", "n_eff", "geweke")) {
+      diag[[stat]] = gridExtra::arrangeGrob(grobs = plot_diagnostic(proj, stat, T), ncol = 2)
+    }
+    ggsave(plot = gridExtra::arrangeGrob(grobs = diag, ncol = 1), filename = img("diganostic"), width = 7, height = 15, dpi = 300, bg = "white")
+  }
+
+  if (!is.null(proj$summary$pred)) {
+    plot_missing(proj) |> suppressWarnings() |> invisible()
+    ggsave(img("missing_pattern"), width = 8, height = 6, dpi = 300, bg = "white")
+  }
 
   if (!is.null(proj$space)) {
     if (proj$prior$semi.conf) {
