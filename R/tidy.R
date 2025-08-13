@@ -223,7 +223,7 @@ missing_validation = function(proj, ...) {
   #   lapply(function(x) which(x == proj$space$id, proj$space$id)) |>
   #   unlist()
   # proj$space = proj$space[space_rows,]
-  proj = proj |> remove( setdiff(names(proj), c("info", "data", "space")) )
+  proj = proj |> delete( setdiff(names(proj), c("info", "data", "space")) )
   return(proj)
 }
 
