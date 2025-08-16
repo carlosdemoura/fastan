@@ -269,7 +269,9 @@ loglik = function(proj, param = NULL, stat = "mean") {
       alpha_lambda = proj$data$real$alpha %*% proj$data$real$lambda
       sigma2 = proj$data$real$sigma2
     } else {
-      alpha_lambda = proj$summary$alpha[,,stat] %*% proj$summary$lambda[,,stat]
+      alpha = proj$summary$alpha[,,stat] |> {\(.) if (is.null(nrow(.))) as.matrix(.) else .}()
+      lambda = proj$summary$lambda[,,stat] |> {\(.) if (is.null(nrow(.))) t(as.matrix(.)) else .}()
+      alpha_lambda = alpha %*% lambda
       sigma2 = proj$summary$sigma2[,,stat] |> as.matrix()
     }
   }
@@ -287,8 +289,8 @@ loglik = function(proj, param = NULL, stat = "mean") {
     loglik_ =
       stats::dnorm(x, alpha_lambda[row_,cols], sqrt(sigma2[row_,1]) * diag(length(x))) |>
       diag() |>
-      prod() |>
-      log()
+      log() |>
+      sum()
 
     loglik = loglik + loglik_
   }
